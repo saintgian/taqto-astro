@@ -1,0 +1,102 @@
+---
+interface Props {
+	title: string;
+	description: string;
+	href: string;
+	index?: number;
+}
+
+const {
+	title,
+	description,
+	href,
+	index = 1,
+} = Astro.props;
+---
+
+<a class="category-card" href={href}>
+	<div class="category-card__top">
+		<span class="category-card__number">
+			{String(index).padStart(2, "0")}
+		</span>
+
+		<svg
+			viewBox="0 0 24 24"
+			aria-hidden="true"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="1.6"
+		>
+			<path d="M5 19 19 5"></path>
+			<path d="M9 5h10v10"></path>
+		</svg>
+	</div>
+
+	<div class="category-card__content">
+		<h2>{title}</h2>
+		<p>{description}</p>
+	</div>
+</a>
+
+<style>
+	.category-card {
+		min-height: 300px;
+		padding: clamp(26px, 3vw, 40px);
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		border: 1px solid rgba(20, 20, 20, 0.14);
+		background: rgba(255, 255, 255, 0.28);
+		color: var(--color-black, #141414);
+		text-decoration: none;
+		transition:
+			background-color 220ms ease,
+			color 220ms ease,
+			transform 220ms ease;
+	}
+
+	.category-card:hover {
+		background: var(--color-black, #141414);
+		color: var(--color-beige, #fff6ed);
+		transform: translateY(-4px);
+	}
+
+	.category-card__top {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+	}
+
+	.category-card__number {
+		font-size: 11px;
+		font-weight: 600;
+		letter-spacing: 0.12em;
+		opacity: 0.6;
+	}
+
+	.category-card svg {
+		width: 24px;
+		height: 24px;
+		transition: transform 220ms ease;
+	}
+
+	.category-card:hover svg {
+		transform: translate(4px, -4px);
+	}
+
+	.category-card h2 {
+		margin: 0 0 14px;
+		font-size: clamp(28px, 3vw, 42px);
+		font-weight: 600;
+		line-height: 1;
+		letter-spacing: -0.045em;
+	}
+
+	.category-card p {
+		max-width: 430px;
+		margin: 0;
+		font-size: 14px;
+		line-height: 1.6;
+		opacity: 0.7;
+	}
+</style>
