@@ -1,0 +1,115 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Header from "../../components/Header.astro";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import CategoryCard from "../../components/CategoryCard.astro";
+import { productCategories } from "../../data/categories";
+---
+
+<BaseLayout
+	title="Categorías | TAQTO"
+	description="Explora las colecciones de parrilla, cocina, oficina, regalos y soluciones para empresas de TAQTO."
+>
+	<Header />
+
+	<main>
+		<section class="category-hero">
+			<div class="container">
+				<Breadcrumbs
+					items={[
+						{ label: "Inicio", href: "/" },
+						{ label: "Categorías" },
+					]}
+				/>
+
+				<div class="category-hero__content">
+					<p class="category-hero__eyebrow">
+						Colecciones TAQTO
+					</p>
+
+					<h1>Diseño para cada espacio y momento.</h1>
+
+					<p class="category-hero__description">
+						Explora nuestras categorías de piezas de madera y cuero,
+						con personalización láser gratuita.
+					</p>
+				</div>
+			</div>
+		</section>
+
+		<section class="categories">
+			<div class="container categories__grid">
+				{
+					productCategories.map((category, index) => (
+						<CategoryCard
+							title={category.name}
+							description={category.description}
+							href={`/categorias/${category.slug}/`}
+							index={index + 1}
+						/>
+					))
+				}
+			</div>
+		</section>
+	</main>
+</BaseLayout>
+
+<style>
+	.category-hero {
+		padding: clamp(38px, 6vw, 78px) 0 clamp(70px, 10vw, 140px);
+	}
+
+	.category-hero__content {
+		max-width: 980px;
+		margin-top: clamp(70px, 10vw, 150px);
+	}
+
+	.category-hero__eyebrow {
+		margin: 0 0 24px;
+		color: var(--color-brown);
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 0.18em;
+		text-transform: uppercase;
+	}
+
+	.category-hero h1 {
+		max-width: 940px;
+		margin: 0;
+		font-size: clamp(48px, 8vw, 112px);
+		line-height: 0.92;
+		letter-spacing: -0.065em;
+		text-wrap: balance;
+	}
+
+	.category-hero__description {
+		max-width: 620px;
+		margin: 34px 0 0;
+		font-size: clamp(17px, 1.6vw, 22px);
+		line-height: 1.55;
+		opacity: 0.7;
+	}
+
+	.categories {
+		padding-bottom: clamp(80px, 10vw, 150px);
+	}
+
+	.categories__grid {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.categories__grid > :last-child:nth-child(odd) {
+		grid-column: 1 / -1;
+	}
+
+	@media (max-width: 760px) {
+		.categories__grid {
+			grid-template-columns: 1fr;
+		}
+
+		.categories__grid > :last-child:nth-child(odd) {
+			grid-column: auto;
+		}
+	}
+</style>

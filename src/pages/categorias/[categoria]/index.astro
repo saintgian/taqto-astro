@@ -1,0 +1,146 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import Header from "../../../components/Header.astro";
+import Breadcrumbs from "../../../components/Breadcrumbs.astro";
+import CategoryCard from "../../../components/CategoryCard.astro";
+import { productCategories } from "../../../data/categories";
+
+export function getStaticPaths() {
+	return productCategories.map((category) => ({
+		params: {
+			categoria: category.slug,
+		},
+		props: {
+			category,
+		},
+	}));
+}
+
+const { category } = Astro.props;
+---
+
+<BaseLayout
+	title={`${category.name} | TAQTO`}
+	description={category.description}
+>
+	<Header />
+
+	<main>
+		<section class="subcategory-hero">
+			<div class="container">
+				<Breadcrumbs
+					items={[
+						{ label: "Inicio", href: "/" },
+						{ label: "Categorías", href: "/categorias/" },
+						{ label: category.name },
+					]}
+				/>
+
+				<div class="subcategory-hero__content">
+					<p>{category.eyebrow}</p>
+
+					<h1>{category.name}</h1>
+
+					<div class="subcategory-hero__bottom">
+						<p class="subcategory-hero__description">
+							{category.description}
+						</p>
+
+						<span>
+							{category.subcategories.length}
+							{" "}
+							colecciones
+						</span>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<section class="subcategory-list">
+			<div class="container subcategory-list__grid">
+				{
+					category.subcategories.map((subcategory, index) => (
+						<CategoryCard
+							title={subcategory.name}
+							description={subcategory.description}
+							href={`/categorias/${category.slug}/${subcategory.slug}/`}
+							index={index + 1}
+						/>
+					))
+				}
+			</div>
+		</section>
+	</main>
+</BaseLayout>
+
+<style>
+	.subcategory-hero {
+		padding: clamp(38px, 6vw, 78px) 0 clamp(68px, 8vw, 120px);
+		background: var(--color-brown);
+		color: var(--color-beige);
+	}
+
+	.subcategory-hero__content {
+		margin-top: clamp(70px, 10vw, 145px);
+	}
+
+	.subcategory-hero__content > p {
+		margin: 0 0 24px;
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 0.18em;
+		text-transform: uppercase;
+		opacity: 0.7;
+	}
+
+	.subcategory-hero h1 {
+		margin: 0;
+		font-size: clamp(62px, 11vw, 160px);
+		line-height: 0.85;
+		letter-spacing: -0.075em;
+	}
+
+	.subcategory-hero__bottom {
+		margin-top: clamp(50px, 7vw, 100px);
+		display: flex;
+		align-items: flex-end;
+		justify-content: space-between;
+		gap: 40px;
+	}
+
+	.subcategory-hero__description {
+		max-width: 650px;
+		margin: 0;
+		font-size: clamp(17px, 1.6vw, 22px);
+		line-height: 1.6;
+		opacity: 0.78;
+	}
+
+	.subcategory-hero__bottom span {
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		white-space: nowrap;
+	}
+
+	.subcategory-list {
+		padding: clamp(70px, 9vw, 140px) 0;
+	}
+
+	.subcategory-list__grid {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	@media (max-width: 760px) {
+		.subcategory-hero__bottom {
+			align-items: flex-start;
+			flex-direction: column;
+		}
+
+		.subcategory-list__grid {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>

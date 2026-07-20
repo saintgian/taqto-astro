@@ -1,0 +1,74 @@
+---
+interface BreadcrumbItem {
+	label: string;
+	href?: string;
+}
+
+interface Props {
+	items: BreadcrumbItem[];
+}
+
+const { items } = Astro.props;
+---
+
+<nav class="breadcrumbs" aria-label="Migas de pan">
+	<ol>
+		{
+			items.map((item, index) => (
+				<li>
+					{item.href ? (
+						<a href={item.href}>{item.label}</a>
+					) : (
+						<span aria-current="page">{item.label}</span>
+					)}
+
+					{index < items.length - 1 && (
+						<span class="breadcrumbs__separator" aria-hidden="true">
+							/
+						</span>
+					)}
+				</li>
+			))
+		}
+	</ol>
+</nav>
+
+<style>
+	.breadcrumbs ol {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 9px;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.breadcrumbs li {
+		display: flex;
+		align-items: center;
+		gap: 9px;
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+	}
+
+	.breadcrumbs a {
+		color: inherit;
+		text-decoration: none;
+		opacity: 0.55;
+		transition: opacity 180ms ease;
+	}
+
+	.breadcrumbs a:hover {
+		opacity: 1;
+	}
+
+	.breadcrumbs span[aria-current="page"] {
+		color: var(--color-brown, #5b312a);
+	}
+
+	.breadcrumbs__separator {
+		opacity: 0.28;
+	}
+</style>

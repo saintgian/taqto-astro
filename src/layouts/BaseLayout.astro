@@ -1,0 +1,178 @@
+---
+import Footer from "../components/Footer.astro";
+
+interface Props {
+	title: string;
+	description?: string;
+}
+
+const {
+	title,
+	description = "Piezas peruanas de madera y cuero con grabado láser personalizado gratuito.",
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="es">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+		<meta name="description" content={description} />
+		<meta name="theme-color" content="#141414" />
+
+		<title>{title}</title>
+	</head>
+
+	<body id="top">
+	<slot />
+
+	<Footer />
+</body>
+</html>
+
+<style is:global>
+	@font-face {
+		font-family: "Malmo Sans";
+		src: url("/fonts/malmo-thin.woff2") format("woff2");
+		font-weight: 300;
+		font-style: normal;
+		font-display: swap;
+	}
+
+	@font-face {
+		font-family: "Malmo Sans";
+		src: url("/fonts/malmo-regular.woff2") format("woff2");
+		font-weight: 400;
+		font-style: normal;
+		font-display: swap;
+	}
+
+	@font-face {
+		font-family: "Malmo Sans";
+		src: url("/fonts/malmo-medium.woff2") format("woff2");
+		font-weight: 500;
+		font-style: normal;
+		font-display: swap;
+	}
+
+	@font-face {
+		font-family: "Malmo Sans";
+		src: url("/fonts/malmo-semibold.woff2") format("woff2");
+		font-weight: 600;
+		font-style: normal;
+		font-display: swap;
+	}
+
+	@font-face {
+		font-family: "Malmo Sans";
+		src: url("/fonts/malmo-bold.woff2") format("woff2");
+		font-weight: 700;
+		font-style: normal;
+		font-display: swap;
+	}
+
+	@font-face {
+		font-family: "Malmo Sans";
+		src: url("/fonts/malmo-thin-italic.woff2") format("woff2");
+		font-weight: 300;
+		font-style: italic;
+		font-display: swap;
+	}
+
+	:root {
+		--color-black: #141414;
+		--color-beige: #fff6ed;
+		--color-orange: #ff4d2a;
+		--color-brown: #5b312a;
+		--color-white: #ffffff;
+
+		--font-primary: "Malmo Sans", Arial, Helvetica, sans-serif;
+
+		--page-width: 1440px;
+		--page-padding: clamp(20px, 4vw, 64px);
+	}
+
+	*,
+	*::before,
+	*::after {
+		box-sizing: border-box;
+	}
+
+	html {
+		scroll-behavior: smooth;
+		background: var(--color-beige);
+		font-family: var(--font-primary);
+	}
+
+	body {
+		margin: 0;
+		min-width: 320px;
+		background: var(--color-beige);
+		color: var(--color-black);
+		font-family: var(--font-primary);
+		font-weight: 400;
+		text-rendering: optimizeLegibility;
+		-webkit-font-smoothing: antialiased;
+	}
+
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6,
+	p,
+	a,
+	span,
+	strong,
+	small,
+	label,
+	button,
+	input,
+	textarea,
+	select {
+		font-family: inherit;
+	}
+
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6 {
+		font-weight: 600;
+	}
+
+	strong,
+	b {
+		font-weight: 700;
+	}
+
+	img,
+	picture,
+	svg,
+	video {
+		display: block;
+		max-width: 100%;
+	}
+
+	button,
+	input,
+	textarea,
+	select {
+		font: inherit;
+	}
+
+	a {
+		color: inherit;
+	}
+
+	.container {
+		width: min(
+			calc(100% - (var(--page-padding) * 2)),
+			var(--page-width)
+		);
+		margin-inline: auto;
+	}
+</style>

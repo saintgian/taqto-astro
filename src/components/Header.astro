@@ -1,0 +1,1019 @@
+---
+import { productCategories } from "../data/categories";
+
+const currentPath = Astro.url.pathname;
+
+const categoryIcons: Record<string, string> = {
+	parrilla: `
+		<svg viewBox="0 0 24 24" aria-hidden="true">
+			<path d="M5 11h14"></path>
+			<path d="M7 11v4a5 5 0 0 0 10 0v-4"></path>
+			<path d="M9 19l-1 3"></path>
+			<path d="M15 19l1 3"></path>
+			<path d="M9 7c0-1 1-1.5 1-2.5"></path>
+			<path d="M13 7c0-1 1-1.5 1-2.5"></path>
+		</svg>
+	`,
+	"cocina-y-mesa": `
+		<svg viewBox="0 0 24 24" aria-hidden="true">
+			<circle cx="12" cy="12" r="7"></circle>
+			<circle cx="12" cy="12" r="3"></circle>
+			<path d="M4 4v7"></path>
+			<path d="M2.5 7h3"></path>
+			<path d="M20 4v16"></path>
+		</svg>
+	`,
+	oficina: `
+		<svg viewBox="0 0 24 24" aria-hidden="true">
+			<rect x="3" y="5" width="18" height="13" rx="2"></rect>
+			<path d="M8 22h8"></path>
+			<path d="M12 18v4"></path>
+		</svg>
+	`,
+	"kits-y-regalos": `
+		<svg viewBox="0 0 24 24" aria-hidden="true">
+			<rect x="3" y="9" width="18" height="12" rx="1.5"></rect>
+			<path d="M12 9v12"></path>
+			<path d="M3 13h18"></path>
+			<path d="M12 9H8.5A2.5 2.5 0 1 1 11 6.5V9"></path>
+			<path d="M12 9h3.5A2.5 2.5 0 1 0 13 6.5V9"></path>
+		</svg>
+	`,
+	empresas: `
+		<svg viewBox="0 0 24 24" aria-hidden="true">
+			<path d="M4 21V5h10v16"></path>
+			<path d="M14 10h6v11"></path>
+			<path d="M8 9h2"></path>
+			<path d="M8 13h2"></path>
+			<path d="M8 17h2"></path>
+			<path d="M17 14h1"></path>
+			<path d="M17 17h1"></path>
+		</svg>
+	`,
+};
+---
+
+<header class="site-header" data-site-header>
+	<div class="header-shell">
+		<div class="announcement">
+			<p>Grabado láser personalizado siempre gratuito</p>
+
+			<a href="/contactanos/">
+				Atención personalizada
+				<span aria-hidden="true">→</span>
+			</a>
+		</div>
+
+		<div class="header-main">
+			<button
+				class="menu-toggle"
+				type="button"
+				aria-label="Abrir menú"
+				aria-expanded="false"
+				aria-controls="primary-navigation"
+				data-menu-toggle
+			>
+				<span></span>
+				<span></span>
+			</button>
+
+			<a class="brand" href="/" aria-label="TAQTO, volver al inicio">
+				<span class="brand__name">TAQTO</span>
+				<span class="brand__tagline">
+					Diseño con alma de madera
+				</span>
+			</a>
+
+			<nav
+				id="primary-navigation"
+				class="navigation"
+				aria-label="Navegación principal"
+				data-navigation
+			>
+				<ul class="navigation__list">
+					<li class="navigation__item">
+						<a
+							class:list={[
+								"navigation__link",
+								{
+									"is-current":
+										currentPath === "/categorias/" ||
+										currentPath === "/tienda/",
+								},
+							]}
+							href="/categorias/"
+						>
+							Tienda
+						</a>
+					</li>
+
+					{
+						productCategories.map((category) => {
+							const categoryHref = `/categorias/${category.slug}/`;
+							const isCurrent =
+								currentPath.startsWith(categoryHref);
+
+							return (
+								<li
+									class:list={[
+										"navigation__item",
+										"navigation__item--dropdown",
+										{ "is-open-current": isCurrent },
+									]}
+									data-dropdown
+								>
+									<div class="navigation__parent">
+	<a
+		class:list={[
+			"navigation__link",
+			{ "is-current": isCurrent },
+		]}
+		href={categoryHref}
+	>
+		<span
+			class="navigation__category-icon"
+			set:html={categoryIcons[category.slug]}
+		></span>
+
+		<span>{category.name}</span>
+	</a>
+
+										<button
+											class="navigation__dropdown-toggle"
+											type="button"
+											aria-label={`Mostrar subcategorías de ${category.name}`}
+											aria-expanded="false"
+											data-dropdown-toggle
+										>
+											<svg
+												viewBox="0 0 24 24"
+												aria-hidden="true"
+												fill="none"
+												stroke="currentColor"
+												stroke-width="1.8"
+											>
+												<path d="m7 9 5 5 5-5"></path>
+											</svg>
+										</button>
+									</div>
+
+									<div class="dropdown" data-dropdown-menu>
+										<div class="dropdown__header">
+											<span
+												class="dropdown__category-icon"
+												set:html={categoryIcons[category.slug]}
+											></span>
+
+											<div>
+												<p>{category.eyebrow}</p>
+												<h2>{category.name}</h2>
+											</div>
+										</div>
+
+										<ul class="dropdown__links">
+											{
+												category.subcategories.map(
+													(subcategory) => (
+														<li>
+															<a
+																href={`${categoryHref}${subcategory.slug}/`}
+															>
+																<span>
+																	{subcategory.name}
+																</span>
+
+																<svg
+																	viewBox="0 0 24 24"
+																	aria-hidden="true"
+																	fill="none"
+																	stroke="currentColor"
+																	stroke-width="1.7"
+																>
+																	<path d="M5 12h14"></path>
+																	<path d="m14 7 5 5-5 5"></path>
+																</svg>
+															</a>
+														</li>
+													),
+												)
+											}
+										</ul>
+
+										<a
+											class="dropdown__view-all"
+											href={categoryHref}
+										>
+											Ver toda la categoría
+											<span aria-hidden="true">→</span>
+										</a>
+									</div>
+								</li>
+							);
+						})
+					}
+				</ul>
+			</nav>
+
+			<div class="header-actions">
+				<a
+					class="icon-button search-button"
+					href="/buscar/"
+					aria-label="Buscar productos"
+				>
+					<svg
+						viewBox="0 0 24 24"
+						aria-hidden="true"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.8"
+					>
+						<circle cx="11" cy="11" r="6.5"></circle>
+						<path d="m16 16 4 4"></path>
+					</svg>
+				</a>
+
+				<a
+					class="icon-button account-button"
+					href="/mi-cuenta/"
+					aria-label="Mi cuenta"
+				>
+					<svg
+						viewBox="0 0 24 24"
+						aria-hidden="true"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.8"
+					>
+						<circle cx="12" cy="8" r="3.5"></circle>
+						<path d="M5.5 20c.6-4 3-6 6.5-6s5.9 2 6.5 6"></path>
+					</svg>
+				</a>
+
+				<a
+					class="icon-button cart-button"
+					href="/carrito/"
+					aria-label="Carrito, 0 productos"
+				>
+					<svg
+						viewBox="0 0 24 24"
+						aria-hidden="true"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.8"
+					>
+						<path d="M5 7h14l-1 13H6L5 7Z"></path>
+						<path d="M9 7V5a3 3 0 0 1 6 0v2"></path>
+					</svg>
+
+					<span class="cart-count">0</span>
+				</a>
+			</div>
+		</div>
+	</div>
+</header>
+
+<script>
+	const initializeHeaders = () => {
+		const headers =
+			document.querySelectorAll<HTMLElement>("[data-site-header]");
+
+		headers.forEach((header) => {
+			if (header.dataset.initialized === "true") return;
+
+			header.dataset.initialized = "true";
+
+			const menuButton =
+				header.querySelector<HTMLButtonElement>("[data-menu-toggle]");
+
+			const navigation =
+				header.querySelector<HTMLElement>("[data-navigation]");
+
+			const dropdowns = Array.from(
+				header.querySelectorAll<HTMLElement>("[data-dropdown]"),
+			);
+
+			const closeDropdown = (dropdown: HTMLElement) => {
+				dropdown.classList.remove("is-open");
+
+				const toggle =
+					dropdown.querySelector<HTMLButtonElement>(
+						"[data-dropdown-toggle]",
+					);
+
+				toggle?.setAttribute("aria-expanded", "false");
+			};
+
+			const closeAllDropdowns = (exception?: HTMLElement) => {
+				dropdowns.forEach((dropdown) => {
+					if (dropdown !== exception) {
+						closeDropdown(dropdown);
+					}
+				});
+			};
+
+			const toggleDropdown = (dropdown: HTMLElement) => {
+				const toggle =
+					dropdown.querySelector<HTMLButtonElement>(
+						"[data-dropdown-toggle]",
+					);
+
+				const willOpen =
+					!dropdown.classList.contains("is-open");
+
+				closeAllDropdowns(dropdown);
+
+				dropdown.classList.toggle("is-open", willOpen);
+				toggle?.setAttribute(
+					"aria-expanded",
+					String(willOpen),
+				);
+			};
+
+			menuButton?.addEventListener("click", () => {
+				const willOpen =
+					menuButton.getAttribute("aria-expanded") !== "true";
+
+				menuButton.setAttribute(
+					"aria-expanded",
+					String(willOpen),
+				);
+
+				navigation?.classList.toggle("is-open", willOpen);
+
+				if (!willOpen) {
+					closeAllDropdowns();
+				}
+			});
+
+			dropdowns.forEach((dropdown) => {
+				const toggle =
+					dropdown.querySelector<HTMLButtonElement>(
+						"[data-dropdown-toggle]",
+					);
+
+				toggle?.addEventListener("click", (event) => {
+					event.preventDefault();
+					event.stopPropagation();
+
+					toggleDropdown(dropdown);
+				});
+
+				dropdown.addEventListener("mouseenter", () => {
+					if (window.innerWidth > 1180) {
+						closeAllDropdowns(dropdown);
+						dropdown.classList.add("is-open");
+						toggle?.setAttribute("aria-expanded", "true");
+					}
+				});
+
+				dropdown.addEventListener("mouseleave", () => {
+					if (window.innerWidth > 1180) {
+						closeDropdown(dropdown);
+					}
+				});
+			});
+
+			document.addEventListener("click", (event) => {
+				if (
+					event.target instanceof Node &&
+					!header.contains(event.target)
+				) {
+					closeAllDropdowns();
+				}
+			});
+
+			document.addEventListener("keydown", (event) => {
+				if (event.key !== "Escape") return;
+
+				closeAllDropdowns();
+
+				navigation?.classList.remove("is-open");
+				menuButton?.setAttribute("aria-expanded", "false");
+			});
+
+			window.addEventListener("resize", () => {
+				if (window.innerWidth > 1180) {
+					navigation?.classList.remove("is-open");
+					menuButton?.setAttribute("aria-expanded", "false");
+				}
+
+				closeAllDropdowns();
+			});
+		});
+	};
+
+	initializeHeaders();
+
+	document.addEventListener(
+		"astro:page-load",
+		initializeHeaders,
+	);
+</script>
+
+<style>
+	.site-header {
+		position: sticky;
+		top: 14px;
+		z-index: 200;
+		width: calc(100% - 28px);
+		max-width: 1540px;
+		margin: 14px auto 0;
+		color: #fff6ed;
+	}
+
+	.header-shell {
+		position: relative;
+		border: 1px solid rgba(255, 255, 255, 0.11);
+		border-radius: 26px;
+		background:
+			linear-gradient(
+				135deg,
+				rgba(255, 255, 255, 0.055),
+				rgba(255, 255, 255, 0.012) 45%,
+				rgba(91, 49, 42, 0.035)
+			),
+			rgba(5, 5, 5, 0.93);
+		box-shadow:
+			inset 0 1px 0 rgba(255, 255, 255, 0.1),
+			0 24px 65px rgba(0, 0, 0, 0.38);
+		backdrop-filter: blur(24px) saturate(125%);
+		-webkit-backdrop-filter: blur(24px) saturate(125%);
+	}
+
+	.header-shell::before {
+		content: "";
+		position: absolute;
+		top: 0;
+		right: 8%;
+		left: 8%;
+		height: 1px;
+		background: linear-gradient(
+			90deg,
+			transparent,
+			rgba(255, 255, 255, 0.38),
+			transparent
+		);
+		pointer-events: none;
+	}
+
+	.announcement {
+		min-height: 31px;
+		padding: 0 28px;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 24px;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+		font-size: 9px;
+		font-weight: 600;
+		letter-spacing: 0.13em;
+		text-transform: uppercase;
+	}
+
+	.announcement p {
+		margin: 0;
+		opacity: 0.62;
+	}
+
+	.announcement a {
+		color: inherit;
+		text-decoration: none;
+		opacity: 0.7;
+	}
+
+	.header-main {
+		min-height: 80px;
+		padding: 0 20px;
+		display: grid;
+		grid-template-columns: auto 1fr auto;
+		align-items: center;
+		gap: clamp(18px, 2.7vw, 44px);
+	}
+
+	.brand {
+		display: inline-flex;
+		flex-direction: column;
+		color: inherit;
+		text-decoration: none;
+	}
+
+	.brand__name {
+		font-size: 30px;
+		font-weight: 700;
+		line-height: 0.95;
+		letter-spacing: -0.055em;
+	}
+
+	.brand__tagline {
+		margin-top: 6px;
+		color: rgba(255, 246, 237, 0.43);
+		font-size: 7px;
+		font-weight: 600;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+	}
+
+	.navigation {
+		height: 80px;
+		justify-self: center;
+	}
+
+	.navigation__list {
+		height: 100%;
+		display: flex;
+		align-items: stretch;
+		gap: clamp(6px, 1.2vw, 21px);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.navigation__item,
+.navigation__parent {
+	height: 100%;
+	display: flex;
+	align-items: center;
+}
+
+.navigation__item--dropdown {
+	position: relative;
+}
+
+	.navigation__link {
+		position: relative;
+		height: 100%;
+		display: flex;
+		align-items: center;
+		padding-inline: 4px;
+		color: rgba(255, 246, 237, 0.68);
+		font-size: 11.5px;
+		font-weight: 600;
+		letter-spacing: 0.055em;
+		text-decoration: none;
+		text-transform: uppercase;
+		white-space: nowrap;
+		transition: color 180ms ease;
+	}
+.navigation__category-icon {
+	width: 20px;
+	height: 20px;
+	flex: 0 0 20px;
+	display: grid;
+	place-items: center;
+	color: rgba(255, 246, 237, 0.54);
+	transition:
+		color 180ms ease,
+		transform 180ms ease;
+}
+
+.navigation__category-icon :global(svg) {
+	width: 20px;
+	height: 20px;
+	display: block;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.55;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+.navigation__link {
+	gap: 7px;
+}
+
+.navigation__link:hover .navigation__category-icon,
+.navigation__link.is-current .navigation__category-icon,
+.navigation__item.is-open .navigation__category-icon {
+	color: #fff6ed;
+	transform: translateY(-1px);
+}
+	.navigation__link::after {
+		content: "";
+		position: absolute;
+		right: 4px;
+		bottom: 19px;
+		left: 4px;
+		height: 1px;
+		background: #fff6ed;
+		transform: scaleX(0);
+		transition: transform 200ms ease;
+	}
+
+	.navigation__link:hover,
+	.navigation__link.is-current,
+	.navigation__item.is-open .navigation__link {
+		color: #fff6ed;
+	}
+
+	.navigation__link:hover::after,
+	.navigation__link.is-current::after,
+	.navigation__item.is-open .navigation__link::after {
+		transform: scaleX(1);
+	}
+
+	.navigation__dropdown-toggle {
+		width: 22px;
+		height: 38px;
+		padding: 0;
+		display: grid;
+		place-items: center;
+		border: 0;
+		background: transparent;
+		color: rgba(255, 246, 237, 0.5);
+		cursor: pointer;
+	}
+
+	.navigation__dropdown-toggle {
+	transition:
+		color 180ms ease,
+		background-color 180ms ease;
+}
+
+.navigation__dropdown-toggle:hover,
+.navigation__item.is-open
+	.navigation__dropdown-toggle {
+	color: #fff6ed;
+}
+
+.navigation__dropdown-toggle svg {
+	width: 15px;
+	height: 15px;
+	transform: rotate(0deg);
+	transform-origin: center;
+	transition:
+		transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+		color 180ms ease;
+}
+
+.navigation__item.is-open
+	.navigation__dropdown-toggle svg {
+	transform: rotate(180deg);
+}
+
+	.navigation__item.is-open
+		.navigation__dropdown-toggle svg {
+		transform: rotate(180deg);
+	}
+
+	.dropdown {
+		position: absolute;
+		top: calc(100% + 10px);
+		width: min(390px, calc(100vw - 28px));
+		padding: 22px;
+		overflow: hidden;
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		border-radius: 22px;
+		background:
+			linear-gradient(
+				145deg,
+				rgba(255, 255, 255, 0.045),
+				rgba(255, 255, 255, 0.008)
+			),
+			rgba(4, 4, 4, 0.97);
+		box-shadow:
+			inset 0 1px 0 rgba(255, 255, 255, 0.08),
+			0 30px 75px rgba(0, 0, 0, 0.52);
+		backdrop-filter: blur(28px) saturate(120%);
+		-webkit-backdrop-filter: blur(28px) saturate(120%);
+		opacity: 0;
+		visibility: hidden;
+		pointer-events: none;
+		transform: translateY(-8px);
+		transition:
+			opacity 180ms ease,
+			visibility 180ms ease,
+			transform 180ms ease;
+	}
+
+	.navigation__item:nth-last-child(-n + 2) .dropdown {
+		right: 14px;
+	}
+
+	.navigation__item:not(:nth-last-child(-n + 2)) .dropdown {
+		left: 50%;
+		transform: translate(-50%, -8px);
+	}
+
+	.navigation__item.is-open .dropdown,
+.navigation__item--dropdown:focus-within .dropdown {
+	opacity: 1;
+	visibility: visible;
+	pointer-events: auto;
+	transform: translateY(0);
+}
+
+.navigation__item:not(:nth-last-child(-n + 2)).is-open
+	.dropdown,
+.navigation__item:not(:nth-last-child(-n + 2)):focus-within
+	.dropdown {
+	transform: translate(-50%, 0);
+}
+
+	.navigation__item:not(:nth-last-child(-n + 2)).is-open .dropdown {
+		transform: translate(-50%, 0);
+	}
+
+	.dropdown__header {
+		display: flex;
+		align-items: center;
+		gap: 15px;
+		padding: 3px 3px 19px;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+	}
+
+	.dropdown__category-icon {
+		flex: 0 0 auto;
+		width: 46px;
+		height: 46px;
+		display: grid;
+		place-items: center;
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		border-radius: 14px;
+		background: rgba(255, 255, 255, 0.035);
+		color: #fff6ed;
+	}
+
+	.dropdown__category-icon :global(svg) {
+		width: 22px;
+		height: 22px;
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 1.5;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+
+	.dropdown__header p {
+		margin: 0 0 5px;
+		color: #ff4d2a;
+		font-size: 8px;
+		font-weight: 600;
+		letter-spacing: 0.15em;
+		text-transform: uppercase;
+	}
+
+	.dropdown__header h2 {
+		margin: 0;
+		font-size: 22px;
+		font-weight: 500;
+		line-height: 1;
+		letter-spacing: -0.035em;
+	}
+
+	.dropdown__links {
+		margin: 8px 0 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.dropdown__links li {
+		border-bottom: 1px solid rgba(255, 255, 255, 0.065);
+	}
+
+	.dropdown__links a {
+		min-height: 51px;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 16px;
+		padding: 4px 3px;
+		color: rgba(255, 246, 237, 0.72);
+		font-size: 12px;
+		font-weight: 500;
+		text-decoration: none;
+		transition:
+			color 160ms ease,
+			padding-left 160ms ease;
+	}
+
+	.dropdown__links a:hover {
+		padding-left: 9px;
+		color: #fff6ed;
+	}
+
+	.dropdown__links svg {
+		width: 16px;
+		height: 16px;
+		color: rgba(255, 246, 237, 0.32);
+		transition:
+			color 160ms ease,
+			transform 160ms ease;
+	}
+
+	.dropdown__links a:hover svg {
+		color: #ff4d2a;
+		transform: translateX(3px);
+	}
+
+	.dropdown__view-all {
+		margin-top: 15px;
+		min-height: 43px;
+		padding: 0 14px;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		border-radius: 12px;
+		background: rgba(255, 255, 255, 0.035);
+		color: #fff6ed;
+		font-size: 9px;
+		font-weight: 600;
+		letter-spacing: 0.09em;
+		text-decoration: none;
+		text-transform: uppercase;
+		transition: background-color 160ms ease;
+	}
+
+	.dropdown__view-all:hover {
+		background: rgba(255, 255, 255, 0.075);
+	}
+
+	.header-actions {
+		display: flex;
+		align-items: center;
+		gap: 3px;
+	}
+
+	.icon-button {
+		position: relative;
+		width: 44px;
+		height: 44px;
+		display: grid;
+		place-items: center;
+		border-radius: 50%;
+		color: rgba(255, 246, 237, 0.7);
+		text-decoration: none;
+		transition:
+			background-color 170ms ease,
+			color 170ms ease;
+	}
+
+	.icon-button:hover {
+		background: rgba(255, 255, 255, 0.075);
+		color: #fff6ed;
+	}
+
+	.icon-button svg {
+		width: 21px;
+		height: 21px;
+	}
+
+	.cart-count {
+		position: absolute;
+		top: 1px;
+		right: -1px;
+		min-width: 17px;
+		height: 17px;
+		padding-inline: 4px;
+		display: grid;
+		place-items: center;
+		border-radius: 999px;
+		background: #5b312a;
+		color: #fff6ed;
+		font-size: 8px;
+		font-weight: 700;
+	}
+
+	.menu-toggle {
+		display: none;
+		width: 40px;
+		height: 40px;
+		padding: 0;
+		border: 0;
+		background: transparent;
+		color: #fff6ed;
+	}
+
+	.menu-toggle span {
+		display: block;
+		width: 20px;
+		height: 1px;
+		margin: 6px auto;
+		background: currentColor;
+	}
+
+	@media (max-width: 1180px) {
+		.header-main {
+			grid-template-columns: 42px auto 1fr;
+		}
+
+		.menu-toggle {
+			display: block;
+		}
+
+		.header-actions {
+			justify-self: end;
+		}
+
+		.navigation {
+			position: absolute;
+			top: calc(100% + 10px);
+			right: 0;
+			left: 0;
+			height: auto;
+			display: none;
+			padding: 14px 18px;
+			border: 1px solid rgba(255, 255, 255, 0.1);
+			border-radius: 22px;
+			background: rgba(4, 4, 4, 0.98);
+			box-shadow: 0 30px 75px rgba(0, 0, 0, 0.52);
+		}
+
+		.navigation.is-open {
+			display: block;
+		}
+
+		.navigation__list {
+			height: auto;
+			flex-direction: column;
+			gap: 0;
+		}
+
+		.navigation__item,
+		.navigation__parent {
+			height: auto;
+			display: block;
+		}
+
+		.navigation__parent {
+			display: grid;
+			grid-template-columns: 1fr 50px;
+		}
+
+		.navigation__link {
+			min-height: 56px;
+		}
+
+		.navigation__link::after {
+			display: none;
+		}
+
+		.navigation__dropdown-toggle {
+			width: 50px;
+			height: 56px;
+		}
+
+		.dropdown,
+		.navigation__item:not(:nth-last-child(-n + 2)) .dropdown {
+			position: static;
+			width: 100%;
+			display: none;
+			padding: 12px;
+			transform: none;
+			opacity: 1;
+			visibility: visible;
+			pointer-events: auto;
+		}
+
+		.navigation__item.is-open .dropdown,
+		.navigation__item:not(:nth-last-child(-n + 2)).is-open
+			.dropdown {
+			display: block;
+			transform: none;
+		}
+	}
+
+	@media (max-width: 680px) {
+		.site-header {
+			top: 8px;
+			width: calc(100% - 16px);
+			margin-top: 8px;
+		}
+
+		.header-shell {
+			border-radius: 20px;
+		}
+
+		.announcement {
+			justify-content: center;
+			padding-inline: 12px;
+			font-size: 8px;
+			text-align: center;
+		}
+
+		.announcement a {
+			display: none;
+		}
+
+		.header-main {
+			min-height: 68px;
+			padding-inline: 12px;
+			grid-template-columns: 40px 1fr auto;
+		}
+
+		.brand {
+			justify-self: center;
+			align-items: center;
+		}
+
+		.brand__name {
+			font-size: 23px;
+		}
+
+		.brand__tagline,
+		.search-button,
+		.account-button {
+			display: none;
+		}
+	}
+</style>

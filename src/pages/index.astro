@@ -1,0 +1,56 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Header from "../components/Header.astro";
+import HeroSlider from "../components/HeroSlider.astro";
+import CampaignBanner from "../components/CampaignBanner.astro";
+---
+
+<BaseLayout
+	title="TAQTO | Diseño con alma de madera"
+	description="Neo-Artesanía Peruana de Precisión. Piezas de madera y cuero con grabado láser personalizado gratuito."
+>
+	<Header />
+
+	<main>
+		<HeroSlider />
+
+		<section class="campaign-section">
+			<div class="campaign-section__container">
+				<CampaignBanner />
+			</div>
+		</section>
+	</main>
+</BaseLayout>
+
+<style>
+	.campaign-section {
+		padding:
+			clamp(48px, 7vw, 100px)
+			var(--page-padding)
+			clamp(70px, 9vw, 130px);
+		background: var(--color-beige);
+	}
+
+	.campaign-section__container {
+		width: min(100%, var(--page-width));
+		margin-inline: auto;
+		overflow: hidden;
+		border-radius: 28px;
+	}
+
+	@media (max-width: 760px) {
+		.campaign-section {
+			padding:
+				36px
+				18px
+				70px;
+		}
+
+		.campaign-section__container {
+			border-radius: 20px;
+		}
+	}
+	main {
+	margin-top: -136px; 
+}
+</style>

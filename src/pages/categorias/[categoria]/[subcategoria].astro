@@ -1,0 +1,257 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import Header from "../../../components/Header.astro";
+import Breadcrumbs from "../../../components/Breadcrumbs.astro";
+import { productCategories } from "../../../data/categories";
+
+export function getStaticPaths() {
+	return productCategories.flatMap((category) =>
+		category.subcategories.map((subcategory) => ({
+			params: {
+				categoria: category.slug,
+				subcategoria: subcategory.slug,
+			},
+			props: {
+				category,
+				subcategory,
+			},
+		})),
+	);
+}
+
+const { category, subcategory } = Astro.props;
+
+const isBusinessCategory = category.slug === "empresas";
+---
+
+<BaseLayout
+	title={`${subcategory.name} | TAQTO`}
+	description={subcategory.description}
+>
+	<Header />
+
+	<main>
+		<section class="collection-hero">
+			<div class="container">
+				<Breadcrumbs
+					items={[
+						{ label: "Inicio", href: "/" },
+						{ label: "Categorías", href: "/categorias/" },
+						{
+							label: category.name,
+							href: `/categorias/${category.slug}/`,
+						},
+						{ label: subcategory.name },
+					]}
+				/>
+
+				<div class="collection-hero__content">
+					<p class="collection-hero__eyebrow">
+						{category.name}
+					</p>
+
+					<h1>{subcategory.name}</h1>
+
+					<p class="collection-hero__description">
+						{subcategory.description}
+					</p>
+				</div>
+			</div>
+		</section>
+
+		{
+			isBusinessCategory ? (
+				<section class="business-placeholder">
+					<div class="container business-placeholder__inner">
+						<div>
+							<p class="section-label">Venta consultiva</p>
+
+							<h2>
+								Construyamos una propuesta para tu empresa.
+							</h2>
+						</div>
+
+						<div class="business-placeholder__content">
+							<p>
+								Esta página tendrá formulario de cotización,
+								contacto por WhatsApp, tiempos de respuesta,
+								mockup previo y condiciones para pedidos
+								corporativos.
+							</p>
+
+							<p class="business-placeholder__rule">
+								El sello TAQTO siempre estará presente junto al
+								logotipo del cliente.
+							</p>
+
+							<a href="/contactanos/">
+								Solicitar cotización
+								<span aria-hidden="true">→</span>
+							</a>
+						</div>
+					</div>
+				</section>
+			) : (
+				<section class="products-placeholder">
+					<div class="container">
+						<div class="products-placeholder__heading">
+							<div>
+								<p class="section-label">
+									Colección de productos
+								</p>
+
+								<h2>Productos próximamente</h2>
+							</div>
+
+							<p>
+								Aquí conectaremos los productos reales,
+								precios, filtros, variantes y
+								personalización.
+							</p>
+						</div>
+
+						<div class="products-placeholder__grid">
+							<div></div>
+							<div></div>
+							<div></div>
+						</div>
+					</div>
+				</section>
+			)
+		}
+	</main>
+</BaseLayout>
+
+<style>
+	.collection-hero {
+		padding: clamp(38px, 6vw, 78px) 0 clamp(90px, 12vw, 180px);
+	}
+
+	.collection-hero__content {
+		max-width: 1100px;
+		margin-top: clamp(70px, 10vw, 150px);
+	}
+
+	.collection-hero__eyebrow,
+	.section-label {
+		margin: 0 0 24px;
+		color: var(--color-brown);
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 0.18em;
+		text-transform: uppercase;
+	}
+
+	.collection-hero h1 {
+		max-width: 1050px;
+		margin: 0;
+		font-size: clamp(50px, 9vw, 128px);
+		line-height: 0.9;
+		letter-spacing: -0.065em;
+		text-wrap: balance;
+	}
+
+	.collection-hero__description {
+		max-width: 680px;
+		margin: 38px 0 0;
+		font-size: clamp(17px, 1.6vw, 22px);
+		line-height: 1.6;
+		opacity: 0.7;
+	}
+
+	.products-placeholder,
+	.business-placeholder {
+		padding: clamp(75px, 10vw, 150px) 0;
+		background: #fff;
+	}
+
+	.products-placeholder__heading,
+	.business-placeholder__inner {
+		display: grid;
+		grid-template-columns: 1.3fr 0.7fr;
+		gap: clamp(40px, 8vw, 130px);
+	}
+
+	.products-placeholder h2,
+	.business-placeholder h2 {
+		max-width: 760px;
+		margin: 0;
+		font-size: clamp(38px, 5vw, 76px);
+		line-height: 0.96;
+		letter-spacing: -0.055em;
+	}
+
+	.products-placeholder__heading > p,
+	.business-placeholder__content > p {
+		margin: 0;
+		font-size: 16px;
+		line-height: 1.7;
+		opacity: 0.7;
+	}
+
+	.products-placeholder__grid {
+		margin-top: 70px;
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 20px;
+	}
+
+	.products-placeholder__grid div {
+		aspect-ratio: 4 / 5;
+		background:
+			linear-gradient(
+				135deg,
+				rgba(91, 49, 42, 0.08),
+				rgba(20, 20, 20, 0.04)
+			);
+	}
+
+	.business-placeholder {
+		background: var(--color-black);
+		color: var(--color-beige);
+	}
+
+	.business-placeholder .section-label {
+		color: var(--color-orange);
+	}
+
+	.business-placeholder__content {
+		display: flex;
+		align-items: flex-start;
+		flex-direction: column;
+		gap: 28px;
+	}
+
+	.business-placeholder__rule {
+		padding-left: 20px;
+		border-left: 2px solid var(--color-orange);
+		font-weight: 700;
+		opacity: 1 !important;
+	}
+
+	.business-placeholder a {
+		display: inline-flex;
+		align-items: center;
+		gap: 20px;
+		min-height: 54px;
+		padding: 0 26px;
+		background: var(--color-beige);
+		color: var(--color-black);
+		font-size: 12px;
+		font-weight: 800;
+		letter-spacing: 0.08em;
+		text-decoration: none;
+		text-transform: uppercase;
+	}
+
+	@media (max-width: 760px) {
+		.products-placeholder__heading,
+		.business-placeholder__inner {
+			grid-template-columns: 1fr;
+		}
+
+		.products-placeholder__grid {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>
