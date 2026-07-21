@@ -1,0 +1,1768 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Header from "../../components/Header.astro";
+import { PortableText } from "astro-portabletext";
+import {
+	sanityClient,
+	urlForImage,
+} from "../../lib/sanity";
+
+import { productDetailQuery } from "../../lib/productDetailQuery";
+
+interface Wood {
+	title?: string;
+	slug?: string;
+	image?: unknown;
+}
+
+interface ProductSize {
+	title?: string;
+	slug?: string;
+	dimensionsLabel?: string;
+}
+
+interface Variant {
+	_key?: string;
+	sku?: string;
+	price?: number;
+	salePrice?: number;
+	stockQuantity?: number;
+	active?: boolean;
+	wood?: Wood;
+	size?: ProductSize;
+}
+
+interface ProductImage {
+	_key?: string;
+	alt?: string;
+	caption?: string;
+	asset?: unknown;
+}
+
+interface Product {
+	_id: string;
+	title: string;
+	slug: string;
+	sku?: string;
+	shortDescription?: string;
+	description?: any[];
+	productMode?: string;
+	gallery?: ProductImage[];
+	materials?: string[];
+	careInstructions?: string;
+	saleStart?: string;
+	saleEnd?: string;
+	engravingIncluded?: boolean;
+	engravingTypes?: string[];
+	engravingMaxCharacters?: number;
+	personalizationNotes?: string;
+	corporateEligible?: boolean;
+	metaTitle?: string;
+	metaDescription?: string;
+
+	category?: {
+		title?: string;
+		slug?: string;
+	};
+
+	subcategory?: {
+		title?: string;
+		slug?: string;
+	};
+
+	uniqueProduct?: {
+		sku?: string;
+		price?: number;
+		salePrice?: number;
+		stockQuantity?: number;
+		available?: boolean;
+		wood?: Wood;
+		size?: ProductSize;
+	};
+
+	variants?: Variant[];
+}
+
+export async function getStaticPaths() {
+	const products =
+		await sanityClient.fetch<Product[]>(
+			productDetailQuery,
+		);
+
+	return products.map((product) => ({
+		params: {
+			slug: product.slug,
+		},
+
+		props: {
+			product,
+		},
+	}));
+}
+
+const { product } = Astro.props as {
+	product: Product;
+};
+
+const base = import.meta.env.BASE_URL;
+
+const categoryHref = product.category?.slug
+	? `${base}categorias/${product.category.slug}/`
+	: `${base}categorias/`;
+
+const contactHref = `${base}contactanos/`;
+
+const activeVariants = (product.variants || []).filter(
+	(variant) => variant.active !== false,
+);
+
+const uniqueWoods = Array.from(
+	new Map(
+		activeVariants
+			.filter((variant) => variant.wood?.slug)
+			.map((variant) => [
+				variant.wood?.slug,
+				variant.wood,
+			]),
+	).values(),
+).filter(Boolean) as Wood[];
+
+const uniqueSizes = Array.from(
+	new Map(
+		activeVariants
+			.filter((variant) => variant.size?.slug)
+			.map((variant) => [
+				variant.size?.slug,
+				variant.size,
+			]),
+	).values(),
+).filter(Boolean) as ProductSize[];
+
+const hasWoodSelector =
+	product.productMode === "wood" ||
+	product.productMode === "woodSize";
+
+const hasSizeSelector =
+	product.productMode === "size" ||
+	product.productMode === "woodSize";
+
+const saleIsActive = (
+	saleStart?: string,
+	saleEnd?: string,
+) => {
+	const now = Date.now();
+
+	if (
+		saleStart &&
+		now < new Date(saleStart).getTime()
+	) {
+		return false;
+	}
+
+	if (
+		saleEnd &&
+		now > new Date(saleEnd).getTime()
+	) {
+		return false;
+	}
+
+	return true;
+};
+
+const currentSaleIsActive = saleIsActive(
+	product.saleStart,
+	product.saleEnd,
+);
+
+const firstVariant =
+	product.productMode === "unique"
+		? product.uniqueProduct
+		: activeVariants[0];
+
+const initialRegularPrice =
+	firstVariant?.price ?? 0;
+
+const initialSalePrice =
+	currentSaleIsActive
+		? firstVariant?.salePrice
+		: undefined;
+
+const initialVisiblePrice =
+	typeof initialSalePrice === "number"
+		? initialSalePrice
+		: initialRegularPrice;
+
+const initialStock =
+	firstVariant?.stockQuantity ?? 0;
+
+const initialSku =
+	product.productMode === "unique"
+		? product.sku
+		: (firstVariant as Variant)?.sku || product.sku;
+
+const formatPrice = (value: number) =>
+	new Intl.NumberFormat("es-PE", {
+		style: "currency",
+		currency: "PEN",
+		minimumFractionDigits: 2,
+	}).format(value);
+
+const mainImage = product.gallery?.[0];
+
+const mainImageUrl = mainImage
+	? urlForImage(mainImage)
+			.width(1200)
+			.height(1500)
+			.fit("crop")
+			.auto("format")
+			.url()
+	: "";
+
+const mainImageAlt =
+	mainImage?.alt ||
+	`${product.title} de TAQTO`;
+
+const pageTitle =
+	product.metaTitle ||
+	`${product.title} | TAQTO`;
+
+const pageDescription =
+	product.metaDescription ||
+	product.shortDescription ||
+	`Conoce ${product.title} de TAQTO.`;
+
+const engravingLabels: Record<string, string> = {
+	name: "Nombre",
+	phrase: "Frase",
+	date: "Fecha",
+	logo: "Logotipo",
+};
+
+const variantData = activeVariants.map((variant) => ({
+	key: variant._key || "",
+	woodSlug: variant.wood?.slug || "",
+	woodTitle: variant.wood?.title || "",
+	sizeSlug: variant.size?.slug || "",
+	sizeTitle: variant.size?.title || "",
+	dimensions: variant.size?.dimensionsLabel || "",
+	sku: variant.sku || product.sku || "",
+	price: variant.price || 0,
+	salePrice:
+		typeof variant.salePrice === "number"
+			? variant.salePrice
+			: null,
+	stock: variant.stockQuantity || 0,
+}));
+
+const uniqueProductData =
+	product.productMode === "unique"
+		? {
+				sku:
+					product.uniqueProduct?.sku ||
+					product.sku ||
+					"",
+				price: product.uniqueProduct?.price || 0,
+				salePrice:
+					typeof product.uniqueProduct
+						?.salePrice === "number"
+						? product.uniqueProduct.salePrice
+						: null,
+				stock:
+					product.uniqueProduct
+						?.stockQuantity || 0,
+			}
+		: null;
+
+const safeVariantJson = JSON.stringify({
+	variants: variantData,
+	saleActive: currentSaleIsActive,
+	productMode: product.productMode || "unique",
+	uniqueProduct: uniqueProductData,
+	product: {
+		slug: product.slug,
+		title: product.title,
+		image: mainImageUrl,
+	},
+}).replace(/</g, "\\u003c");
+---
+
+<BaseLayout
+	title={pageTitle}
+	description={pageDescription}
+>
+	<Header />
+
+	<main class="product-page">
+		<nav
+			class="product-breadcrumbs"
+			aria-label="Migas de pan"
+		>
+			<a href={base}>Inicio</a>
+			<span aria-hidden="true">/</span>
+
+			<a href={categoryHref}>
+				{product.category?.title || "Tienda"}
+			</a>
+
+			<span aria-hidden="true">/</span>
+
+			<span>{product.title}</span>
+		</nav>
+
+		<section class="product-hero">
+			<div class="product-gallery">
+				<div class="product-main-image">
+					{
+						mainImageUrl ? (
+							<img
+								id="product-main-image"
+								src={mainImageUrl}
+								alt={mainImageAlt}
+								width="1200"
+								height="1500"
+								loading="eager"
+								decoding="async"
+							/>
+						) : (
+							<div class="product-image-placeholder">
+								<span>TAQTO</span>
+							</div>
+						)
+					}
+				</div>
+
+				{
+					product.gallery &&
+					product.gallery.length > 1 && (
+						<div
+							class="product-thumbnails"
+							aria-label="Galería del producto"
+						>
+							{product.gallery.map(
+								(image, index) => {
+									const thumbnailUrl =
+										urlForImage(image)
+											.width(240)
+											.height(300)
+											.fit("crop")
+											.auto("format")
+											.url();
+
+									const largeUrl =
+										urlForImage(image)
+											.width(1200)
+											.height(1500)
+											.fit("crop")
+											.auto("format")
+											.url();
+
+									return (
+										<button
+											class:list={[
+												"product-thumbnail",
+												{
+													"is-active":
+														index === 0,
+												},
+											]}
+											type="button"
+											data-product-thumbnail
+											data-large-image={largeUrl}
+											data-image-alt={
+												image.alt ||
+												product.title
+											}
+											aria-label={`Ver imagen ${
+												index + 1
+											}`}
+										>
+											<img
+												src={thumbnailUrl}
+												alt=""
+												width="240"
+												height="300"
+												loading="lazy"
+											/>
+										</button>
+									);
+								},
+							)}
+						</div>
+					)
+				}
+			</div>
+
+			<div class="product-information">
+				<p class="product-category">
+					{product.category?.title || "TAQTO"}
+				</p>
+
+				<h1>{product.title}</h1>
+
+				<p class="product-short-description">
+					{product.shortDescription}
+				</p>
+
+				<div class="product-price-wrapper">
+					<p
+						class="product-price"
+						id="product-price"
+					>
+						{formatPrice(initialVisiblePrice)}
+					</p>
+
+					<p
+						class:list={[
+							"product-regular-price",
+							{
+								"is-hidden":
+									typeof initialSalePrice !==
+									"number",
+							},
+						]}
+						id="product-regular-price"
+					>
+						{formatPrice(initialRegularPrice)}
+					</p>
+				</div>
+
+				<div class="product-status">
+					<span
+						class:list={[
+							"product-status__dot",
+							{
+								"is-out":
+									initialStock <= 0,
+							},
+						]}
+						id="product-stock-dot"
+					></span>
+
+					<span id="product-stock-label">
+						{
+							initialStock > 0
+								? `${initialStock} unidades disponibles`
+								: "Temporalmente agotado"
+						}
+					</span>
+				</div>
+
+				<div class="product-meta">
+					<span>SKU</span>
+					<strong id="product-sku">
+						{initialSku || "Sin SKU"}
+					</strong>
+				</div>
+
+				{
+					hasWoodSelector &&
+						uniqueWoods.length > 0 && (
+							<fieldset class="product-option-group">
+								<legend>Elige la madera</legend>
+
+								<div class="product-option-list">
+									{uniqueWoods.map(
+										(wood, index) => (
+											<button
+												class:list={[
+													"product-option",
+													{
+														"is-selected":
+															index === 0,
+													},
+												]}
+												type="button"
+												data-option-wood
+												data-value={wood.slug}
+												aria-pressed={
+													index === 0
+														? "true"
+														: "false"
+												}
+											>
+												{wood.title}
+											</button>
+										),
+									)}
+								</div>
+							</fieldset>
+						)
+				}
+
+				{
+					hasSizeSelector &&
+						uniqueSizes.length > 0 && (
+							<fieldset class="product-option-group">
+								<legend>Elige el tamaño</legend>
+
+								<div class="product-option-list">
+									{uniqueSizes.map(
+										(size, index) => (
+											<button
+												class:list={[
+													"product-option",
+													{
+														"is-selected":
+															index === 0,
+													},
+												]}
+												type="button"
+												data-option-size
+												data-value={size.slug}
+												aria-pressed={
+													index === 0
+														? "true"
+														: "false"
+												}
+											>
+												<strong>
+													{size.title}
+												</strong>
+
+												{size.dimensionsLabel && (
+													<small>
+														{
+															size.dimensionsLabel
+														}
+													</small>
+												)}
+											</button>
+										),
+									)}
+								</div>
+							</fieldset>
+						)
+				}
+
+				<p
+					class="product-variation-message"
+					id="product-variation-message"
+					aria-live="polite"
+				></p>
+
+				<div class="product-personalization">
+					<div class="product-personalization__icon">
+						<svg
+							viewBox="0 0 24 24"
+							aria-hidden="true"
+						>
+							<path d="M12 3 5 7v5c0 4.4 2.8 7.7 7 9 4.2-1.3 7-4.6 7-9V7l-7-4Z"></path>
+							<path d="m9 12 2 2 4-5"></path>
+						</svg>
+					</div>
+
+					<div>
+						<strong>
+							Grabado láser personalizado gratuito
+						</strong>
+
+						<p>
+							{
+								product.personalizationNotes ||
+									"Personaliza tu pieza sin costo adicional."
+							}
+						</p>
+					</div>
+				</div>
+
+				<div class="product-quantity-row">
+					<div
+						class="product-quantity"
+						role="group"
+						aria-label="Cantidad"
+					>
+						<button
+							type="button"
+							class="product-quantity__button"
+							data-quantity-decrease
+							aria-label="Reducir cantidad"
+						>
+							−
+						</button>
+
+						<input
+							type="number"
+							class="product-quantity__input"
+							id="product-quantity-input"
+							min="1"
+							step="1"
+							value="1"
+							inputmode="numeric"
+							aria-label="Cantidad"
+						/>
+
+						<button
+							type="button"
+							class="product-quantity__button"
+							data-quantity-increase
+							aria-label="Aumentar cantidad"
+						>
+							+
+						</button>
+					</div>
+
+					<button
+						type="button"
+						class:list={[
+							"product-add-to-cart",
+							{
+								"is-disabled":
+									initialStock <= 0,
+							},
+						]}
+						id="product-add-to-cart"
+					>
+						<span id="product-add-to-cart-label">
+							Agregar al carrito
+						</span>
+					</button>
+				</div>
+
+				<a
+					class:list={[
+						"product-contact-button",
+						{
+							"is-disabled":
+								initialStock <= 0,
+						},
+					]}
+					id="product-contact-button"
+					href={contactHref}
+				>
+					<span>Consultar este producto</span>
+					<span aria-hidden="true">→</span>
+				</a>
+
+				<p class="product-delivery-note">
+					Entrega estimada: 2 días hábiles en Lima
+					Metropolitana. Envíos a provincias por
+					agencia.
+				</p>
+			</div>
+		</section>
+
+		<section class="product-details">
+			<div class="product-detail-column">
+				<p class="section-eyebrow">
+					Detalles de la pieza
+				</p>
+
+				<h2>Diseño, material y precisión.</h2>
+			</div>
+
+			<div class="product-description">
+				{
+					product.description &&
+						product.description.length > 0 && (
+							<PortableText
+								value={product.description}
+							/>
+						)
+				}
+
+				{
+					product.materials &&
+						product.materials.length > 0 && (
+							<div class="product-materials">
+								<h3>Materiales</h3>
+
+								<ul>
+									{product.materials.map(
+										(material) => (
+											<li>{material}</li>
+										),
+									)}
+								</ul>
+							</div>
+						)
+				}
+
+				{product.careInstructions && (
+					<div class="product-care">
+						<h3>Cuidados</h3>
+						<p>{product.careInstructions}</p>
+					</div>
+				)}
+			</div>
+		</section>
+
+		{
+			product.engravingIncluded && (
+				<section class="engraving-section">
+					<div>
+						<p class="section-eyebrow">
+							Personalización incluida
+						</p>
+
+						<h2>
+							Una pieza hecha para llevar tu
+							historia.
+						</h2>
+					</div>
+
+					<div class="engraving-information">
+						<p>
+							El grabado láser personalizado está
+							incluido sin costo adicional.
+						</p>
+
+						{
+							product.engravingTypes &&
+								product.engravingTypes.length >
+									0 && (
+									<ul>
+										{product.engravingTypes.map(
+											(type) => (
+												<li>
+													{engravingLabels[
+														type
+													] || type}
+												</li>
+											),
+										)}
+									</ul>
+								)
+						}
+
+						{
+							product.engravingMaxCharacters && (
+								<p>
+									Hasta{" "}
+									<strong>
+										{
+											product.engravingMaxCharacters
+										}
+									</strong>{" "}
+									caracteres.
+								</p>
+							)
+						}
+					</div>
+				</section>
+			)
+		}
+
+		<script
+			id="product-variant-data"
+			type="application/json"
+			set:html={safeVariantJson}
+		></script>
+	</main>
+</BaseLayout>
+
+<script>
+	import { addItem } from "../../lib/cart";
+
+	const initializeProductPage = () => {
+		const dataElement =
+			document.querySelector<HTMLScriptElement>(
+				"#product-variant-data",
+			);
+
+		if (!dataElement) return;
+
+		const parsedData = JSON.parse(
+			dataElement.textContent || "{}",
+		);
+
+		const variants = parsedData.variants || [];
+		const saleActive =
+			parsedData.saleActive === true;
+		const productMode =
+			parsedData.productMode || "unique";
+		const uniqueProductInfo =
+			parsedData.uniqueProduct || null;
+		const productInfo = parsedData.product || {};
+
+		const woodButtons = Array.from(
+			document.querySelectorAll<HTMLButtonElement>(
+				"[data-option-wood]",
+			),
+		);
+
+		const sizeButtons = Array.from(
+			document.querySelectorAll<HTMLButtonElement>(
+				"[data-option-size]",
+			),
+		);
+
+		const priceElement =
+			document.querySelector<HTMLElement>(
+				"#product-price",
+			);
+
+		const regularPriceElement =
+			document.querySelector<HTMLElement>(
+				"#product-regular-price",
+			);
+
+		const skuElement =
+			document.querySelector<HTMLElement>(
+				"#product-sku",
+			);
+
+		const stockLabel =
+			document.querySelector<HTMLElement>(
+				"#product-stock-label",
+			);
+
+		const stockDot =
+			document.querySelector<HTMLElement>(
+				"#product-stock-dot",
+			);
+
+		const messageElement =
+			document.querySelector<HTMLElement>(
+				"#product-variation-message",
+			);
+
+		const contactButton =
+			document.querySelector<HTMLAnchorElement>(
+				"#product-contact-button",
+			);
+
+		const addToCartButton =
+			document.querySelector<HTMLButtonElement>(
+				"#product-add-to-cart",
+			);
+
+		const addToCartLabel =
+			document.querySelector<HTMLElement>(
+				"#product-add-to-cart-label",
+			);
+
+		const quantityInput =
+			document.querySelector<HTMLInputElement>(
+				"#product-quantity-input",
+			);
+
+		const quantityDecrease =
+			document.querySelector<HTMLButtonElement>(
+				"[data-quantity-decrease]",
+			);
+
+		const quantityIncrease =
+			document.querySelector<HTMLButtonElement>(
+				"[data-quantity-increase]",
+			);
+
+		let selectedWood =
+			woodButtons.find((button) =>
+				button.classList.contains("is-selected"),
+			)?.dataset.value || "";
+
+		let selectedSize =
+			sizeButtons.find((button) =>
+				button.classList.contains("is-selected"),
+			)?.dataset.value || "";
+
+		const formatPrice = (value: number) =>
+			new Intl.NumberFormat("es-PE", {
+				style: "currency",
+				currency: "PEN",
+				minimumFractionDigits: 2,
+			}).format(value);
+
+		const findVariant = () =>
+			variants.find((variant: any) => {
+				const woodMatches =
+					!woodButtons.length ||
+					variant.woodSlug === selectedWood;
+
+				const sizeMatches =
+					!sizeButtons.length ||
+					variant.sizeSlug === selectedSize;
+
+				return woodMatches && sizeMatches;
+			});
+
+		const getCurrentSelection = () => {
+			if (productMode === "unique") {
+				if (!uniqueProductInfo) return null;
+
+				return {
+					sku: uniqueProductInfo.sku || "",
+					price: uniqueProductInfo.price || 0,
+					salePrice:
+						uniqueProductInfo.salePrice,
+					stock: uniqueProductInfo.stock || 0,
+					woodTitle: "",
+					sizeTitle: "",
+				};
+			}
+
+			const variant = findVariant();
+			if (!variant) return null;
+
+			return {
+				sku: variant.sku || "",
+				price: variant.price || 0,
+				salePrice: variant.salePrice,
+				stock: variant.stock || 0,
+				woodTitle: variant.woodTitle || "",
+				sizeTitle: variant.sizeTitle || "",
+			};
+		};
+
+		const updateInterface = () => {
+			if (!variants.length) return;
+
+			const variant = findVariant();
+
+			if (!variant) {
+				if (messageElement) {
+					messageElement.textContent =
+						"Esta combinación no está disponible.";
+				}
+
+				contactButton?.classList.add(
+					"is-disabled",
+				);
+
+				addToCartButton?.classList.add(
+					"is-disabled",
+				);
+
+				return;
+			}
+
+			if (messageElement) {
+				messageElement.textContent = "";
+			}
+
+			const hasSale =
+				saleActive &&
+				typeof variant.salePrice === "number";
+
+			if (priceElement) {
+				priceElement.textContent = formatPrice(
+					hasSale
+						? variant.salePrice
+						: variant.price,
+				);
+			}
+
+			if (regularPriceElement) {
+				regularPriceElement.textContent =
+					formatPrice(variant.price);
+
+				regularPriceElement.classList.toggle(
+					"is-hidden",
+					!hasSale,
+				);
+			}
+
+			if (skuElement) {
+				skuElement.textContent =
+					variant.sku || "Sin SKU";
+			}
+
+			const stock = Number(variant.stock || 0);
+
+			if (stockLabel) {
+				stockLabel.textContent =
+					stock > 0
+						? `${stock} unidades disponibles`
+						: "Temporalmente agotado";
+			}
+
+			stockDot?.classList.toggle(
+				"is-out",
+				stock <= 0,
+			);
+
+			contactButton?.classList.toggle(
+				"is-disabled",
+				stock <= 0,
+			);
+
+			addToCartButton?.classList.toggle(
+				"is-disabled",
+				stock <= 0,
+			);
+		};
+
+		const selectButton = (
+			button: HTMLButtonElement,
+			buttons: HTMLButtonElement[],
+		) => {
+			buttons.forEach((currentButton) => {
+				const selected =
+					currentButton === button;
+
+				currentButton.classList.toggle(
+					"is-selected",
+					selected,
+				);
+
+				currentButton.setAttribute(
+					"aria-pressed",
+					String(selected),
+				);
+			});
+		};
+
+		woodButtons.forEach((button) => {
+			button.addEventListener("click", () => {
+				selectButton(button, woodButtons);
+
+				selectedWood =
+					button.dataset.value || "";
+
+				updateInterface();
+			});
+		});
+
+		sizeButtons.forEach((button) => {
+			button.addEventListener("click", () => {
+				selectButton(button, sizeButtons);
+
+				selectedSize =
+					button.dataset.value || "";
+
+				updateInterface();
+			});
+		});
+
+		const getQuantity = () => {
+			const value = Number(
+				quantityInput?.value || 1,
+			);
+
+			if (!Number.isFinite(value) || value < 1) {
+				return 1;
+			}
+
+			return Math.floor(value);
+		};
+
+		const setQuantity = (value: number) => {
+			if (!quantityInput) return;
+
+			quantityInput.value = String(
+				Math.max(1, Math.floor(value)),
+			);
+		};
+
+		quantityDecrease?.addEventListener(
+			"click",
+			() => {
+				setQuantity(getQuantity() - 1);
+			},
+		);
+
+		quantityIncrease?.addEventListener(
+			"click",
+			() => {
+				setQuantity(getQuantity() + 1);
+			},
+		);
+
+		quantityInput?.addEventListener(
+			"change",
+			() => {
+				setQuantity(getQuantity());
+			},
+		);
+
+		addToCartButton?.addEventListener(
+			"click",
+			() => {
+				if (
+					addToCartButton.classList.contains(
+						"is-disabled",
+					)
+				) {
+					return;
+				}
+
+				const selection =
+					getCurrentSelection();
+
+				if (!selection) {
+					if (messageElement) {
+						messageElement.textContent =
+							"Elige una combinación disponible antes de agregar al carrito.";
+					}
+
+					return;
+				}
+
+				const hasSale =
+					saleActive &&
+					typeof selection.salePrice ===
+						"number";
+
+				const unitPrice = hasSale
+					? selection.salePrice
+					: selection.price;
+
+				const cartId = [
+					productInfo.slug,
+					selection.woodTitle,
+					selection.sizeTitle,
+				]
+					.filter(Boolean)
+					.join("__");
+
+				addItem({
+					id: cartId || productInfo.slug,
+					slug: productInfo.slug,
+					title: productInfo.title,
+					image: productInfo.image || "",
+					sku: selection.sku,
+					woodTitle:
+						selection.woodTitle || undefined,
+					sizeTitle:
+						selection.sizeTitle || undefined,
+					unitPrice,
+					quantity: getQuantity(),
+				});
+
+				setQuantity(1);
+
+				if (addToCartLabel) {
+					const previousLabel =
+						addToCartLabel.textContent;
+
+					addToCartLabel.textContent =
+						"Agregado ✓";
+
+					window.setTimeout(() => {
+						addToCartLabel.textContent =
+							previousLabel;
+					}, 1600);
+				}
+			},
+		);
+
+		const mainImage =
+			document.querySelector<HTMLImageElement>(
+				"#product-main-image",
+			);
+
+		const thumbnailButtons = Array.from(
+			document.querySelectorAll<HTMLButtonElement>(
+				"[data-product-thumbnail]",
+			),
+		);
+
+		thumbnailButtons.forEach((button) => {
+			button.addEventListener("click", () => {
+				if (!mainImage) return;
+
+				mainImage.src =
+					button.dataset.largeImage || "";
+
+				mainImage.alt =
+					button.dataset.imageAlt || "";
+
+				thumbnailButtons.forEach(
+					(currentButton) => {
+						currentButton.classList.toggle(
+							"is-active",
+							currentButton === button,
+						);
+					},
+				);
+			});
+		});
+
+		updateInterface();
+	};
+
+	initializeProductPage();
+
+	document.addEventListener(
+		"astro:page-load",
+		initializeProductPage,
+	);
+</script>
+
+<style>
+	.product-page {
+		min-height: 100vh;
+		padding:
+			clamp(165px, 14vw, 210px)
+			clamp(20px, 5vw, 82px)
+			clamp(80px, 9vw, 140px);
+		background: #fff6ed;
+		color: #141414;
+	}
+
+	.product-breadcrumbs {
+		width: min(100%, 1450px);
+		margin: 0 auto 24px;
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 9px;
+		color: rgba(20, 20, 20, 0.52);
+		font-size: 10px;
+		font-weight: 600;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+	}
+
+	.product-breadcrumbs a {
+		color: inherit;
+		text-decoration: none;
+	}
+
+	.product-breadcrumbs a:hover {
+		color: #141414;
+	}
+
+	.product-hero {
+		width: min(100%, 1450px);
+		margin-inline: auto;
+		display: grid;
+		grid-template-columns:
+			minmax(0, 1.12fr)
+			minmax(360px, 0.88fr);
+		align-items: start;
+		gap: clamp(45px, 6vw, 100px);
+	}
+
+	.product-gallery {
+		min-width: 0;
+	}
+
+	.product-main-image {
+		aspect-ratio: 4 / 5;
+		overflow: hidden;
+		border-radius: 24px;
+		background: #eee6dd;
+	}
+
+	.product-main-image img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	.product-image-placeholder {
+		width: 100%;
+		height: 100%;
+		display: grid;
+		place-items: center;
+		color: #5b312a;
+		font-size: 16px;
+		font-weight: 700;
+		letter-spacing: 0.18em;
+	}
+
+	.product-thumbnails {
+		margin-top: 13px;
+		display: grid;
+		grid-template-columns:
+			repeat(5, minmax(0, 1fr));
+		gap: 10px;
+	}
+
+	.product-thumbnail {
+		aspect-ratio: 4 / 5;
+		padding: 0;
+		overflow: hidden;
+		border: 1px solid transparent;
+		border-radius: 13px;
+		background: transparent;
+		cursor: pointer;
+		opacity: 0.6;
+		transition:
+			opacity 180ms ease,
+			border-color 180ms ease;
+	}
+
+	.product-thumbnail.is-active,
+	.product-thumbnail:hover {
+		border-color: #141414;
+		opacity: 1;
+	}
+
+	.product-thumbnail img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	.product-information {
+		position: sticky;
+		top: 155px;
+		padding-top: 10px;
+	}
+
+	.product-category,
+	.section-eyebrow {
+		margin: 0 0 13px;
+		color: #ff4d2a;
+		font-size: 9px;
+		font-weight: 700;
+		letter-spacing: 0.15em;
+		text-transform: uppercase;
+	}
+
+	.product-information h1 {
+		margin: 0;
+		font-size: clamp(44px, 5vw, 76px);
+		font-weight: 600;
+		line-height: 0.92;
+		letter-spacing: -0.055em;
+	}
+
+	.product-short-description {
+		margin: 24px 0 0;
+		color: rgba(20, 20, 20, 0.67);
+		font-size: 15px;
+		line-height: 1.65;
+	}
+
+	.product-price-wrapper {
+		margin-top: 27px;
+		display: flex;
+		align-items: baseline;
+		flex-wrap: wrap;
+		gap: 12px;
+	}
+
+	.product-price {
+		margin: 0;
+		font-size: 27px;
+		font-weight: 700;
+		letter-spacing: -0.03em;
+	}
+
+	.product-regular-price {
+		margin: 0;
+		color: rgba(20, 20, 20, 0.42);
+		font-size: 15px;
+		text-decoration: line-through;
+	}
+
+	.is-hidden {
+		display: none !important;
+	}
+
+	.product-status {
+		margin-top: 13px;
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		color: rgba(20, 20, 20, 0.62);
+		font-size: 12px;
+	}
+
+	.product-status__dot {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background: #308b5d;
+	}
+
+	.product-status__dot.is-out {
+		background: #a94737;
+	}
+
+	.product-meta {
+		margin-top: 21px;
+		padding-block: 15px;
+		display: flex;
+		justify-content: space-between;
+		gap: 20px;
+		border-top: 1px solid rgba(20, 20, 20, 0.1);
+		border-bottom: 1px solid rgba(20, 20, 20, 0.1);
+		font-size: 11px;
+		text-transform: uppercase;
+	}
+
+	.product-meta span {
+		color: rgba(20, 20, 20, 0.46);
+		letter-spacing: 0.08em;
+	}
+
+	.product-option-group {
+		margin: 28px 0 0;
+		padding: 0;
+		border: 0;
+	}
+
+	.product-option-group legend {
+		margin-bottom: 13px;
+		font-size: 13px;
+		font-weight: 700;
+	}
+
+	.product-option-list {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 9px;
+	}
+
+	.product-option {
+		min-height: 45px;
+		padding: 9px 16px;
+		display: flex;
+		align-items: flex-start;
+		justify-content: center;
+		flex-direction: column;
+		gap: 2px;
+		border: 1px solid rgba(20, 20, 20, 0.16);
+		border-radius: 12px;
+		background: transparent;
+		color: #141414;
+		font: inherit;
+		cursor: pointer;
+		transition:
+			background-color 180ms ease,
+			border-color 180ms ease,
+			color 180ms ease;
+	}
+
+	.product-option:hover {
+		border-color: rgba(20, 20, 20, 0.5);
+	}
+
+	.product-option.is-selected {
+		border-color: #141414;
+		background: #141414;
+		color: #fff6ed;
+	}
+
+	.product-option strong {
+		font-size: 12px;
+		font-weight: 600;
+	}
+
+	.product-option small {
+		color: inherit;
+		font-size: 9px;
+		opacity: 0.65;
+	}
+
+	.product-variation-message {
+		min-height: 18px;
+		margin: 12px 0 0;
+		color: #a94737;
+		font-size: 11px;
+		font-weight: 600;
+	}
+
+	.product-personalization {
+		margin-top: 20px;
+		padding: 16px;
+		display: grid;
+		grid-template-columns: 42px 1fr;
+		gap: 13px;
+		border: 1px solid rgba(91, 49, 42, 0.15);
+		border-radius: 15px;
+		background: rgba(91, 49, 42, 0.055);
+	}
+
+	.product-personalization__icon {
+		width: 42px;
+		height: 42px;
+		display: grid;
+		place-items: center;
+		border-radius: 12px;
+		background: #5b312a;
+		color: #fff6ed;
+	}
+
+	.product-personalization__icon svg {
+		width: 21px;
+		height: 21px;
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 1.6;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+
+	.product-personalization strong {
+		display: block;
+		font-size: 12px;
+	}
+
+	.product-personalization p {
+		margin: 5px 0 0;
+		color: rgba(20, 20, 20, 0.6);
+		font-size: 11px;
+		line-height: 1.5;
+	}
+
+	.product-quantity-row {
+		margin-top: 22px;
+		display: flex;
+		align-items: stretch;
+		gap: 10px;
+	}
+
+	.product-quantity {
+		flex-shrink: 0;
+		display: flex;
+		align-items: stretch;
+		border: 1px solid rgba(20, 20, 20, 0.16);
+		border-radius: 15px;
+		overflow: hidden;
+	}
+
+	.product-quantity__button {
+		width: 42px;
+		border: 0;
+		background: transparent;
+		color: #141414;
+		font-size: 16px;
+		cursor: pointer;
+		transition: background-color 180ms ease;
+	}
+
+	.product-quantity__button:hover {
+		background: rgba(20, 20, 20, 0.06);
+	}
+
+	.product-quantity__input {
+		width: 48px;
+		border: 0;
+		border-inline: 1px solid rgba(20, 20, 20, 0.16);
+		background: transparent;
+		color: #141414;
+		font-size: 14px;
+		font-weight: 600;
+		text-align: center;
+		-moz-appearance: textfield;
+	}
+
+	.product-quantity__input::-webkit-outer-spin-button,
+	.product-quantity__input::-webkit-inner-spin-button {
+		margin: 0;
+		-webkit-appearance: none;
+	}
+
+	.product-add-to-cart {
+		flex: 1;
+		min-height: 58px;
+		padding-inline: 20px;
+		border: 0;
+		border-radius: 15px;
+		background: #ff4d2a;
+		color: #fff6ed;
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		cursor: pointer;
+		transition:
+			background-color 180ms ease,
+			transform 180ms ease,
+			opacity 180ms ease;
+	}
+
+	.product-add-to-cart:hover {
+		background: #e5431f;
+		transform: translateY(-2px);
+	}
+
+	.product-add-to-cart.is-disabled {
+		pointer-events: none;
+		opacity: 0.42;
+	}
+
+	.product-contact-button {
+		margin-top: 18px;
+		min-height: 58px;
+		padding-inline: 20px;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		border-radius: 15px;
+		background: #141414;
+		color: #fff6ed;
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-decoration: none;
+		text-transform: uppercase;
+		transition:
+			background-color 180ms ease,
+			transform 180ms ease,
+			opacity 180ms ease;
+	}
+
+	.product-contact-button:hover {
+		background: #5b312a;
+		transform: translateY(-2px);
+	}
+
+	.product-contact-button.is-disabled {
+		pointer-events: none;
+		opacity: 0.42;
+	}
+
+	.product-delivery-note {
+		margin: 13px 0 0;
+		color: rgba(20, 20, 20, 0.48);
+		font-size: 10px;
+		line-height: 1.5;
+		text-align: center;
+	}
+
+	.product-details,
+	.engraving-section {
+		width: min(100%, 1450px);
+		margin:
+			clamp(90px, 11vw, 160px)
+			auto 0;
+		padding-top: clamp(42px, 5vw, 70px);
+		display: grid;
+		grid-template-columns: 0.8fr 1.2fr;
+		gap: clamp(50px, 8vw, 135px);
+		border-top: 1px solid rgba(20, 20, 20, 0.12);
+	}
+
+	.product-details h2,
+	.engraving-section h2 {
+		max-width: 600px;
+		margin: 0;
+		font-size: clamp(36px, 5vw, 66px);
+		font-weight: 600;
+		line-height: 0.98;
+		letter-spacing: -0.05em;
+	}
+
+	.product-description {
+		color: rgba(20, 20, 20, 0.72);
+		font-size: 15px;
+		line-height: 1.75;
+	}
+
+	.product-description :global(p) {
+		margin: 0 0 18px;
+	}
+
+	.product-description :global(h2),
+	.product-description :global(h3) {
+		margin: 32px 0 12px;
+		color: #141414;
+	}
+
+	.product-materials,
+	.product-care {
+		margin-top: 32px;
+		padding-top: 25px;
+		border-top: 1px solid rgba(20, 20, 20, 0.1);
+	}
+
+	.product-materials h3,
+	.product-care h3 {
+		margin: 0 0 14px;
+		color: #141414;
+		font-size: 13px;
+		text-transform: uppercase;
+	}
+
+	.product-materials ul {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.product-materials li {
+		padding: 8px 11px;
+		border: 1px solid rgba(20, 20, 20, 0.12);
+		border-radius: 999px;
+		font-size: 11px;
+	}
+
+	.product-care p {
+		margin: 0;
+	}
+
+	.engraving-section {
+		padding-bottom: clamp(25px, 4vw, 60px);
+	}
+
+	.engraving-information {
+		color: rgba(20, 20, 20, 0.68);
+		font-size: 15px;
+		line-height: 1.7;
+	}
+
+	.engraving-information > p {
+		margin: 0 0 18px;
+	}
+
+	.engraving-information ul {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 9px;
+		margin: 0 0 20px;
+		padding: 0;
+		list-style: none;
+	}
+
+	.engraving-information li {
+		padding: 9px 12px;
+		border-radius: 999px;
+		background: #141414;
+		color: #fff6ed;
+		font-size: 10px;
+		font-weight: 600;
+	}
+
+	@media (max-width: 980px) {
+		.product-hero {
+			grid-template-columns: 1fr;
+		}
+
+		.product-information {
+			position: static;
+		}
+
+		.product-details,
+		.engraving-section {
+			grid-template-columns: 1fr;
+			gap: 35px;
+		}
+	}
+
+	@media (max-width: 600px) {
+		.product-page {
+			padding:
+				150px 14px
+				75px;
+		}
+
+		.product-main-image {
+			border-radius: 18px;
+		}
+
+		.product-information h1 {
+			font-size: clamp(42px, 13vw, 60px);
+		}
+
+		.product-thumbnails {
+			grid-template-columns:
+				repeat(4, minmax(0, 1fr));
+		}
+
+		.product-option-list {
+			display: grid;
+			grid-template-columns:
+				repeat(2, minmax(0, 1fr));
+		}
+
+		.product-option {
+			width: 100%;
+		}
+
+		.product-details,
+		.engraving-section {
+			margin-top: 85px;
+		}
+	}
+</style>

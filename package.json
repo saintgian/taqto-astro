@@ -12,6 +12,9 @@
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^7.1.1"
+    "@sanity/client": "^7.24.0",
+    "@sanity/image-url": "^2.1.1",
+    "astro": "^7.1.1",
+    "astro-portabletext": "^0.13.0"
   }
 }

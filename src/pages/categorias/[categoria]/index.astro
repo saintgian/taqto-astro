@@ -1,146 +1,508 @@
 ---
 import BaseLayout from "../../../layouts/BaseLayout.astro";
 import Header from "../../../components/Header.astro";
-import Breadcrumbs from "../../../components/Breadcrumbs.astro";
-import CategoryCard from "../../../components/CategoryCard.astro";
-import { productCategories } from "../../../data/categories";
+import ProductCard from "../../../components/ProductCard.astro";
 
-export function getStaticPaths() {
-	return productCategories.map((category) => ({
-		params: {
-			categoria: category.slug,
-		},
-		props: {
-			category,
-		},
-	}));
+import {
+	sanityClient,
+} from "../../../lib/sanity";
+
+import {
+	categoryPageQuery,
+	categoryPathsQuery,
+} from "../../../lib/categoryQueries";
+
+interface Subcategory {
+	_id: string;
+	title: string;
+	slug: string;
+	description?: string;
+	order?: number;
+	productCount?: number;
 }
 
-const { category } = Astro.props;
+interface Product {
+	_id: string;
+	title: string;
+	slug: string;
+	[key: string]: unknown;
+}
+
+interface Category {
+	_id: string;
+	title: string;
+	slug: string;
+	eyebrow?: string;
+	description?: string;
+	order?: number;
+	subcategories?: Subcategory[];
+	products?: Product[];
+}
+
+export async function getStaticPaths() {
+	const categories =
+		await sanityClient.fetch<Category[]>(
+			categoryPathsQuery,
+		);
+
+	return categories
+		.filter((category) => category.slug)
+		.map((category) => ({
+			params: {
+				categoria: category.slug,
+			},
+
+			props: {
+				categorySlug: category.slug,
+			},
+		}));
+}
+
+const {
+	categorySlug,
+} = Astro.props as {
+	categorySlug: string;
+};
+
+const category =
+	await sanityClient.fetch<Category>(
+		categoryPageQuery,
+		{
+			categorySlug,
+		},
+	);
+
+if (!category) {
+	return Astro.redirect("/categorias/");
+}
+
+const base = import.meta.env.BASE_URL;
+
+const homeHref = base;
+const storeHref = `${base}categorias/`;
+
+const subcategories =
+	category.subcategories || [];
+
+const products =
+	category.products || [];
+
+const pageTitle =
+	`${category.title} | TAQTO`;
+
+const pageDescription =
+	category.description ||
+	`Explora la colección ${category.title} de TAQTO.`;
 ---
 
 <BaseLayout
-	title={`${category.name} | TAQTO`}
-	description={category.description}
+	title={pageTitle}
+	description={pageDescription}
 >
 	<Header />
 
-	<main>
-		<section class="subcategory-hero">
-			<div class="container">
-				<Breadcrumbs
-					items={[
-						{ label: "Inicio", href: "/" },
-						{ label: "Categorías", href: "/categorias/" },
-						{ label: category.name },
-					]}
-				/>
+	<main class="category-page">
+		<nav
+			class="category-breadcrumbs"
+			aria-label="Migas de pan"
+		>
+			<a href={homeHref}>Inicio</a>
 
-				<div class="subcategory-hero__content">
-					<p>{category.eyebrow}</p>
+			<span aria-hidden="true">/</span>
 
-					<h1>{category.name}</h1>
+			<a href={storeHref}>Tienda</a>
 
-					<div class="subcategory-hero__bottom">
-						<p class="subcategory-hero__description">
-							{category.description}
-						</p>
+			<span aria-hidden="true">/</span>
 
-						<span>
-							{category.subcategories.length}
-							{" "}
-							colecciones
-						</span>
+			<span>{category.title}</span>
+		</nav>
+
+		<header class="category-hero">
+			<div>
+				<p class="category-eyebrow">
+					{
+						category.eyebrow ||
+							"Colección TAQTO"
+					}
+				</p>
+
+				<h1>{category.title}</h1>
+
+				<p class="category-description">
+					{category.description}
+				</p>
+			</div>
+
+			<div class="category-count">
+				<strong>{products.length}</strong>
+
+				<span>
+					{
+						products.length === 1
+							? "pieza"
+							: "piezas"
+					}
+				</span>
+			</div>
+		</header>
+
+		{
+			subcategories.length > 0 && (
+				<section class="subcategory-navigation">
+					<p class="section-label">
+						Explorar colección
+					</p>
+
+					<div class="subcategory-navigation__grid">
+						{
+							subcategories.map(
+								(subcategory) => (
+									<a
+										class="subcategory-link"
+										href={`${base}categorias/${category.slug}/${subcategory.slug}/`}
+									>
+										<div>
+											<span>
+												{subcategory.title}
+											</span>
+
+											<small>
+												{
+													subcategory.productCount ||
+														0
+												}{" "}
+												{
+													subcategory.productCount ===
+													1
+														? "producto"
+														: "productos"
+												}
+											</small>
+										</div>
+
+										<strong aria-hidden="true">
+											→
+										</strong>
+									</a>
+								),
+							)
+						}
 					</div>
-				</div>
-			</div>
-		</section>
+				</section>
+			)
+		}
 
-		<section class="subcategory-list">
-			<div class="container subcategory-list__grid">
-				{
-					category.subcategories.map((subcategory, index) => (
-						<CategoryCard
-							title={subcategory.name}
-							description={subcategory.description}
-							href={`/categorias/${category.slug}/${subcategory.slug}/`}
-							index={index + 1}
-						/>
-					))
-				}
+		<section class="category-products">
+			<div class="category-products__header">
+				<div>
+					<p class="section-label">
+						Catálogo
+					</p>
+
+					<h2>
+						Piezas de {category.title}
+					</h2>
+				</div>
+
+				<p>
+					Grabado láser personalizado siempre
+					gratuito.
+				</p>
 			</div>
+
+			{
+				products.length > 0 ? (
+					<div class="product-grid">
+						{
+							products.map((product) => (
+								<ProductCard
+									product={product}
+								/>
+							))
+						}
+					</div>
+				) : (
+					<div class="category-empty">
+						<h3>
+							Colección en preparación
+						</h3>
+
+						<p>
+							Aún no hay productos publicados
+							dentro de esta categoría.
+						</p>
+					</div>
+				)
+			}
 		</section>
 	</main>
 </BaseLayout>
 
 <style>
-	.subcategory-hero {
-		padding: clamp(38px, 6vw, 78px) 0 clamp(68px, 8vw, 120px);
-		background: var(--color-brown);
-		color: var(--color-beige);
+	.category-page {
+		min-height: 100vh;
+		padding:
+			clamp(175px, 15vw, 225px)
+			clamp(20px, 5vw, 82px)
+			clamp(80px, 9vw, 140px);
+		background: #fff6ed;
+		color: #141414;
 	}
 
-	.subcategory-hero__content {
-		margin-top: clamp(70px, 10vw, 145px);
+	.category-breadcrumbs,
+	.category-hero,
+	.subcategory-navigation,
+	.category-products {
+		width: min(100%, 1450px);
+		margin-inline: auto;
 	}
 
-	.subcategory-hero__content > p {
-		margin: 0 0 24px;
-		font-size: 11px;
-		font-weight: 700;
-		letter-spacing: 0.18em;
-		text-transform: uppercase;
-		opacity: 0.7;
-	}
-
-	.subcategory-hero h1 {
-		margin: 0;
-		font-size: clamp(62px, 11vw, 160px);
-		line-height: 0.85;
-		letter-spacing: -0.075em;
-	}
-
-	.subcategory-hero__bottom {
-		margin-top: clamp(50px, 7vw, 100px);
+	.category-breadcrumbs {
+		margin-bottom: 28px;
 		display: flex;
-		align-items: flex-end;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 9px;
+		color: rgba(20, 20, 20, 0.5);
+		font-size: 9px;
+		font-weight: 600;
+		letter-spacing: 0.07em;
+		text-transform: uppercase;
+	}
+
+	.category-breadcrumbs a {
+		color: inherit;
+		text-decoration: none;
+	}
+
+	.category-hero {
+		display: grid;
+		grid-template-columns:
+			minmax(0, 1fr)
+			auto;
+		align-items: end;
+		gap: 50px;
+	}
+
+	.category-hero > div:first-child {
+		max-width: 940px;
+	}
+
+	.category-eyebrow,
+	.section-label {
+		margin: 0 0 14px;
+		color: #ff4d2a;
+		font-size: 10px;
+		font-weight: 700;
+		letter-spacing: 0.15em;
+		text-transform: uppercase;
+	}
+
+	.category-hero h1 {
+		margin: 0;
+		font-size: clamp(58px, 9vw, 130px);
+		font-weight: 600;
+		line-height: 0.86;
+		letter-spacing: -0.07em;
+	}
+
+	.category-description {
+		max-width: 680px;
+		margin: 26px 0 0;
+		color: rgba(20, 20, 20, 0.63);
+		font-size: 15px;
+		line-height: 1.65;
+	}
+
+	.category-count {
+		min-width: 145px;
+		padding: 22px;
+		border: 1px solid rgba(20, 20, 20, 0.1);
+		border-radius: 18px;
+		text-align: center;
+	}
+
+	.category-count strong {
+		display: block;
+		font-size: 36px;
+		font-weight: 600;
+		letter-spacing: -0.04em;
+	}
+
+	.category-count span {
+		display: block;
+		margin-top: 4px;
+		color: rgba(20, 20, 20, 0.5);
+		font-size: 9px;
+		font-weight: 600;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+	}
+
+	.subcategory-navigation {
+		margin-top: clamp(55px, 7vw, 90px);
+		padding-top: clamp(36px, 4vw, 50px);
+		border-top: 1px solid rgba(20, 20, 20, 0.1);
+	}
+
+	.subcategory-navigation__grid {
+		display: grid;
+		grid-template-columns:
+			repeat(2, minmax(0, 1fr));
+		gap: 10px;
+	}
+
+	.subcategory-link {
+		min-height: 88px;
+		padding: 18px 21px;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 20px;
+		border: 1px solid rgba(20, 20, 20, 0.1);
+		border-radius: 16px;
+		color: #141414;
+		text-decoration: none;
+		transition:
+			background-color 180ms ease,
+			color 180ms ease,
+			transform 180ms ease;
+	}
+
+	.subcategory-link:hover {
+		background: #141414;
+		color: #fff6ed;
+		transform: translateY(-2px);
+	}
+
+	.subcategory-link div {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+	}
+
+	.subcategory-link span {
+		font-size: 17px;
+		font-weight: 600;
+	}
+
+	.subcategory-link small {
+		font-size: 9px;
+		letter-spacing: 0.07em;
+		text-transform: uppercase;
+		opacity: 0.55;
+	}
+
+	.subcategory-link strong {
+		font-size: 18px;
+		transition: transform 180ms ease;
+	}
+
+	.subcategory-link:hover strong {
+		transform: translateX(4px);
+	}
+
+	.category-products {
+		margin-top: clamp(80px, 10vw, 135px);
+	}
+
+	.category-products__header {
+		margin-bottom: 45px;
+		display: flex;
+		align-items: end;
 		justify-content: space-between;
 		gap: 40px;
 	}
 
-	.subcategory-hero__description {
-		max-width: 650px;
+	.category-products__header h2 {
 		margin: 0;
-		font-size: clamp(17px, 1.6vw, 22px);
-		line-height: 1.6;
-		opacity: 0.78;
+		font-size: clamp(36px, 5vw, 66px);
+		font-weight: 600;
+		line-height: 0.96;
+		letter-spacing: -0.05em;
 	}
 
-	.subcategory-hero__bottom span {
+	.category-products__header > p {
+		max-width: 260px;
+		margin: 0;
+		color: rgba(20, 20, 20, 0.52);
 		font-size: 11px;
-		font-weight: 700;
-		letter-spacing: 0.12em;
-		text-transform: uppercase;
-		white-space: nowrap;
+		line-height: 1.55;
+		text-align: right;
 	}
 
-	.subcategory-list {
-		padding: clamp(70px, 9vw, 140px) 0;
-	}
-
-	.subcategory-list__grid {
+	.product-grid {
 		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
+		grid-template-columns:
+			repeat(
+				auto-fill,
+				minmax(min(100%, 250px), 300px)
+			);
+		justify-content: start;
+		gap: 36px 24px;
+	}
+
+	.category-empty {
+		padding: 70px 25px;
+		border: 1px solid rgba(20, 20, 20, 0.1);
+		border-radius: 22px;
+		text-align: center;
+	}
+
+	.category-empty h3 {
+		margin: 0;
+		font-size: 34px;
+	}
+
+	.category-empty p {
+		margin: 12px 0 0;
+		color: rgba(20, 20, 20, 0.58);
 	}
 
 	@media (max-width: 760px) {
-		.subcategory-hero__bottom {
-			align-items: flex-start;
-			flex-direction: column;
+		.category-page {
+			padding:
+				150px 14px
+				75px;
 		}
 
-		.subcategory-list__grid {
+		.category-hero {
 			grid-template-columns: 1fr;
+			align-items: start;
+			gap: 28px;
+		}
+
+		.category-count {
+			width: 100%;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			text-align: left;
+		}
+
+		.category-count span {
+			margin: 0;
+		}
+
+		.subcategory-navigation__grid {
+			grid-template-columns: 1fr;
+		}
+
+		.category-products__header {
+			align-items: flex-start;
+			flex-direction: column;
+			gap: 16px;
+		}
+
+		.category-products__header > p {
+			text-align: left;
+		}
+	}
+
+	@media (max-width: 560px) {
+		.product-grid {
+			grid-template-columns: 1fr;
+			gap: 50px;
 		}
 	}
 </style>

@@ -1,7 +1,61 @@
 ---
-import { productCategories } from "../data/categories";
+import { sanityClient } from "../lib/sanity";
+import { navigationCategoriesQuery } from "../lib/categoryQueries";
+import { WHATSAPP_NUMBER } from "../lib/constants";
 
-const currentPath = Astro.url.pathname;
+interface NavSubcategory {
+	_id: string;
+	title: string;
+	slug: string;
+}
+
+interface NavCategory {
+	_id: string;
+	title: string;
+	eyebrow?: string;
+	slug: string;
+	subcategories?: NavSubcategory[];
+}
+
+const productCategories =
+	await sanityClient.fetch<NavCategory[]>(
+		navigationCategoriesQuery,
+	);
+
+const base = import.meta.env.BASE_URL;
+
+const withBase = (path = "") =>
+	`${base}${path.replace(/^\/+/, "")}`;
+
+const basePath =
+	base === "/"
+		? ""
+		: base.replace(/\/$/, "");
+
+const currentPath =
+	Astro.url.pathname.startsWith(basePath)
+		? Astro.url.pathname.slice(basePath.length) || "/"
+		: Astro.url.pathname;
+
+const homeHref = withBase();
+const storeHref = withBase("categorias/");
+const contactHref = withBase("contactanos/");
+const searchHref = withBase("buscar/");
+const accountHref = withBase("mi-cuenta/");
+const cartHref = withBase("carrito/");
+
+const headerLogo =
+	`${base}brand/logotipo/logotipo-colorprincipal02.svg`;
+
+const mobileLogo =
+	`${base}brand/isotipo/isotipo-colorprincipal02.svg`;
+
+const whatsappMessage = encodeURIComponent(
+	"Hola TAQTO, quisiera información sobre sus productos.",
+);
+
+const whatsappHref =
+	`https://wa.me/${WHATSAPP_NUMBER}?text=${whatsappMessage}`;
 
 const categoryIcons: Record<string, string> = {
 	parrilla: `
@@ -51,6 +105,16 @@ const categoryIcons: Record<string, string> = {
 		</svg>
 	`,
 };
+
+const defaultCategoryIcon = `
+	<svg viewBox="0 0 24 24" aria-hidden="true">
+		<rect x="4" y="4" width="16" height="16" rx="3"></rect>
+		<path d="M4 10h16"></path>
+	</svg>
+`;
+
+const getCategoryIcon = (slug: string) =>
+	categoryIcons[slug] || defaultCategoryIcon;
 ---
 
 <header class="site-header" data-site-header>
@@ -58,30 +122,65 @@ const categoryIcons: Record<string, string> = {
 		<div class="announcement">
 			<p>Grabado láser personalizado siempre gratuito</p>
 
-			<a href="/contactanos/">
+			<a href={contactHref}>
 				Atención personalizada
 				<span aria-hidden="true">→</span>
 			</a>
 		</div>
 
 		<div class="header-main">
-			<button
-				class="menu-toggle"
-				type="button"
-				aria-label="Abrir menú"
-				aria-expanded="false"
-				aria-controls="primary-navigation"
-				data-menu-toggle
-			>
-				<span></span>
-				<span></span>
-			</button>
+			<div class="header-mobile-left">
+				<button
+					class="menu-toggle"
+					type="button"
+					aria-label="Abrir menú"
+					aria-expanded="false"
+					aria-controls="primary-navigation"
+					data-menu-toggle
+				>
+					<span></span>
+					<span></span>
+					<span></span>
+				</button>
 
-			<a class="brand" href="/" aria-label="TAQTO, volver al inicio">
-				<span class="brand__name">TAQTO</span>
-				<span class="brand__tagline">
-					Diseño con alma de madera
-				</span>
+				<a
+					class="icon-button mobile-search-button"
+					href={searchHref}
+					aria-label="Buscar productos"
+				>
+					<svg
+						viewBox="0 0 24 24"
+						aria-hidden="true"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.8"
+					>
+						<circle cx="11" cy="11" r="6.5"></circle>
+						<path d="m16 16 4 4"></path>
+					</svg>
+				</a>
+			</div>
+
+			<a
+				class="brand"
+				href={homeHref}
+				aria-label="TAQTO, volver al inicio"
+			>
+				<img
+					class="brand__logo brand__logo--desktop"
+					src={headerLogo}
+					alt="TAQTO — Diseño con alma de madera"
+					width="917"
+					height="235"
+				/>
+
+				<img
+					class="brand__logo brand__logo--mobile"
+					src={mobileLogo}
+					alt="TAQTO"
+					width="511"
+					height="425"
+				/>
 			</a>
 
 			<nav
@@ -101,7 +200,7 @@ const categoryIcons: Record<string, string> = {
 										currentPath === "/tienda/",
 								},
 							]}
-							href="/categorias/"
+							href={storeHref}
 						>
 							Tienda
 						</a>
@@ -109,39 +208,44 @@ const categoryIcons: Record<string, string> = {
 
 					{
 						productCategories.map((category) => {
-							const categoryHref = `/categorias/${category.slug}/`;
+							const categoryPath =
+								`/categorias/${category.slug}/`;
+
+							const categoryHref =
+								withBase(`categorias/${category.slug}/`);
+
 							const isCurrent =
-								currentPath.startsWith(categoryHref);
+								currentPath.startsWith(categoryPath);
 
 							return (
 								<li
 									class:list={[
 										"navigation__item",
 										"navigation__item--dropdown",
-										{ "is-open-current": isCurrent },
+										{ "is-current-category": isCurrent },
 									]}
 									data-dropdown
 								>
 									<div class="navigation__parent">
-	<a
-		class:list={[
-			"navigation__link",
-			{ "is-current": isCurrent },
-		]}
-		href={categoryHref}
-	>
-		<span
-			class="navigation__category-icon"
-			set:html={categoryIcons[category.slug]}
-		></span>
+										<a
+											class:list={[
+												"navigation__link",
+												{ "is-current": isCurrent },
+											]}
+											href={categoryHref}
+										>
+											<span
+												class="navigation__category-icon"
+												set:html={getCategoryIcon(category.slug)}
+											></span>
 
-		<span>{category.name}</span>
-	</a>
+											<span>{category.title}</span>
+										</a>
 
 										<button
 											class="navigation__dropdown-toggle"
 											type="button"
-											aria-label={`Mostrar subcategorías de ${category.name}`}
+											aria-label={`Mostrar subcategorías de ${category.title}`}
 											aria-expanded="false"
 											data-dropdown-toggle
 										>
@@ -157,29 +261,34 @@ const categoryIcons: Record<string, string> = {
 										</button>
 									</div>
 
-									<div class="dropdown" data-dropdown-menu>
+									<div
+										class="dropdown"
+										data-dropdown-menu
+									>
 										<div class="dropdown__header">
 											<span
 												class="dropdown__category-icon"
-												set:html={categoryIcons[category.slug]}
+												set:html={getCategoryIcon(category.slug)}
 											></span>
 
 											<div>
 												<p>{category.eyebrow}</p>
-												<h2>{category.name}</h2>
+												<h2>{category.title}</h2>
 											</div>
 										</div>
 
 										<ul class="dropdown__links">
 											{
-												category.subcategories.map(
+												(category.subcategories || []).map(
 													(subcategory) => (
 														<li>
 															<a
-																href={`${categoryHref}${subcategory.slug}/`}
+																href={withBase(
+																	`categorias/${category.slug}/${subcategory.slug}/`,
+																)}
 															>
 																<span>
-																	{subcategory.name}
+																	{subcategory.title}
 																</span>
 
 																<svg
@@ -203,7 +312,7 @@ const categoryIcons: Record<string, string> = {
 											class="dropdown__view-all"
 											href={categoryHref}
 										>
-											Ver toda la categoría
+											<span>Ver toda la categoría</span>
 											<span aria-hidden="true">→</span>
 										</a>
 									</div>
@@ -216,8 +325,8 @@ const categoryIcons: Record<string, string> = {
 
 			<div class="header-actions">
 				<a
-					class="icon-button search-button"
-					href="/buscar/"
+					class="icon-button desktop-search-button"
+					href={searchHref}
 					aria-label="Buscar productos"
 				>
 					<svg
@@ -233,8 +342,27 @@ const categoryIcons: Record<string, string> = {
 				</a>
 
 				<a
+					class="icon-button whatsapp-button"
+					href={whatsappHref}
+					target="_blank"
+					rel="noopener noreferrer"
+					aria-label="Contactar a TAQTO por WhatsApp"
+				>
+					<svg
+						viewBox="0 0 24 24"
+						aria-hidden="true"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.75"
+					>
+						<path d="M20.5 11.8a8.5 8.5 0 0 1-12.6 7.5L3.5 21l1.6-4.2a8.5 8.5 0 1 1 15.4-5Z"></path>
+						<path d="M8.6 7.8c.2-.5.5-.6.8-.6h.5c.2 0 .4.1.5.4l.8 1.8c.1.3.1.5-.1.7l-.6.8c-.2.2-.2.4 0 .7.7 1.3 1.8 2.3 3.2 2.9.3.1.5.1.7-.1l.9-1.1c.2-.2.5-.3.8-.1l1.7.8c.3.1.4.4.4.7 0 .6-.3 1.5-.9 2-.7.6-1.6.8-2.6.6-1.3-.2-3-.9-4.8-2.5-1.5-1.3-2.6-2.9-3-4.1-.5-1.3-.1-2.4.3-3Z"></path>
+					</svg>
+				</a>
+
+				<a
 					class="icon-button account-button"
-					href="/mi-cuenta/"
+					href={accountHref}
 					aria-label="Mi cuenta"
 				>
 					<svg
@@ -251,8 +379,9 @@ const categoryIcons: Record<string, string> = {
 
 				<a
 					class="icon-button cart-button"
-					href="/carrito/"
+					href={cartHref}
 					aria-label="Carrito, 0 productos"
+					data-cart-link
 				>
 					<svg
 						viewBox="0 0 24 24"
@@ -265,7 +394,7 @@ const categoryIcons: Record<string, string> = {
 						<path d="M9 7V5a3 3 0 0 1 6 0v2"></path>
 					</svg>
 
-					<span class="cart-count">0</span>
+					<span class="cart-count" data-cart-count>0</span>
 				</a>
 			</div>
 		</div>
@@ -273,6 +402,43 @@ const categoryIcons: Record<string, string> = {
 </header>
 
 <script>
+	import { getItemCount, onCartUpdated } from "../lib/cart";
+
+	const updateCartBadges = () => {
+		const count = getItemCount();
+
+		const badges =
+			document.querySelectorAll<HTMLElement>(
+				"[data-cart-count]",
+			);
+
+		badges.forEach((badge) => {
+			badge.textContent = String(count);
+		});
+
+		const cartLinks =
+			document.querySelectorAll<HTMLAnchorElement>(
+				"[data-cart-link]",
+			);
+
+		cartLinks.forEach((link) => {
+			link.setAttribute(
+				"aria-label",
+				`Carrito, ${count} ${
+					count === 1 ? "producto" : "productos"
+				}`,
+			);
+		});
+	};
+
+	updateCartBadges();
+	onCartUpdated(updateCartBadges);
+
+	document.addEventListener(
+		"astro:page-load",
+		updateCartBadges,
+	);
+
 	const initializeHeaders = () => {
 		const headers =
 			document.querySelectorAll<HTMLElement>("[data-site-header]");
@@ -295,15 +461,16 @@ const categoryIcons: Record<string, string> = {
 			const closeDropdown = (dropdown: HTMLElement) => {
 				dropdown.classList.remove("is-open");
 
-				const toggle =
-					dropdown.querySelector<HTMLButtonElement>(
+				dropdown
+					.querySelector<HTMLButtonElement>(
 						"[data-dropdown-toggle]",
-					);
-
-				toggle?.setAttribute("aria-expanded", "false");
+					)
+					?.setAttribute("aria-expanded", "false");
 			};
 
-			const closeAllDropdowns = (exception?: HTMLElement) => {
+			const closeAllDropdowns = (
+				exception?: HTMLElement,
+			) => {
 				dropdowns.forEach((dropdown) => {
 					if (dropdown !== exception) {
 						closeDropdown(dropdown);
@@ -311,34 +478,40 @@ const categoryIcons: Record<string, string> = {
 				});
 			};
 
-			const toggleDropdown = (dropdown: HTMLElement) => {
-				const toggle =
-					dropdown.querySelector<HTMLButtonElement>(
-						"[data-dropdown-toggle]",
-					);
+			const closeMobileMenu = () => {
+				navigation?.classList.remove("is-open");
 
-				const willOpen =
-					!dropdown.classList.contains("is-open");
-
-				closeAllDropdowns(dropdown);
-
-				dropdown.classList.toggle("is-open", willOpen);
-				toggle?.setAttribute(
+				menuButton?.setAttribute(
 					"aria-expanded",
-					String(willOpen),
+					"false",
 				);
+
+				document.body.classList.remove(
+					"menu-is-open",
+				);
+
+				closeAllDropdowns();
 			};
 
 			menuButton?.addEventListener("click", () => {
 				const willOpen =
-					menuButton.getAttribute("aria-expanded") !== "true";
+					menuButton.getAttribute("aria-expanded") !==
+					"true";
 
 				menuButton.setAttribute(
 					"aria-expanded",
 					String(willOpen),
 				);
 
-				navigation?.classList.toggle("is-open", willOpen);
+				navigation?.classList.toggle(
+					"is-open",
+					willOpen,
+				);
+
+				document.body.classList.toggle(
+					"menu-is-open",
+					willOpen,
+				);
 
 				if (!willOpen) {
 					closeAllDropdowns();
@@ -351,26 +524,66 @@ const categoryIcons: Record<string, string> = {
 						"[data-dropdown-toggle]",
 					);
 
+				let leaveTimer:
+					| ReturnType<typeof setTimeout>
+					| undefined;
+
+				const openDropdown = () => {
+					if (leaveTimer) {
+						clearTimeout(leaveTimer);
+					}
+
+					closeAllDropdowns(dropdown);
+
+					dropdown.classList.add("is-open");
+
+					toggle?.setAttribute(
+						"aria-expanded",
+						"true",
+					);
+				};
+
 				toggle?.addEventListener("click", (event) => {
 					event.preventDefault();
 					event.stopPropagation();
 
-					toggleDropdown(dropdown);
+					const willOpen =
+						!dropdown.classList.contains(
+							"is-open",
+						);
+
+					closeAllDropdowns(dropdown);
+
+					dropdown.classList.toggle(
+						"is-open",
+						willOpen,
+					);
+
+					toggle.setAttribute(
+						"aria-expanded",
+						String(willOpen),
+					);
 				});
 
-				dropdown.addEventListener("mouseenter", () => {
-					if (window.innerWidth > 1180) {
-						closeAllDropdowns(dropdown);
-						dropdown.classList.add("is-open");
-						toggle?.setAttribute("aria-expanded", "true");
-					}
-				});
+				dropdown.addEventListener(
+					"mouseenter",
+					() => {
+						if (window.innerWidth > 1180) {
+							openDropdown();
+						}
+					},
+				);
 
-				dropdown.addEventListener("mouseleave", () => {
-					if (window.innerWidth > 1180) {
-						closeDropdown(dropdown);
-					}
-				});
+				dropdown.addEventListener(
+					"mouseleave",
+					() => {
+						if (window.innerWidth > 1180) {
+							leaveTimer = setTimeout(() => {
+								closeDropdown(dropdown);
+							}, 180);
+						}
+					},
+				);
 			});
 
 			document.addEventListener("click", (event) => {
@@ -378,23 +591,28 @@ const categoryIcons: Record<string, string> = {
 					event.target instanceof Node &&
 					!header.contains(event.target)
 				) {
-					closeAllDropdowns();
+					closeMobileMenu();
 				}
 			});
 
 			document.addEventListener("keydown", (event) => {
-				if (event.key !== "Escape") return;
-
-				closeAllDropdowns();
-
-				navigation?.classList.remove("is-open");
-				menuButton?.setAttribute("aria-expanded", "false");
+				if (event.key === "Escape") {
+					closeMobileMenu();
+				}
 			});
 
 			window.addEventListener("resize", () => {
 				if (window.innerWidth > 1180) {
 					navigation?.classList.remove("is-open");
-					menuButton?.setAttribute("aria-expanded", "false");
+
+					menuButton?.setAttribute(
+						"aria-expanded",
+						"false",
+					);
+
+					document.body.classList.remove(
+						"menu-is-open",
+					);
 				}
 
 				closeAllDropdowns();
@@ -411,6 +629,10 @@ const categoryIcons: Record<string, string> = {
 </script>
 
 <style>
+	:global(body.menu-is-open) {
+		overflow: hidden;
+	}
+
 	.site-header {
 		position: sticky;
 		top: 14px;
@@ -423,21 +645,21 @@ const categoryIcons: Record<string, string> = {
 
 	.header-shell {
 		position: relative;
-		border: 1px solid rgba(255, 255, 255, 0.11);
+		border: 1px solid rgba(255, 255, 255, 0.13);
 		border-radius: 26px;
 		background:
 			linear-gradient(
 				135deg,
-				rgba(255, 255, 255, 0.055),
-				rgba(255, 255, 255, 0.012) 45%,
-				rgba(91, 49, 42, 0.035)
+				rgba(255, 255, 255, 0.04),
+				rgba(255, 255, 255, 0.008) 46%,
+				rgba(91, 49, 42, 0.025)
 			),
-			rgba(5, 5, 5, 0.93);
+			rgba(3, 3, 3, 0.985);
 		box-shadow:
 			inset 0 1px 0 rgba(255, 255, 255, 0.1),
-			0 24px 65px rgba(0, 0, 0, 0.38);
-		backdrop-filter: blur(24px) saturate(125%);
-		-webkit-backdrop-filter: blur(24px) saturate(125%);
+			0 24px 68px rgba(0, 0, 0, 0.48);
+		backdrop-filter: blur(28px) saturate(115%);
+		-webkit-backdrop-filter: blur(28px) saturate(115%);
 	}
 
 	.header-shell::before {
@@ -450,20 +672,21 @@ const categoryIcons: Record<string, string> = {
 		background: linear-gradient(
 			90deg,
 			transparent,
-			rgba(255, 255, 255, 0.38),
+			rgba(255, 255, 255, 0.35),
 			transparent
 		);
 		pointer-events: none;
 	}
 
 	.announcement {
-		min-height: 31px;
+		min-height: 32px;
 		padding: 0 28px;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		gap: 24px;
-		border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+		color: rgba(255, 246, 237, 0.88);
 		font-size: 9px;
 		font-weight: 600;
 		letter-spacing: 0.13em;
@@ -472,13 +695,19 @@ const categoryIcons: Record<string, string> = {
 
 	.announcement p {
 		margin: 0;
-		opacity: 0.62;
 	}
 
 	.announcement a {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
 		color: inherit;
 		text-decoration: none;
-		opacity: 0.7;
+		transition: color 180ms ease;
+	}
+
+	.announcement a:hover {
+		color: #ffffff;
 	}
 
 	.header-main {
@@ -487,30 +716,35 @@ const categoryIcons: Record<string, string> = {
 		display: grid;
 		grid-template-columns: auto 1fr auto;
 		align-items: center;
-		gap: clamp(18px, 2.7vw, 44px);
+		gap: clamp(18px, 2.5vw, 42px);
+	}
+
+	.header-mobile-left {
+		display: none;
 	}
 
 	.brand {
 		display: inline-flex;
-		flex-direction: column;
+		align-items: center;
 		color: inherit;
 		text-decoration: none;
 	}
 
-	.brand__name {
-		font-size: 30px;
-		font-weight: 700;
-		line-height: 0.95;
-		letter-spacing: -0.055em;
+	.brand__logo {
+		display: block;
+		height: auto;
+		object-fit: contain;
 	}
 
-	.brand__tagline {
-		margin-top: 6px;
-		color: rgba(255, 246, 237, 0.43);
-		font-size: 7px;
-		font-weight: 600;
-		letter-spacing: 0.14em;
-		text-transform: uppercase;
+	.brand__logo--desktop {
+		width: clamp(128px, 9vw, 158px);
+		max-height: 48px;
+	}
+
+	.brand__logo--mobile {
+		display: none;
+		width: 42px;
+		height: 42px;
 	}
 
 	.navigation {
@@ -522,133 +756,125 @@ const categoryIcons: Record<string, string> = {
 		height: 100%;
 		display: flex;
 		align-items: stretch;
-		gap: clamp(6px, 1.2vw, 21px);
+		gap: clamp(6px, 1.1vw, 20px);
 		margin: 0;
 		padding: 0;
 		list-style: none;
 	}
 
 	.navigation__item,
-.navigation__parent {
-	height: 100%;
-	display: flex;
-	align-items: center;
-}
+	.navigation__parent {
+		height: 100%;
+		display: flex;
+		align-items: center;
+	}
 
-.navigation__item--dropdown {
-	position: relative;
-}
+	.navigation__item--dropdown {
+		position: relative;
+	}
 
 	.navigation__link {
 		position: relative;
 		height: 100%;
 		display: flex;
 		align-items: center;
+		gap: 7px;
 		padding-inline: 4px;
-		color: rgba(255, 246, 237, 0.68);
+		color: rgba(255, 246, 237, 0.88);
 		font-size: 11.5px;
 		font-weight: 600;
-		letter-spacing: 0.055em;
+		letter-spacing: 0.045em;
 		text-decoration: none;
 		text-transform: uppercase;
 		white-space: nowrap;
 		transition: color 180ms ease;
 	}
-.navigation__category-icon {
-	width: 20px;
-	height: 20px;
-	flex: 0 0 20px;
-	display: grid;
-	place-items: center;
-	color: rgba(255, 246, 237, 0.54);
-	transition:
-		color 180ms ease,
-		transform 180ms ease;
-}
 
-.navigation__category-icon :global(svg) {
-	width: 20px;
-	height: 20px;
-	display: block;
-	fill: none;
-	stroke: currentColor;
-	stroke-width: 1.55;
-	stroke-linecap: round;
-	stroke-linejoin: round;
-}
-
-.navigation__link {
-	gap: 7px;
-}
-
-.navigation__link:hover .navigation__category-icon,
-.navigation__link.is-current .navigation__category-icon,
-.navigation__item.is-open .navigation__category-icon {
-	color: #fff6ed;
-	transform: translateY(-1px);
-}
 	.navigation__link::after {
 		content: "";
 		position: absolute;
 		right: 4px;
-		bottom: 19px;
+		bottom: 18px;
 		left: 4px;
 		height: 1px;
 		background: #fff6ed;
 		transform: scaleX(0);
+		transform-origin: right;
 		transition: transform 200ms ease;
 	}
 
 	.navigation__link:hover,
 	.navigation__link.is-current,
 	.navigation__item.is-open .navigation__link {
-		color: #fff6ed;
+		color: #ffffff;
 	}
 
 	.navigation__link:hover::after,
 	.navigation__link.is-current::after,
 	.navigation__item.is-open .navigation__link::after {
 		transform: scaleX(1);
+		transform-origin: left;
+	}
+
+	.navigation__category-icon {
+		width: 20px;
+		height: 20px;
+		flex: 0 0 20px;
+		display: grid;
+		place-items: center;
+		color: rgba(255, 246, 237, 0.72);
+		transition:
+			color 180ms ease,
+			transform 180ms ease;
+	}
+
+	.navigation__category-icon :global(svg) {
+		width: 20px;
+		height: 20px;
+		display: block;
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 1.55;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+
+	.navigation__link:hover
+		.navigation__category-icon,
+	.navigation__link.is-current
+		.navigation__category-icon,
+	.navigation__item.is-open
+		.navigation__category-icon {
+		color: #ffffff;
+		transform: translateY(-1px);
 	}
 
 	.navigation__dropdown-toggle {
-		width: 22px;
-		height: 38px;
+		width: 24px;
+		height: 40px;
 		padding: 0;
 		display: grid;
 		place-items: center;
 		border: 0;
 		background: transparent;
-		color: rgba(255, 246, 237, 0.5);
+		color: rgba(255, 246, 237, 0.7);
 		cursor: pointer;
+		transition: color 180ms ease;
 	}
 
-	.navigation__dropdown-toggle {
-	transition:
-		color 180ms ease,
-		background-color 180ms ease;
-}
+	.navigation__dropdown-toggle:hover,
+	.navigation__item.is-open
+		.navigation__dropdown-toggle {
+		color: #ffffff;
+	}
 
-.navigation__dropdown-toggle:hover,
-.navigation__item.is-open
-	.navigation__dropdown-toggle {
-	color: #fff6ed;
-}
-
-.navigation__dropdown-toggle svg {
-	width: 15px;
-	height: 15px;
-	transform: rotate(0deg);
-	transform-origin: center;
-	transition:
-		transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
-		color 180ms ease;
-}
-
-.navigation__item.is-open
 	.navigation__dropdown-toggle svg {
-	transform: rotate(180deg);
-}
+		width: 14px;
+		height: 14px;
+		transform: rotate(0deg);
+		transform-origin: center;
+		transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+	}
 
 	.navigation__item.is-open
 		.navigation__dropdown-toggle svg {
@@ -661,20 +887,19 @@ const categoryIcons: Record<string, string> = {
 		width: min(390px, calc(100vw - 28px));
 		padding: 22px;
 		overflow: hidden;
-		border: 1px solid rgba(255, 255, 255, 0.1);
+		border: 1px solid rgba(255, 255, 255, 0.13);
 		border-radius: 22px;
 		background:
 			linear-gradient(
 				145deg,
-				rgba(255, 255, 255, 0.045),
-				rgba(255, 255, 255, 0.008)
+				rgba(255, 255, 255, 0.035),
+				rgba(255, 255, 255, 0.004) 55%,
+				rgba(91, 49, 42, 0.025)
 			),
-			rgba(4, 4, 4, 0.97);
+			rgba(2, 2, 2, 0.995);
 		box-shadow:
 			inset 0 1px 0 rgba(255, 255, 255, 0.08),
-			0 30px 75px rgba(0, 0, 0, 0.52);
-		backdrop-filter: blur(28px) saturate(120%);
-		-webkit-backdrop-filter: blur(28px) saturate(120%);
+			0 32px 80px rgba(0, 0, 0, 0.7);
 		opacity: 0;
 		visibility: hidden;
 		pointer-events: none;
@@ -685,32 +910,42 @@ const categoryIcons: Record<string, string> = {
 			transform 180ms ease;
 	}
 
-	.navigation__item:nth-last-child(-n + 2) .dropdown {
-		right: 14px;
+	.dropdown::before {
+		content: "";
+		position: absolute;
+		top: -12px;
+		right: 0;
+		left: 0;
+		height: 12px;
 	}
 
-	.navigation__item:not(:nth-last-child(-n + 2)) .dropdown {
+	.navigation__item:nth-last-child(-n + 2)
+		.dropdown {
+		right: 8px;
+	}
+
+	.navigation__item:not(:nth-last-child(-n + 2))
+		.dropdown {
 		left: 50%;
 		transform: translate(-50%, -8px);
 	}
 
-	.navigation__item.is-open .dropdown,
-.navigation__item--dropdown:focus-within .dropdown {
-	opacity: 1;
-	visibility: visible;
-	pointer-events: auto;
-	transform: translateY(0);
-}
+	@media (min-width: 1181px) {
+		.navigation__item.is-open .dropdown,
+		.navigation__item--dropdown:focus-within
+			.dropdown {
+			opacity: 1;
+			visibility: visible;
+			pointer-events: auto;
+			transform: translateY(0);
+		}
 
-.navigation__item:not(:nth-last-child(-n + 2)).is-open
-	.dropdown,
-.navigation__item:not(:nth-last-child(-n + 2)):focus-within
-	.dropdown {
-	transform: translate(-50%, 0);
-}
-
-	.navigation__item:not(:nth-last-child(-n + 2)).is-open .dropdown {
-		transform: translate(-50%, 0);
+		.navigation__item:not(:nth-last-child(-n + 2)).is-open
+			.dropdown,
+		.navigation__item:not(:nth-last-child(-n + 2)):focus-within
+			.dropdown {
+			transform: translate(-50%, 0);
+		}
 	}
 
 	.dropdown__header {
@@ -718,18 +953,18 @@ const categoryIcons: Record<string, string> = {
 		align-items: center;
 		gap: 15px;
 		padding: 3px 3px 19px;
-		border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+		border-bottom: 1px solid rgba(255, 255, 255, 0.11);
 	}
 
 	.dropdown__category-icon {
-		flex: 0 0 auto;
+		flex: 0 0 46px;
 		width: 46px;
 		height: 46px;
 		display: grid;
 		place-items: center;
-		border: 1px solid rgba(255, 255, 255, 0.1);
+		border: 1px solid rgba(255, 255, 255, 0.12);
 		border-radius: 14px;
-		background: rgba(255, 255, 255, 0.035);
+		background: rgba(255, 255, 255, 0.04);
 		color: #fff6ed;
 	}
 
@@ -746,18 +981,19 @@ const categoryIcons: Record<string, string> = {
 	.dropdown__header p {
 		margin: 0 0 5px;
 		color: #ff4d2a;
-		font-size: 8px;
+		font-size: 9px;
 		font-weight: 600;
-		letter-spacing: 0.15em;
+		letter-spacing: 0.14em;
 		text-transform: uppercase;
 	}
 
 	.dropdown__header h2 {
 		margin: 0;
-		font-size: 22px;
-		font-weight: 500;
+		color: #fff6ed;
+		font-size: 23px;
+		font-weight: 600;
 		line-height: 1;
-		letter-spacing: -0.035em;
+		letter-spacing: -0.03em;
 	}
 
 	.dropdown__links {
@@ -767,34 +1003,36 @@ const categoryIcons: Record<string, string> = {
 	}
 
 	.dropdown__links li {
-		border-bottom: 1px solid rgba(255, 255, 255, 0.065);
+		border-bottom: 1px solid rgba(255, 255, 255, 0.09);
 	}
 
 	.dropdown__links a {
-		min-height: 51px;
+		min-height: 52px;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		gap: 16px;
 		padding: 4px 3px;
-		color: rgba(255, 246, 237, 0.72);
-		font-size: 12px;
+		color: rgba(255, 246, 237, 0.88);
+		font-size: 13px;
 		font-weight: 500;
 		text-decoration: none;
 		transition:
 			color 160ms ease,
-			padding-left 160ms ease;
+			padding-left 160ms ease,
+			background-color 160ms ease;
 	}
 
 	.dropdown__links a:hover {
 		padding-left: 9px;
-		color: #fff6ed;
+		background: rgba(255, 255, 255, 0.035);
+		color: #ffffff;
 	}
 
 	.dropdown__links svg {
 		width: 16px;
 		height: 16px;
-		color: rgba(255, 246, 237, 0.32);
+		color: rgba(255, 246, 237, 0.42);
 		transition:
 			color 160ms ease,
 			transform 160ms ease;
@@ -807,50 +1045,58 @@ const categoryIcons: Record<string, string> = {
 
 	.dropdown__view-all {
 		margin-top: 15px;
-		min-height: 43px;
+		min-height: 45px;
 		padding: 0 14px;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		border: 1px solid rgba(255, 255, 255, 0.1);
+		border: 1px solid rgba(255, 255, 255, 0.14);
 		border-radius: 12px;
-		background: rgba(255, 255, 255, 0.035);
+		background: rgba(255, 255, 255, 0.04);
 		color: #fff6ed;
-		font-size: 9px;
+		font-size: 10px;
 		font-weight: 600;
-		letter-spacing: 0.09em;
+		letter-spacing: 0.08em;
 		text-decoration: none;
 		text-transform: uppercase;
 		transition: background-color 160ms ease;
 	}
 
 	.dropdown__view-all:hover {
-		background: rgba(255, 255, 255, 0.075);
+		background: rgba(255, 255, 255, 0.085);
 	}
 
 	.header-actions {
 		display: flex;
 		align-items: center;
-		gap: 3px;
+		justify-content: flex-end;
+		gap: 2px;
 	}
 
 	.icon-button {
 		position: relative;
-		width: 44px;
-		height: 44px;
+		width: 43px;
+		height: 43px;
 		display: grid;
 		place-items: center;
 		border-radius: 50%;
-		color: rgba(255, 246, 237, 0.7);
+		color: rgba(255, 246, 237, 0.86);
 		text-decoration: none;
 		transition:
 			background-color 170ms ease,
-			color 170ms ease;
+			color 170ms ease,
+			transform 170ms ease;
 	}
 
 	.icon-button:hover {
-		background: rgba(255, 255, 255, 0.075);
-		color: #fff6ed;
+		background: rgba(255, 255, 255, 0.09);
+		color: #ffffff;
+		transform: translateY(-1px);
+	}
+
+	.whatsapp-button:hover {
+		background: rgba(37, 211, 102, 0.1);
+		color: #25d366;
 	}
 
 	.icon-button svg {
@@ -867,6 +1113,7 @@ const categoryIcons: Record<string, string> = {
 		padding-inline: 4px;
 		display: grid;
 		place-items: center;
+		border: 1px solid rgba(255, 255, 255, 0.18);
 		border-radius: 999px;
 		background: #5b312a;
 		color: #fff6ed;
@@ -875,48 +1122,107 @@ const categoryIcons: Record<string, string> = {
 	}
 
 	.menu-toggle {
-		display: none;
 		width: 40px;
 		height: 40px;
 		padding: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-direction: column;
+		gap: 5px;
 		border: 0;
 		background: transparent;
 		color: #fff6ed;
+		cursor: pointer;
 	}
 
 	.menu-toggle span {
 		display: block;
-		width: 20px;
-		height: 1px;
-		margin: 6px auto;
+		width: 22px;
+		height: 1.5px;
+		border-radius: 2px;
 		background: currentColor;
+		transition:
+			transform 250ms ease,
+			opacity 250ms ease;
+	}
+
+	.menu-toggle[aria-expanded="true"]
+		span:nth-child(1) {
+		transform: translateY(6.5px) rotate(45deg);
+	}
+
+	.menu-toggle[aria-expanded="true"]
+		span:nth-child(2) {
+		opacity: 0;
+	}
+
+	.menu-toggle[aria-expanded="true"]
+		span:nth-child(3) {
+		transform: translateY(-6.5px) rotate(-45deg);
 	}
 
 	@media (max-width: 1180px) {
-		.header-main {
-			grid-template-columns: 42px auto 1fr;
+		.site-header {
+			top: 10px;
+			width: calc(100% - 20px);
+			margin-top: 10px;
 		}
 
-		.menu-toggle {
-			display: block;
+		.header-main {
+			min-height: 74px;
+			padding-inline: 16px;
+			grid-template-columns: 1fr auto 1fr;
+			gap: 10px;
+		}
+
+		.header-mobile-left {
+			display: flex;
+			align-items: center;
+			justify-self: start;
+			gap: 2px;
+		}
+
+		.brand {
+			justify-self: center;
 		}
 
 		.header-actions {
 			justify-self: end;
 		}
 
+		.desktop-search-button {
+			display: none;
+		}
+
+		.mobile-search-button {
+			display: grid;
+		}
+
 		.navigation {
 			position: absolute;
-			top: calc(100% + 10px);
+			top: calc(100% + 9px);
 			right: 0;
 			left: 0;
+			width: 100%;
 			height: auto;
+			max-height: calc(100svh - 124px);
 			display: none;
-			padding: 14px 18px;
-			border: 1px solid rgba(255, 255, 255, 0.1);
+			overflow-y: auto;
+			overscroll-behavior: contain;
+			padding: 16px 14px 22px;
+			border: 1px solid rgba(255, 255, 255, 0.14);
 			border-radius: 22px;
-			background: rgba(4, 4, 4, 0.98);
-			box-shadow: 0 30px 75px rgba(0, 0, 0, 0.52);
+			background:
+				linear-gradient(
+					145deg,
+					rgba(255, 255, 255, 0.025),
+					rgba(255, 255, 255, 0.003)
+				),
+				rgba(2, 2, 2, 0.995);
+			box-shadow:
+				inset 0 1px 0 rgba(255, 255, 255, 0.07),
+				0 32px 85px rgba(0, 0, 0, 0.75);
 		}
 
 		.navigation.is-open {
@@ -929,19 +1235,25 @@ const categoryIcons: Record<string, string> = {
 			gap: 0;
 		}
 
-		.navigation__item,
-		.navigation__parent {
+		.navigation__item {
 			height: auto;
 			display: block;
+			border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 		}
 
 		.navigation__parent {
+			height: auto;
 			display: grid;
-			grid-template-columns: 1fr 50px;
+			grid-template-columns: minmax(0, 1fr) 52px;
 		}
 
 		.navigation__link {
-			min-height: 56px;
+			min-height: 58px;
+			padding-inline: 4px;
+			color: #fff6ed;
+			font-size: 14px;
+			font-weight: 600;
+			letter-spacing: 0.035em;
 		}
 
 		.navigation__link::after {
@@ -949,20 +1261,35 @@ const categoryIcons: Record<string, string> = {
 		}
 
 		.navigation__dropdown-toggle {
-			width: 50px;
-			height: 56px;
+			width: 52px;
+			height: 58px;
+			justify-self: end;
 		}
 
 		.dropdown,
-		.navigation__item:not(:nth-last-child(-n + 2)) .dropdown {
+		.navigation__item:not(:nth-last-child(-n + 2))
+			.dropdown {
 			position: static;
 			width: 100%;
 			display: none;
-			padding: 12px;
-			transform: none;
+			margin: 0 0 13px;
+			padding: 14px;
+			border: 1px solid rgba(255, 255, 255, 0.12);
+			border-radius: 19px;
+			background:
+				linear-gradient(
+					145deg,
+					rgba(255, 255, 255, 0.025),
+					rgba(255, 255, 255, 0.002)
+				),
+				rgba(4, 4, 4, 0.998);
+			box-shadow:
+				inset 0 1px 0 rgba(255, 255, 255, 0.06),
+				0 18px 42px rgba(0, 0, 0, 0.42);
 			opacity: 1;
 			visibility: visible;
 			pointer-events: auto;
+			transform: none;
 		}
 
 		.navigation__item.is-open .dropdown,
@@ -970,6 +1297,11 @@ const categoryIcons: Record<string, string> = {
 			.dropdown {
 			display: block;
 			transform: none;
+		}
+
+		.dropdown__links a {
+			min-height: 52px;
+			font-size: 13.5px;
 		}
 	}
 
@@ -985,6 +1317,7 @@ const categoryIcons: Record<string, string> = {
 		}
 
 		.announcement {
+			min-height: 31px;
 			justify-content: center;
 			padding-inline: 12px;
 			font-size: 8px;
@@ -996,24 +1329,65 @@ const categoryIcons: Record<string, string> = {
 		}
 
 		.header-main {
-			min-height: 68px;
-			padding-inline: 12px;
-			grid-template-columns: 40px 1fr auto;
+			min-height: 70px;
+			padding-inline: 10px;
+			grid-template-columns: 1fr auto 1fr;
+			gap: 5px;
 		}
 
-		.brand {
-			justify-self: center;
-			align-items: center;
+		.header-mobile-left {
+			gap: 0;
 		}
 
-		.brand__name {
-			font-size: 23px;
+		.header-mobile-left .icon-button,
+		.menu-toggle {
+			width: 39px;
+			height: 39px;
 		}
 
-		.brand__tagline,
-		.search-button,
+		.brand__logo--desktop {
+			display: none;
+		}
+
+		.brand__logo--mobile {
+			display: block;
+		}
+
+		.header-actions {
+			gap: 0;
+		}
+
+		.header-actions .icon-button {
+			width: 37px;
+			height: 37px;
+		}
+
+		.header-actions .icon-button svg,
+		.mobile-search-button svg {
+			width: 20px;
+			height: 20px;
+		}
+
+		.navigation {
+			max-height: calc(100svh - 112px);
+			padding: 14px 10px 20px;
+			border-radius: 20px;
+		}
+	}
+
+	@media (max-width: 390px) {
 		.account-button {
 			display: none;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.navigation__link::after,
+		.navigation__dropdown-toggle svg,
+		.dropdown,
+		.icon-button,
+		.menu-toggle span {
+			transition: none;
 		}
 	}
 </style>

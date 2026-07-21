@@ -1,0 +1,1423 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Header from "../components/Header.astro";
+
+const base = import.meta.env.BASE_URL;
+const catalogHref = `${base}categorias/`;
+const qrPlaceholder = `${base}pagos/yape-qr-placeholder.svg`;
+---
+
+<BaseLayout
+	title="Carrito | TAQTO"
+	description="Revisa tu carrito y completa tu pedido con TAQTO."
+>
+	<Header />
+
+	<main class="cart-page">
+		<nav class="cart-breadcrumbs" aria-label="Migas de pan">
+			<a href={base}>Inicio</a>
+			<span aria-hidden="true">/</span>
+			<span>Carrito</span>
+		</nav>
+
+		<ol class="cart-steps-indicator" data-steps-indicator>
+			<li data-step-indicator="1" class="is-active">
+				<span>1</span> Carrito
+			</li>
+			<li data-step-indicator="2">
+				<span>2</span> Datos de envío
+			</li>
+			<li data-step-indicator="3">
+				<span>3</span> Pago
+			</li>
+		</ol>
+
+		<!-- PASO 1: CARRITO -->
+		<section class="cart-step is-active" data-step="1">
+			<div class="cart-items" id="cart-items" data-cart-items></div>
+
+			<div class="cart-empty" id="cart-empty" hidden>
+				<p>Tu carrito está vacío.</p>
+				<a href={catalogHref}>Ver catálogo</a>
+			</div>
+
+			<div class="cart-summary">
+				<div class="cart-summary__row">
+					<span>Subtotal</span>
+					<strong id="cart-subtotal">S/ 0.00</strong>
+				</div>
+			</div>
+
+			<div class="cart-step-actions">
+				<a class="cart-secondary-button" href={catalogHref}>
+					Seguir comprando
+				</a>
+
+				<button
+					type="button"
+					class="cart-primary-button"
+					id="go-to-step-2"
+					disabled
+				>
+					Continuar con mis datos
+				</button>
+			</div>
+		</section>
+
+		<!-- PASO 2: DATOS DE ENVIO -->
+		<section class="cart-step" data-step="2" hidden>
+			<form class="shipping-form" id="shipping-form">
+				<div class="shipping-form__grid">
+					<label class="shipping-field">
+						<span>Nombres</span>
+						<input
+							type="text"
+							name="firstName"
+							required
+							autocomplete="given-name"
+						/>
+					</label>
+
+					<label class="shipping-field">
+						<span>Apellidos</span>
+						<input
+							type="text"
+							name="lastName"
+							required
+							autocomplete="family-name"
+						/>
+					</label>
+
+					<label class="shipping-field">
+						<span>Correo</span>
+						<input
+							type="email"
+							name="email"
+							required
+							autocomplete="email"
+						/>
+					</label>
+
+					<label class="shipping-field">
+						<span>Número (Perú)</span>
+						<input
+							type="tel"
+							name="phone"
+							required
+							pattern="9[0-9]{8}"
+							maxlength="9"
+							inputmode="numeric"
+							placeholder="9XXXXXXXX"
+							title="Número de celular peruano: 9 dígitos, empieza con 9."
+							autocomplete="tel-national"
+						/>
+					</label>
+
+					<label class="shipping-field">
+						<span>Departamento</span>
+						<select
+							id="select-departamento"
+							name="departamento"
+							required
+						></select>
+					</label>
+
+					<label class="shipping-field">
+						<span>Provincia</span>
+						<select
+							id="select-provincia"
+							name="provincia"
+							required
+							disabled
+						></select>
+					</label>
+
+					<label class="shipping-field">
+						<span>Distrito</span>
+						<select
+							id="select-distrito"
+							name="distrito"
+							required
+							disabled
+						></select>
+					</label>
+				</div>
+
+				<p class="shipping-method-preview" id="shipping-method-preview">
+					Elige tu departamento para ver el método y costo de envío.
+				</p>
+
+				<label class="shipping-field shipping-field--full">
+					<span>Mensaje para la tarjeta de regalo (opcional)</span>
+					<textarea
+						name="giftMessage"
+						rows="3"
+						placeholder="Escribe aquí el mensaje que quieres incluir en la tarjeta de regalo"
+					></textarea>
+				</label>
+			</form>
+
+			<div class="cart-step-actions">
+				<button
+					type="button"
+					class="cart-secondary-button"
+					data-go-step="1"
+				>
+					Volver al carrito
+				</button>
+
+				<button
+					type="button"
+					class="cart-primary-button"
+					id="go-to-step-3"
+				>
+					Continuar al pago
+				</button>
+			</div>
+		</section>
+
+		<!-- PASO 3: PAGO -->
+		<section class="cart-step" data-step="3" hidden>
+			<div class="order-summary">
+				<div class="order-summary__block">
+					<p class="order-summary__label">Datos del cliente</p>
+					<dl class="order-summary__list" id="order-customer-summary">
+					</dl>
+				</div>
+
+				<div class="order-summary__block">
+					<p class="order-summary__label">Productos</p>
+					<div
+						class="order-summary__products"
+						id="order-products-summary"
+					></div>
+				</div>
+
+				<div class="order-summary__totals" id="order-totals">
+					<div class="order-summary__row">
+						<span>Subtotal</span>
+						<strong id="order-subtotal">S/ 0.00</strong>
+					</div>
+
+					<div class="order-summary__row">
+						<span id="order-shipping-label">Envío</span>
+						<strong id="order-shipping-amount">S/ 0.00</strong>
+					</div>
+
+					<div class="order-summary__row order-summary__row--total">
+						<span>Total</span>
+						<strong id="order-total">S/ 0.00</strong>
+					</div>
+				</div>
+			</div>
+
+			<div class="payment-options">
+				<button
+					type="button"
+					class="payment-option payment-option--whatsapp"
+					id="pay-whatsapp"
+				>
+					<span>Pedir por WhatsApp</span>
+					<small>Enviamos tu pedido completo por chat</small>
+				</button>
+
+				<button
+					type="button"
+					class="payment-option payment-option--yape"
+					id="pay-yape"
+				>
+					<span>Pagar con Yape</span>
+					<small>Yapea y envíanos tu comprobante</small>
+				</button>
+			</div>
+
+			<div class="yape-panel" id="yape-panel" hidden>
+				<div class="yape-panel__details">
+					<p>
+						<span>Yape</span>
+						Gianmarco Santillán
+					</p>
+					<p>
+						<span>Número</span>
+						977 600 400
+					</p>
+				</div>
+
+				<img
+					class="yape-panel__qr"
+					src={qrPlaceholder}
+					alt="Código QR de Yape para pagar"
+					width="220"
+					height="220"
+				/>
+
+				<a
+					class="cart-primary-button"
+					id="yape-send-proof"
+					target="_blank"
+					rel="noopener noreferrer"
+				>
+					Enviar comprobante
+				</a>
+			</div>
+
+			<div class="cart-step-actions">
+				<button
+					type="button"
+					class="cart-secondary-button"
+					data-go-step="2"
+				>
+					Volver a mis datos
+				</button>
+			</div>
+		</section>
+	</main>
+</BaseLayout>
+
+<script>
+	import {
+		getCart,
+		updateQuantity,
+		removeItem,
+		onCartUpdated,
+		type CartItem,
+	} from "../lib/cart";
+
+	import { formatPEN } from "../lib/productPricing";
+
+	import {
+		getDepartamentos,
+		getProvincias,
+		getDistritos,
+		getDepartamentoName,
+		getProvinciaName,
+		getDistritoName,
+		isLimaMetropolitana,
+		type UbigeoOption,
+	} from "../lib/peruUbigeo";
+
+	import {
+		WHATSAPP_NUMBER,
+		SHIPPING_COST,
+	} from "../lib/constants";
+
+	const base = import.meta.env.BASE_URL;
+
+	const steps = Array.from(
+		document.querySelectorAll<HTMLElement>(
+			"[data-step]",
+		),
+	);
+
+	const stepIndicators = Array.from(
+		document.querySelectorAll<HTMLElement>(
+			"[data-step-indicator]",
+		),
+	);
+
+	const goToStep = (stepNumber: number) => {
+		steps.forEach((section) => {
+			const isActive =
+				section.dataset.step === String(stepNumber);
+
+			section.hidden = !isActive;
+			section.classList.toggle(
+				"is-active",
+				isActive,
+			);
+		});
+
+		stepIndicators.forEach((indicator) => {
+			const stepValue = Number(
+				indicator.dataset.stepIndicator,
+			);
+
+			indicator.classList.toggle(
+				"is-active",
+				stepValue === stepNumber,
+			);
+
+			indicator.classList.toggle(
+				"is-complete",
+				stepValue < stepNumber,
+			);
+		});
+
+		window.scrollTo({ top: 0, behavior: "smooth" });
+	};
+
+	document
+		.querySelectorAll<HTMLButtonElement>(
+			"[data-go-step]",
+		)
+		.forEach((button) => {
+			button.addEventListener("click", () => {
+				goToStep(
+					Number(button.dataset.goStep),
+				);
+			});
+		});
+
+	// ---------- PASO 1: CARRITO ----------
+
+	const cartItemsContainer =
+		document.querySelector<HTMLElement>(
+			"#cart-items",
+		)!;
+
+	const cartEmptyState =
+		document.querySelector<HTMLElement>(
+			"#cart-empty",
+		)!;
+
+	const cartSubtotalLabel =
+		document.querySelector<HTMLElement>(
+			"#cart-subtotal",
+		)!;
+
+	const goToStep2Button =
+		document.querySelector<HTMLButtonElement>(
+			"#go-to-step-2",
+		)!;
+
+	const getCartSubtotal = (items: CartItem[]) =>
+		items.reduce(
+			(total, item) =>
+				total + item.unitPrice * item.quantity,
+			0,
+		);
+
+	const renderCartItems = () => {
+		const items = getCart();
+
+		cartItemsContainer.innerHTML = "";
+		cartEmptyState.hidden = items.length > 0;
+		goToStep2Button.disabled = items.length === 0;
+
+		items.forEach((item) => {
+			const row = document.createElement("div");
+			row.className = "cart-item";
+
+			const variantLabel = [
+				item.woodTitle,
+				item.sizeTitle,
+			]
+				.filter(Boolean)
+				.join(" · ");
+
+			row.innerHTML = `
+				<div class="cart-item__media">
+					${
+						item.image
+							? `<img src="${item.image}" alt="${item.title}" loading="lazy" />`
+							: `<div class="cart-item__placeholder">TAQTO</div>`
+					}
+				</div>
+
+				<div class="cart-item__content">
+					<p class="cart-item__title">${item.title}</p>
+					${
+						variantLabel
+							? `<p class="cart-item__variant">${variantLabel}</p>`
+							: ""
+					}
+					<p class="cart-item__price">${formatPEN(item.unitPrice)}</p>
+				</div>
+
+				<div class="cart-item__actions">
+					<input
+						type="number"
+						min="1"
+						step="1"
+						class="cart-item__quantity"
+						value="${item.quantity}"
+						aria-label="Cantidad de ${item.title}"
+					/>
+
+					<button
+						type="button"
+						class="cart-item__remove"
+						aria-label="Quitar ${item.title} del carrito"
+					>
+						Quitar
+					</button>
+				</div>
+
+				<p class="cart-item__line-total">
+					${formatPEN(item.unitPrice * item.quantity)}
+				</p>
+			`;
+
+			const quantityInput =
+				row.querySelector<HTMLInputElement>(
+					".cart-item__quantity",
+				)!;
+
+			quantityInput.addEventListener(
+				"change",
+				() => {
+					const nextQuantity = Math.max(
+						1,
+						Math.floor(
+							Number(quantityInput.value) || 1,
+						),
+					);
+
+					updateQuantity(item.id, nextQuantity);
+				},
+			);
+
+			const removeButton =
+				row.querySelector<HTMLButtonElement>(
+					".cart-item__remove",
+				)!;
+
+			removeButton.addEventListener("click", () => {
+				removeItem(item.id);
+			});
+
+			cartItemsContainer.appendChild(row);
+		});
+
+		cartSubtotalLabel.textContent = formatPEN(
+			getCartSubtotal(items),
+		);
+	};
+
+	renderCartItems();
+	onCartUpdated(renderCartItems);
+
+	goToStep2Button.addEventListener("click", () => {
+		if (getCart().length === 0) return;
+		goToStep(2);
+	});
+
+	// ---------- PASO 2: DATOS DE ENVIO ----------
+
+	const shippingForm =
+		document.querySelector<HTMLFormElement>(
+			"#shipping-form",
+		)!;
+
+	const departamentoSelect =
+		document.querySelector<HTMLSelectElement>(
+			"#select-departamento",
+		)!;
+
+	const provinciaSelect =
+		document.querySelector<HTMLSelectElement>(
+			"#select-provincia",
+		)!;
+
+	const distritoSelect =
+		document.querySelector<HTMLSelectElement>(
+			"#select-distrito",
+		)!;
+
+	const shippingMethodPreview =
+		document.querySelector<HTMLElement>(
+			"#shipping-method-preview",
+		)!;
+
+	const populateSelect = (
+		select: HTMLSelectElement,
+		options: UbigeoOption[],
+		placeholder: string,
+	) => {
+		select.innerHTML = "";
+
+		const placeholderOption =
+			document.createElement("option");
+
+		placeholderOption.value = "";
+		placeholderOption.textContent = placeholder;
+		placeholderOption.disabled = true;
+		placeholderOption.selected = true;
+
+		select.appendChild(placeholderOption);
+
+		options.forEach((option) => {
+			const optionEl =
+				document.createElement("option");
+
+			optionEl.value = option.id;
+			optionEl.textContent = option.name;
+			select.appendChild(optionEl);
+		});
+	};
+
+	const getShippingLabel = () => {
+		if (!departamentoSelect.value) {
+			return "Elige tu departamento para ver el método y costo de envío.";
+		}
+
+		const isLima = isLimaMetropolitana(
+			departamentoSelect.value,
+		);
+
+		return isLima
+			? `Delivery a domicilio (Lima Metropolitana) — ${formatPEN(SHIPPING_COST)}`
+			: `Envío a agencia en tu ciudad — ${formatPEN(SHIPPING_COST)}`;
+	};
+
+	const updateShippingPreview = () => {
+		shippingMethodPreview.textContent =
+			getShippingLabel();
+	};
+
+	populateSelect(
+		departamentoSelect,
+		getDepartamentos(),
+		"Selecciona un departamento",
+	);
+
+	departamentoSelect.addEventListener(
+		"change",
+		() => {
+			const provincias = getProvincias(
+				departamentoSelect.value,
+			);
+
+			populateSelect(
+				provinciaSelect,
+				provincias,
+				"Selecciona una provincia",
+			);
+
+			provinciaSelect.disabled =
+				provincias.length === 0;
+
+			populateSelect(
+				distritoSelect,
+				[],
+				"Selecciona una provincia primero",
+			);
+
+			distritoSelect.disabled = true;
+
+			updateShippingPreview();
+		},
+	);
+
+	provinciaSelect.addEventListener("change", () => {
+		const distritos = getDistritos(
+			provinciaSelect.value,
+		);
+
+		populateSelect(
+			distritoSelect,
+			distritos,
+			"Selecciona un distrito",
+		);
+
+		distritoSelect.disabled =
+			distritos.length === 0;
+	});
+
+	const goToStep3Button =
+		document.querySelector<HTMLButtonElement>(
+			"#go-to-step-3",
+		)!;
+
+	goToStep3Button.addEventListener("click", () => {
+		if (!shippingForm.reportValidity()) return;
+
+		buildOrderSummary();
+		goToStep(3);
+	});
+
+	// ---------- PASO 3: PAGO ----------
+
+	const orderCustomerSummary =
+		document.querySelector<HTMLElement>(
+			"#order-customer-summary",
+		)!;
+
+	const orderProductsSummary =
+		document.querySelector<HTMLElement>(
+			"#order-products-summary",
+		)!;
+
+	const orderSubtotalLabel =
+		document.querySelector<HTMLElement>(
+			"#order-subtotal",
+		)!;
+
+	const orderShippingLabelEl =
+		document.querySelector<HTMLElement>(
+			"#order-shipping-label",
+		)!;
+
+	const orderShippingAmountLabel =
+		document.querySelector<HTMLElement>(
+			"#order-shipping-amount",
+		)!;
+
+	const orderTotalLabel =
+		document.querySelector<HTMLElement>(
+			"#order-total",
+		)!;
+
+	const getCustomerData = () => {
+		const formData = new FormData(shippingForm);
+
+		const departamentoId = String(
+			formData.get("departamento") || "",
+		);
+
+		const provinciaId = String(
+			formData.get("provincia") || "",
+		);
+
+		const distritoId = String(
+			formData.get("distrito") || "",
+		);
+
+		return {
+			firstName: String(
+				formData.get("firstName") || "",
+			),
+			lastName: String(
+				formData.get("lastName") || "",
+			),
+			email: String(formData.get("email") || ""),
+			phone: String(formData.get("phone") || ""),
+			departamento:
+				getDepartamentoName(departamentoId),
+			provincia: getProvinciaName(provinciaId),
+			distrito: getDistritoName(distritoId),
+			giftMessage: String(
+				formData.get("giftMessage") || "",
+			),
+			isLima: isLimaMetropolitana(departamentoId),
+		};
+	};
+
+	const buildOrderSummary = () => {
+		const customer = getCustomerData();
+		const items = getCart();
+		const subtotal = getCartSubtotal(items);
+		const total = subtotal + SHIPPING_COST;
+
+		const shippingLabel = customer.isLima
+			? "Delivery a domicilio (Lima Metropolitana)"
+			: "Envío a agencia en tu ciudad";
+
+		orderCustomerSummary.innerHTML = `
+			<div>
+				<dt>Nombre</dt>
+				<dd>${customer.firstName} ${customer.lastName}</dd>
+			</div>
+			<div>
+				<dt>Correo</dt>
+				<dd>${customer.email}</dd>
+			</div>
+			<div>
+				<dt>Teléfono</dt>
+				<dd>${customer.phone}</dd>
+			</div>
+			<div>
+				<dt>Dirección</dt>
+				<dd>${customer.distrito}, ${customer.provincia}, ${customer.departamento}</dd>
+			</div>
+			${
+				customer.giftMessage
+					? `<div><dt>Tarjeta de regalo</dt><dd>${customer.giftMessage}</dd></div>`
+					: ""
+			}
+		`;
+
+		orderProductsSummary.innerHTML = items
+			.map(
+				(item) => `
+					<div class="order-summary__product">
+						<span>
+							${item.title}${
+								[item.woodTitle, item.sizeTitle]
+									.filter(Boolean)
+									.join(" · ")
+									? ` — ${[item.woodTitle, item.sizeTitle].filter(Boolean).join(" · ")}`
+									: ""
+							}
+							× ${item.quantity}
+						</span>
+						<strong>${formatPEN(item.unitPrice * item.quantity)}</strong>
+					</div>
+				`,
+			)
+			.join("");
+
+		orderSubtotalLabel.textContent =
+			formatPEN(subtotal);
+
+		orderShippingLabelEl.textContent = shippingLabel;
+		orderShippingAmountLabel.textContent =
+			formatPEN(SHIPPING_COST);
+
+		orderTotalLabel.textContent = formatPEN(total);
+	};
+
+	const buildWhatsAppOrderMessage = () => {
+		const customer = getCustomerData();
+		const items = getCart();
+		const subtotal = getCartSubtotal(items);
+		const total = subtotal + SHIPPING_COST;
+
+		const shippingLabel = customer.isLima
+			? "Delivery a domicilio (Lima Metropolitana)"
+			: "Envío a agencia en tu ciudad";
+
+		const productLines = items
+			.map((item, index) => {
+				const variant = [
+					item.woodTitle,
+					item.sizeTitle,
+				]
+					.filter(Boolean)
+					.join(" · ");
+
+				return `${index + 1}. ${item.title}${
+					variant ? ` (${variant})` : ""
+				} — x${item.quantity} — ${formatPEN(
+					item.unitPrice * item.quantity,
+				)}`;
+			})
+			.join("\n");
+
+		return [
+			"Hola TAQTO, quiero hacer este pedido:",
+			"",
+			`*Cliente:* ${customer.firstName} ${customer.lastName}`,
+			`*Correo:* ${customer.email}`,
+			`*Teléfono:* ${customer.phone}`,
+			`*Dirección:* ${customer.distrito}, ${customer.provincia}, ${customer.departamento}`,
+			`*Envío:* ${shippingLabel} — ${formatPEN(SHIPPING_COST)}`,
+			customer.giftMessage
+				? `*Mensaje para la tarjeta de regalo:* ${customer.giftMessage}`
+				: "",
+			"",
+			"*Productos:*",
+			productLines,
+			"",
+			`*Subtotal:* ${formatPEN(subtotal)}`,
+			`*Envío:* ${formatPEN(SHIPPING_COST)}`,
+			`*Total:* ${formatPEN(total)}`,
+		]
+			.filter((line) => line !== "")
+			.join("\n");
+	};
+
+	const buildWhatsAppReceiptMessage = () => {
+		const customer = getCustomerData();
+		const items = getCart();
+		const total =
+			getCartSubtotal(items) + SHIPPING_COST;
+
+		return [
+			`Hola TAQTO, acabo de yapear mi pedido por un total de ${formatPEN(total)}. Adjunto la captura del comprobante.`,
+			"",
+			`*Cliente:* ${customer.firstName} ${customer.lastName}`,
+			`*Teléfono:* ${customer.phone}`,
+		].join("\n");
+	};
+
+	const payWhatsAppButton =
+		document.querySelector<HTMLButtonElement>(
+			"#pay-whatsapp",
+		)!;
+
+	payWhatsAppButton.addEventListener("click", () => {
+		const message = encodeURIComponent(
+			buildWhatsAppOrderMessage(),
+		);
+
+		window.open(
+			`https://wa.me/${WHATSAPP_NUMBER}?text=${message}`,
+			"_blank",
+			"noopener,noreferrer",
+		);
+	});
+
+	const payYapeButton =
+		document.querySelector<HTMLButtonElement>(
+			"#pay-yape",
+		)!;
+
+	const yapePanel =
+		document.querySelector<HTMLElement>(
+			"#yape-panel",
+		)!;
+
+	const yapeSendProofLink =
+		document.querySelector<HTMLAnchorElement>(
+			"#yape-send-proof",
+		)!;
+
+	payYapeButton.addEventListener("click", () => {
+		yapePanel.hidden = false;
+
+		const message = encodeURIComponent(
+			buildWhatsAppReceiptMessage(),
+		);
+
+		yapeSendProofLink.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
+
+		yapePanel.scrollIntoView({
+			behavior: "smooth",
+			block: "center",
+		});
+	});
+</script>
+
+<style>
+	.cart-page {
+		min-height: 100vh;
+		padding:
+			clamp(175px, 15vw, 225px)
+			clamp(20px, 5vw, 82px)
+			clamp(100px, 12vw, 160px);
+		background: #fff6ed;
+		color: #141414;
+	}
+
+	.cart-breadcrumbs,
+	.cart-steps-indicator,
+	.cart-step {
+		width: min(100%, 900px);
+		margin-inline: auto;
+	}
+
+	.cart-breadcrumbs {
+		margin-bottom: 28px;
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 9px;
+		color: rgba(20, 20, 20, 0.5);
+		font-size: 9px;
+		font-weight: 600;
+		letter-spacing: 0.07em;
+		text-transform: uppercase;
+	}
+
+	.cart-breadcrumbs a {
+		color: inherit;
+		text-decoration: none;
+	}
+
+	.cart-steps-indicator {
+		margin-bottom: clamp(36px, 5vw, 56px);
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		padding: 0;
+		list-style: none;
+	}
+
+	.cart-steps-indicator li {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding-bottom: 12px;
+		border-bottom: 2px solid rgba(20, 20, 20, 0.12);
+		color: rgba(20, 20, 20, 0.42);
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		transition:
+			color 180ms ease,
+			border-color 180ms ease;
+	}
+
+	.cart-steps-indicator li span {
+		width: 20px;
+		height: 20px;
+		display: grid;
+		place-items: center;
+		border-radius: 50%;
+		background: rgba(20, 20, 20, 0.08);
+		font-size: 10px;
+	}
+
+	.cart-steps-indicator li.is-active,
+	.cart-steps-indicator li.is-complete {
+		color: #141414;
+		border-color: #141414;
+	}
+
+	.cart-steps-indicator li.is-active span,
+	.cart-steps-indicator li.is-complete span {
+		background: #ff4d2a;
+		color: #fff6ed;
+	}
+
+	.cart-step {
+		display: none;
+	}
+
+	.cart-step.is-active {
+		display: block;
+	}
+
+	.cart-items {
+		display: flex;
+		flex-direction: column;
+		gap: 18px;
+	}
+
+	.cart-item {
+		display: grid;
+		grid-template-columns: 84px minmax(0, 1fr) auto auto;
+		align-items: center;
+		gap: 18px;
+		padding: 16px;
+		border: 1px solid rgba(20, 20, 20, 0.1);
+		border-radius: 18px;
+		background: rgba(255, 255, 255, 0.5);
+	}
+
+	.cart-item__media {
+		width: 84px;
+		height: 84px;
+		overflow: hidden;
+		border-radius: 12px;
+		background: #ffffff;
+	}
+
+	.cart-item__media img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: contain;
+		padding: 8px;
+	}
+
+	.cart-item__placeholder {
+		width: 100%;
+		height: 100%;
+		display: grid;
+		place-items: center;
+		color: #5b312a;
+		font-size: 10px;
+		font-weight: 700;
+		letter-spacing: 0.1em;
+	}
+
+	.cart-item__title {
+		margin: 0;
+		font-size: 15px;
+		font-weight: 600;
+	}
+
+	.cart-item__variant {
+		margin: 4px 0 0;
+		color: rgba(20, 20, 20, 0.55);
+		font-size: 12px;
+	}
+
+	.cart-item__price {
+		margin: 6px 0 0;
+		color: rgba(20, 20, 20, 0.6);
+		font-size: 12px;
+	}
+
+	.cart-item__actions {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 8px;
+	}
+
+	.cart-item__quantity {
+		width: 56px;
+		padding: 6px;
+		border: 1px solid rgba(20, 20, 20, 0.18);
+		border-radius: 10px;
+		text-align: center;
+		font-size: 13px;
+	}
+
+	.cart-item__remove {
+		border: 0;
+		background: transparent;
+		color: #a94737;
+		font-size: 10px;
+		font-weight: 700;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		cursor: pointer;
+	}
+
+	.cart-item__line-total {
+		margin: 0;
+		font-size: 15px;
+		font-weight: 700;
+		white-space: nowrap;
+	}
+
+	.cart-empty {
+		padding: 50px 20px;
+		border: 1px solid rgba(20, 20, 20, 0.1);
+		border-radius: 18px;
+		text-align: center;
+	}
+
+	.cart-empty p {
+		margin: 0 0 14px;
+		color: rgba(20, 20, 20, 0.6);
+	}
+
+	.cart-empty a {
+		color: #141414;
+		font-weight: 700;
+		text-decoration: underline;
+	}
+
+	.cart-summary {
+		margin-top: 26px;
+		padding-top: 20px;
+		border-top: 1px solid rgba(20, 20, 20, 0.12);
+	}
+
+	.cart-summary__row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		font-size: 15px;
+	}
+
+	.cart-summary__row strong {
+		font-size: 20px;
+	}
+
+	.cart-step-actions {
+		margin-top: 30px;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 16px;
+		flex-wrap: wrap;
+	}
+
+	.cart-primary-button,
+	.cart-secondary-button {
+		min-height: 52px;
+		padding-inline: 24px;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 14px;
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		text-decoration: none;
+		cursor: pointer;
+		transition:
+			background-color 180ms ease,
+			transform 180ms ease,
+			opacity 180ms ease;
+	}
+
+	.cart-primary-button {
+		border: 0;
+		background: #ff4d2a;
+		color: #fff6ed;
+	}
+
+	.cart-primary-button:hover {
+		background: #e5431f;
+		transform: translateY(-2px);
+	}
+
+	.cart-primary-button:disabled {
+		pointer-events: none;
+		opacity: 0.4;
+	}
+
+	.cart-secondary-button {
+		border: 1px solid rgba(20, 20, 20, 0.2);
+		background: transparent;
+		color: #141414;
+	}
+
+	.cart-secondary-button:hover {
+		background: rgba(20, 20, 20, 0.05);
+	}
+
+	.shipping-form__grid {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 18px;
+	}
+
+	.shipping-field {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		font-size: 12px;
+		font-weight: 600;
+	}
+
+	.shipping-field--full {
+		grid-column: 1 / -1;
+	}
+
+	.shipping-field input,
+	.shipping-field select,
+	.shipping-field textarea {
+		padding: 13px 14px;
+		border: 1px solid rgba(20, 20, 20, 0.18);
+		border-radius: 12px;
+		background: #ffffff;
+		font-size: 14px;
+		font-weight: 400;
+	}
+
+	.shipping-field select:disabled {
+		opacity: 0.5;
+	}
+
+	.shipping-field textarea {
+		resize: vertical;
+		font-family: inherit;
+	}
+
+	.shipping-method-preview {
+		margin: 20px 0 0;
+		padding: 14px 16px;
+		border: 1px solid rgba(255, 77, 42, 0.3);
+		border-radius: 12px;
+		background: rgba(255, 77, 42, 0.06);
+		color: #141414;
+		font-size: 13px;
+		font-weight: 600;
+	}
+
+	.shipping-form .shipping-field--full {
+		margin-top: 22px;
+	}
+
+	.order-summary {
+		display: flex;
+		flex-direction: column;
+		gap: 24px;
+	}
+
+	.order-summary__block {
+		padding: 20px;
+		border: 1px solid rgba(20, 20, 20, 0.1);
+		border-radius: 16px;
+	}
+
+	.order-summary__label {
+		margin: 0 0 14px;
+		color: #ff4d2a;
+		font-size: 10px;
+		font-weight: 700;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+	}
+
+	.order-summary__list {
+		margin: 0;
+		display: grid;
+		gap: 10px;
+	}
+
+	.order-summary__list dt {
+		color: rgba(20, 20, 20, 0.5);
+		font-size: 11px;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+	}
+
+	.order-summary__list dd {
+		margin: 2px 0 0;
+		font-size: 14px;
+		font-weight: 600;
+	}
+
+	.order-summary__products {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+	}
+
+	.order-summary__product {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 12px;
+		font-size: 13px;
+	}
+
+	.order-summary__totals {
+		padding: 20px;
+		border: 1px solid rgba(20, 20, 20, 0.12);
+		border-radius: 16px;
+		background: rgba(20, 20, 20, 0.03);
+	}
+
+	.order-summary__row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		font-size: 13px;
+	}
+
+	.order-summary__row + .order-summary__row {
+		margin-top: 10px;
+	}
+
+	.order-summary__row--total {
+		margin-top: 14px;
+		padding-top: 14px;
+		border-top: 1px solid rgba(20, 20, 20, 0.14);
+		font-size: 17px;
+		font-weight: 700;
+	}
+
+	.payment-options {
+		margin-top: 30px;
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 14px;
+	}
+
+	.payment-option {
+		min-height: 76px;
+		padding: 16px 18px;
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		justify-content: center;
+		gap: 4px;
+		border-radius: 16px;
+		border: 1px solid rgba(20, 20, 20, 0.14);
+		background: #ffffff;
+		color: #141414;
+		text-align: left;
+		cursor: pointer;
+		transition:
+			transform 180ms ease,
+			border-color 180ms ease;
+	}
+
+	.payment-option span {
+		font-size: 14px;
+		font-weight: 700;
+	}
+
+	.payment-option small {
+		color: rgba(20, 20, 20, 0.55);
+		font-size: 11px;
+	}
+
+	.payment-option:hover {
+		transform: translateY(-2px);
+		border-color: #141414;
+	}
+
+	.payment-option--whatsapp {
+		border-color: rgba(37, 211, 102, 0.4);
+	}
+
+	.payment-option--yape {
+		border-color: rgba(124, 45, 209, 0.35);
+	}
+
+	.yape-panel {
+		margin-top: 20px;
+		padding: 24px;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 14px;
+		border: 1px solid rgba(20, 20, 20, 0.12);
+		border-radius: 18px;
+		background: rgba(255, 255, 255, 0.6);
+		text-align: center;
+	}
+
+	.yape-panel__details p {
+		margin: 0 0 6px;
+		font-size: 14px;
+	}
+
+	.yape-panel__details span {
+		margin-right: 6px;
+		color: rgba(20, 20, 20, 0.5);
+		font-size: 11px;
+		font-weight: 700;
+		text-transform: uppercase;
+	}
+
+	.yape-panel__qr {
+		width: 180px;
+		height: 180px;
+		border-radius: 14px;
+		border: 1px solid rgba(20, 20, 20, 0.1);
+	}
+
+	@media (max-width: 700px) {
+		.cart-page {
+			padding: 150px 14px 90px;
+		}
+
+		.cart-steps-indicator li span {
+			display: none;
+		}
+
+		.cart-steps-indicator li {
+			font-size: 9px;
+			text-align: center;
+			justify-content: center;
+		}
+
+		.cart-item {
+			grid-template-columns: 64px minmax(0, 1fr);
+			grid-template-areas:
+				"media content"
+				"actions actions"
+				"total total";
+			row-gap: 10px;
+		}
+
+		.cart-item__media {
+			grid-area: media;
+			width: 64px;
+			height: 64px;
+		}
+
+		.cart-item__content {
+			grid-area: content;
+		}
+
+		.cart-item__actions {
+			grid-area: actions;
+			flex-direction: row;
+			justify-content: space-between;
+		}
+
+		.cart-item__line-total {
+			grid-area: total;
+			text-align: right;
+		}
+
+		.shipping-form__grid {
+			grid-template-columns: 1fr;
+		}
+
+		.payment-options {
+			grid-template-columns: 1fr;
+		}
+
+		.cart-step-actions {
+			flex-direction: column-reverse;
+			align-items: stretch;
+		}
+	}
+</style>

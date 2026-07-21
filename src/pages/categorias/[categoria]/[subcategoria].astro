@@ -1,121 +1,207 @@
 ---
 import BaseLayout from "../../../layouts/BaseLayout.astro";
 import Header from "../../../components/Header.astro";
-import Breadcrumbs from "../../../components/Breadcrumbs.astro";
-import { productCategories } from "../../../data/categories";
+import ProductCard from "../../../components/ProductCard.astro";
 
-export function getStaticPaths() {
-	return productCategories.flatMap((category) =>
-		category.subcategories.map((subcategory) => ({
-			params: {
-				categoria: category.slug,
-				subcategoria: subcategory.slug,
-			},
-			props: {
-				category,
-				subcategory,
-			},
-		})),
-	);
+import {
+	sanityClient,
+} from "../../../lib/sanity";
+
+import {
+	productsForSubcategoryQuery,
+	subcategoryPathsQuery,
+} from "../../../lib/subcategoryQueries";
+
+interface Category {
+	_id?: string;
+	title?: string;
+	slug?: string;
+	eyebrow?: string;
+	description?: string;
 }
 
-const { category, subcategory } = Astro.props;
+interface Subcategory {
+	_id?: string;
+	title?: string;
+	slug?: string;
+	description?: string;
+	order?: number;
+	category?: Category;
+}
 
-const isBusinessCategory = category.slug === "empresas";
+interface Product {
+	_id: string;
+	title: string;
+	slug: string;
+	[key: string]: unknown;
+}
+
+export async function getStaticPaths() {
+	const subcategories =
+		await sanityClient.fetch<Subcategory[]>(
+			subcategoryPathsQuery,
+		);
+
+	const paths = await Promise.all(
+		subcategories
+			.filter(
+				(subcategory) =>
+					subcategory.slug &&
+					subcategory.category?.slug,
+			)
+			.map(async (subcategory) => {
+				const categorySlug =
+					subcategory.category!.slug!;
+
+				const subcategorySlug =
+					subcategory.slug!;
+
+				const products =
+					await sanityClient.fetch<Product[]>(
+						productsForSubcategoryQuery,
+						{
+							categorySlug,
+							subcategorySlug,
+						},
+					);
+
+				return {
+					params: {
+						categoria: categorySlug,
+						subcategoria: subcategorySlug,
+					},
+
+					props: {
+						category:
+							subcategory.category,
+						subcategory,
+						products,
+					},
+				};
+			}),
+	);
+
+	return paths;
+}
+
+const {
+	category,
+	subcategory,
+	products,
+} = Astro.props as {
+	category: Category;
+	subcategory: Subcategory;
+	products: Product[];
+};
+
+const base =
+	import.meta.env.BASE_URL;
+
+const categoryHref =
+	`${base}categorias/${category.slug}/`;
+
+const homeHref = base;
+
+const pageTitle =
+	`${subcategory.title} | ${category.title} | TAQTO`;
+
+const pageDescription =
+	subcategory.description ||
+	`Descubre ${subcategory.title} de TAQTO, piezas de madera creadas con precisión y personalización láser gratuita.`;
 ---
 
 <BaseLayout
-	title={`${subcategory.name} | TAQTO`}
-	description={subcategory.description}
+	title={pageTitle}
+	description={pageDescription}
 >
 	<Header />
 
-	<main>
-		<section class="collection-hero">
-			<div class="container">
-				<Breadcrumbs
-					items={[
-						{ label: "Inicio", href: "/" },
-						{ label: "Categorías", href: "/categorias/" },
-						{
-							label: category.name,
-							href: `/categorias/${category.slug}/`,
-						},
-						{ label: subcategory.name },
-					]}
-				/>
+	<main class="subcategory-page">
+		<nav
+			class="subcategory-breadcrumbs"
+			aria-label="Migas de pan"
+		>
+			<a href={homeHref}>Inicio</a>
+			<span aria-hidden="true">/</span>
 
-				<div class="collection-hero__content">
-					<p class="collection-hero__eyebrow">
-						{category.name}
-					</p>
+			<a href={categoryHref}>
+				{category.title}
+			</a>
 
-					<h1>{subcategory.name}</h1>
+			<span aria-hidden="true">/</span>
 
-					<p class="collection-hero__description">
-						{subcategory.description}
-					</p>
-				</div>
+			<span>{subcategory.title}</span>
+		</nav>
+
+		<header class="subcategory-hero">
+			<div class="subcategory-hero__content">
+				<p class="subcategory-eyebrow">
+					{
+						category.eyebrow ||
+							category.title
+					}
+				</p>
+
+				<h1>{subcategory.title}</h1>
+
+				<p class="subcategory-description">
+					{
+						subcategory.description ||
+							`Explora la colección ${subcategory.title} de TAQTO.`
+					}
+				</p>
 			</div>
-		</section>
+
+			<div class="subcategory-summary">
+				<span>
+					{products.length}
+				</span>
+
+				<p>
+					{
+						products.length === 1
+							? "pieza disponible"
+							: "piezas disponibles"
+					}
+				</p>
+			</div>
+		</header>
+
+		<div class="subcategory-divider"></div>
 
 		{
-			isBusinessCategory ? (
-				<section class="business-placeholder">
-					<div class="container business-placeholder__inner">
-						<div>
-							<p class="section-label">Venta consultiva</p>
-
-							<h2>
-								Construyamos una propuesta para tu empresa.
-							</h2>
-						</div>
-
-						<div class="business-placeholder__content">
-							<p>
-								Esta página tendrá formulario de cotización,
-								contacto por WhatsApp, tiempos de respuesta,
-								mockup previo y condiciones para pedidos
-								corporativos.
-							</p>
-
-							<p class="business-placeholder__rule">
-								El sello TAQTO siempre estará presente junto al
-								logotipo del cliente.
-							</p>
-
-							<a href="/contactanos/">
-								Solicitar cotización
-								<span aria-hidden="true">→</span>
-							</a>
-						</div>
-					</div>
+			products.length > 0 ? (
+				<section
+					class="product-grid"
+					aria-label={`Productos de ${subcategory.title}`}
+				>
+					{
+						products.map((product) => (
+							<ProductCard
+								product={product}
+							/>
+						))
+					}
 				</section>
 			) : (
-				<section class="products-placeholder">
-					<div class="container">
-						<div class="products-placeholder__heading">
-							<div>
-								<p class="section-label">
-									Colección de productos
-								</p>
+				<section class="subcategory-empty">
+					<p class="subcategory-empty__eyebrow">
+						Colección en preparación
+					</p>
 
-								<h2>Productos próximamente</h2>
-							</div>
+					<h2>
+						Aún no hay productos publicados.
+					</h2>
 
-							<p>
-								Aquí conectaremos los productos reales,
-								precios, filtros, variantes y
-								personalización.
-							</p>
-						</div>
+					<p>
+						Estamos preparando nuevas piezas para
+						esta categoría.
+					</p>
 
-						<div class="products-placeholder__grid">
-							<div></div>
-							<div></div>
-							<div></div>
-						</div>
-					</div>
+					<a href={categoryHref}>
+						Volver a {category.title}
+						<span aria-hidden="true">→</span>
+					</a>
 				</section>
 			)
 		}
@@ -123,135 +209,214 @@ const isBusinessCategory = category.slug === "empresas";
 </BaseLayout>
 
 <style>
-	.collection-hero {
-		padding: clamp(38px, 6vw, 78px) 0 clamp(90px, 12vw, 180px);
+	.subcategory-page {
+		min-height: 100vh;
+		padding:
+			clamp(175px, 15vw, 225px)
+			clamp(20px, 5vw, 82px)
+			clamp(80px, 9vw, 135px);
+		background: #fff6ed;
+		color: #141414;
 	}
 
-	.collection-hero__content {
-		max-width: 1100px;
-		margin-top: clamp(70px, 10vw, 150px);
+	.subcategory-breadcrumbs,
+	.subcategory-hero,
+	.subcategory-divider,
+	.product-grid,
+	.subcategory-empty {
+		width: min(100%, 1450px);
+		margin-inline: auto;
 	}
 
-	.collection-hero__eyebrow,
-	.section-label {
-		margin: 0 0 24px;
-		color: var(--color-brown);
-		font-size: 11px;
-		font-weight: 700;
-		letter-spacing: 0.18em;
+	.subcategory-breadcrumbs {
+		margin-bottom: 28px;
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 9px;
+		color: rgba(20, 20, 20, 0.5);
+		font-size: 9px;
+		font-weight: 600;
+		letter-spacing: 0.07em;
 		text-transform: uppercase;
 	}
 
-	.collection-hero h1 {
-		max-width: 1050px;
+	.subcategory-breadcrumbs a {
+		color: inherit;
+		text-decoration: none;
+	}
+
+	.subcategory-breadcrumbs a:hover {
+		color: #141414;
+	}
+
+	.subcategory-hero {
+		display: grid;
+		grid-template-columns:
+			minmax(0, 1fr)
+			auto;
+		align-items: end;
+		gap: 50px;
+	}
+
+	.subcategory-hero__content {
+		max-width: 900px;
+	}
+
+	.subcategory-eyebrow {
+		margin: 0 0 14px;
+		color: #ff4d2a;
+		font-size: 10px;
+		font-weight: 700;
+		letter-spacing: 0.15em;
+		text-transform: uppercase;
+	}
+
+	.subcategory-hero h1 {
 		margin: 0;
-		font-size: clamp(50px, 9vw, 128px);
-		line-height: 0.9;
+		font-size: clamp(50px, 8vw, 116px);
+		font-weight: 600;
+		line-height: 0.88;
 		letter-spacing: -0.065em;
 		text-wrap: balance;
 	}
 
-	.collection-hero__description {
+	.subcategory-description {
 		max-width: 680px;
-		margin: 38px 0 0;
-		font-size: clamp(17px, 1.6vw, 22px);
-		line-height: 1.6;
-		opacity: 0.7;
+		margin: 25px 0 0;
+		color: rgba(20, 20, 20, 0.62);
+		font-size: 15px;
+		line-height: 1.65;
 	}
 
-	.products-placeholder,
-	.business-placeholder {
-		padding: clamp(75px, 10vw, 150px) 0;
-		background: #fff;
+	.subcategory-summary {
+		min-width: 145px;
+		padding: 21px;
+		border: 1px solid
+			rgba(20, 20, 20, 0.1);
+		border-radius: 18px;
+		text-align: center;
 	}
 
-	.products-placeholder__heading,
-	.business-placeholder__inner {
-		display: grid;
-		grid-template-columns: 1.3fr 0.7fr;
-		gap: clamp(40px, 8vw, 130px);
+	.subcategory-summary span {
+		display: block;
+		font-size: 34px;
+		font-weight: 600;
+		letter-spacing: -0.04em;
 	}
 
-	.products-placeholder h2,
-	.business-placeholder h2 {
-		max-width: 760px;
-		margin: 0;
-		font-size: clamp(38px, 5vw, 76px);
-		line-height: 0.96;
-		letter-spacing: -0.055em;
+	.subcategory-summary p {
+		margin: 5px 0 0;
+		color: rgba(20, 20, 20, 0.5);
+		font-size: 9px;
+		font-weight: 600;
+		letter-spacing: 0.07em;
+		text-transform: uppercase;
 	}
 
-	.products-placeholder__heading > p,
-	.business-placeholder__content > p {
-		margin: 0;
-		font-size: 16px;
-		line-height: 1.7;
-		opacity: 0.7;
+	.subcategory-divider {
+		height: 1px;
+		margin-top: clamp(45px, 6vw, 75px);
+		margin-bottom: clamp(40px, 5vw, 65px);
+		background: rgba(20, 20, 20, 0.11);
 	}
 
-	.products-placeholder__grid {
-		margin-top: 70px;
-		display: grid;
-		grid-template-columns: repeat(3, 1fr);
-		gap: 20px;
+	.product-grid {
+	display: grid;
+	grid-template-columns:
+		repeat(
+			auto-fill,
+			minmax(min(100%, 250px), 300px)
+		);
+	justify-content: start;
+	gap: 36px 24px;
+}
+
+	.subcategory-empty {
+		padding: clamp(50px, 7vw, 90px) 25px;
+		border: 1px solid
+			rgba(20, 20, 20, 0.1);
+		border-radius: 24px;
+		text-align: center;
 	}
 
-	.products-placeholder__grid div {
-		aspect-ratio: 4 / 5;
-		background:
-			linear-gradient(
-				135deg,
-				rgba(91, 49, 42, 0.08),
-				rgba(20, 20, 20, 0.04)
-			);
-	}
-
-	.business-placeholder {
-		background: var(--color-black);
-		color: var(--color-beige);
-	}
-
-	.business-placeholder .section-label {
-		color: var(--color-orange);
-	}
-
-	.business-placeholder__content {
-		display: flex;
-		align-items: flex-start;
-		flex-direction: column;
-		gap: 28px;
-	}
-
-	.business-placeholder__rule {
-		padding-left: 20px;
-		border-left: 2px solid var(--color-orange);
+	.subcategory-empty__eyebrow {
+		margin: 0 0 12px;
+		color: #ff4d2a;
+		font-size: 9px;
 		font-weight: 700;
-		opacity: 1 !important;
+		letter-spacing: 0.13em;
+		text-transform: uppercase;
 	}
 
-	.business-placeholder a {
+	.subcategory-empty h2 {
+		margin: 0;
+		font-size: clamp(32px, 5vw, 56px);
+		line-height: 1;
+		letter-spacing: -0.045em;
+	}
+
+	.subcategory-empty > p:not(
+			.subcategory-empty__eyebrow
+		) {
+		margin: 16px 0 0;
+		color: rgba(20, 20, 20, 0.6);
+	}
+
+	.subcategory-empty a {
+		margin-top: 25px;
 		display: inline-flex;
 		align-items: center;
-		gap: 20px;
-		min-height: 54px;
-		padding: 0 26px;
-		background: var(--color-beige);
-		color: var(--color-black);
-		font-size: 12px;
-		font-weight: 800;
+		gap: 10px;
+		color: #141414;
+		font-size: 10px;
+		font-weight: 700;
 		letter-spacing: 0.08em;
 		text-decoration: none;
 		text-transform: uppercase;
 	}
 
-	@media (max-width: 760px) {
-		.products-placeholder__heading,
-		.business-placeholder__inner {
-			grid-template-columns: 1fr;
+	@media (max-width: 950px) {
+	.product-grid {
+		grid-template-columns:
+			repeat(
+				auto-fill,
+				minmax(min(100%, 240px), 1fr)
+			);
+	}
+}
+
+	@media (max-width: 700px) {
+		.subcategory-page {
+			padding:
+				150px 14px
+				75px;
 		}
 
-		.products-placeholder__grid {
+		.subcategory-hero {
 			grid-template-columns: 1fr;
+			align-items: start;
+			gap: 28px;
+		}
+
+		.subcategory-summary {
+			min-width: 0;
+			width: 100%;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			text-align: left;
+		}
+
+		.subcategory-summary p {
+			margin: 0;
+		}
+	}
+
+	@media (max-width: 560px) {
+		.product-grid {
+			grid-template-columns: 1fr;
+			gap: 50px;
 		}
 	}
 </style>
