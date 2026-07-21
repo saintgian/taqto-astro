@@ -8,13 +8,15 @@ interface Props {
 	campaignId?: string;
 }
 
+const base = import.meta.env.BASE_URL;
+
 const {
 	eyebrow = "Edición Fiestas Patrias",
 	title = "Celebremos el diseño hecho en Perú.",
 	description =
 		"Regala piezas de madera personalizadas con grabado láser gratuito.",
 	buttonText = "Explorar regalos",
-	buttonHref = "/categorias/kits-y-regalos/",
+	buttonHref = `${base}categorias/kits-y-regalos/`,
 	campaignId = "fiestas-patrias-2026",
 } = Astro.props;
 ---

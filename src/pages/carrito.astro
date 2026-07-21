@@ -4,7 +4,9 @@ import Header from "../components/Header.astro";
 
 const base = import.meta.env.BASE_URL;
 const catalogHref = `${base}categorias/`;
-const qrPlaceholder = `${base}pagos/yape-qr-placeholder.svg`;
+const yapeQr = `${base}pagos/qr-yape_1.webp`;
+const yapeLogo = `${base}icons/Yape_peru_logotype.svg`;
+const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 ---
 
 <BaseLayout
@@ -20,257 +22,350 @@ const qrPlaceholder = `${base}pagos/yape-qr-placeholder.svg`;
 			<span>Carrito</span>
 		</nav>
 
-		<ol class="cart-steps-indicator" data-steps-indicator>
-			<li data-step-indicator="1" class="is-active">
-				<span>1</span> Carrito
-			</li>
-			<li data-step-indicator="2">
-				<span>2</span> Datos de envío
-			</li>
-			<li data-step-indicator="3">
-				<span>3</span> Pago
-			</li>
-		</ol>
+		<div class="checkout-shell">
+			<ol class="cart-steps-indicator" data-steps-indicator>
+				<li data-step-indicator="1" class="is-active">
+					<span>1</span> Carrito
+				</li>
+				<li data-step-indicator="2">
+					<span>2</span> Datos de envío
+				</li>
+				<li data-step-indicator="3">
+					<span>3</span> Pago
+				</li>
+			</ol>
 
-		<!-- PASO 1: CARRITO -->
-		<section class="cart-step is-active" data-step="1">
-			<div class="cart-items" id="cart-items" data-cart-items></div>
+			<!-- PASO 1: CARRITO -->
+			<section class="cart-step is-active" data-step="1">
+				<div class="cart-items" id="cart-items" data-cart-items></div>
 
-			<div class="cart-empty" id="cart-empty" hidden>
-				<p>Tu carrito está vacío.</p>
-				<a href={catalogHref}>Ver catálogo</a>
-			</div>
-
-			<div class="cart-summary">
-				<div class="cart-summary__row">
-					<span>Subtotal</span>
-					<strong id="cart-subtotal">S/ 0.00</strong>
-				</div>
-			</div>
-
-			<div class="cart-step-actions">
-				<a class="cart-secondary-button" href={catalogHref}>
-					Seguir comprando
-				</a>
-
-				<button
-					type="button"
-					class="cart-primary-button"
-					id="go-to-step-2"
-					disabled
-				>
-					Continuar con mis datos
-				</button>
-			</div>
-		</section>
-
-		<!-- PASO 2: DATOS DE ENVIO -->
-		<section class="cart-step" data-step="2" hidden>
-			<form class="shipping-form" id="shipping-form">
-				<div class="shipping-form__grid">
-					<label class="shipping-field">
-						<span>Nombres</span>
-						<input
-							type="text"
-							name="firstName"
-							required
-							autocomplete="given-name"
-						/>
-					</label>
-
-					<label class="shipping-field">
-						<span>Apellidos</span>
-						<input
-							type="text"
-							name="lastName"
-							required
-							autocomplete="family-name"
-						/>
-					</label>
-
-					<label class="shipping-field">
-						<span>Correo</span>
-						<input
-							type="email"
-							name="email"
-							required
-							autocomplete="email"
-						/>
-					</label>
-
-					<label class="shipping-field">
-						<span>Número (Perú)</span>
-						<input
-							type="tel"
-							name="phone"
-							required
-							pattern="9[0-9]{8}"
-							maxlength="9"
-							inputmode="numeric"
-							placeholder="9XXXXXXXX"
-							title="Número de celular peruano: 9 dígitos, empieza con 9."
-							autocomplete="tel-national"
-						/>
-					</label>
-
-					<label class="shipping-field">
-						<span>Departamento</span>
-						<select
-							id="select-departamento"
-							name="departamento"
-							required
-						></select>
-					</label>
-
-					<label class="shipping-field">
-						<span>Provincia</span>
-						<select
-							id="select-provincia"
-							name="provincia"
-							required
-							disabled
-						></select>
-					</label>
-
-					<label class="shipping-field">
-						<span>Distrito</span>
-						<select
-							id="select-distrito"
-							name="distrito"
-							required
-							disabled
-						></select>
-					</label>
+				<div class="cart-empty" id="cart-empty" hidden>
+					<p>Tu carrito está vacío.</p>
+					<a href={catalogHref}>Ver catálogo</a>
 				</div>
 
-				<p class="shipping-method-preview" id="shipping-method-preview">
-					Elige tu departamento para ver el método y costo de envío.
-				</p>
-
-				<label class="shipping-field shipping-field--full">
-					<span>Mensaje para la tarjeta de regalo (opcional)</span>
-					<textarea
-						name="giftMessage"
-						rows="3"
-						placeholder="Escribe aquí el mensaje que quieres incluir en la tarjeta de regalo"
-					></textarea>
-				</label>
-			</form>
-
-			<div class="cart-step-actions">
-				<button
-					type="button"
-					class="cart-secondary-button"
-					data-go-step="1"
-				>
-					Volver al carrito
-				</button>
-
-				<button
-					type="button"
-					class="cart-primary-button"
-					id="go-to-step-3"
-				>
-					Continuar al pago
-				</button>
-			</div>
-		</section>
-
-		<!-- PASO 3: PAGO -->
-		<section class="cart-step" data-step="3" hidden>
-			<div class="order-summary">
-				<div class="order-summary__block">
-					<p class="order-summary__label">Datos del cliente</p>
-					<dl class="order-summary__list" id="order-customer-summary">
-					</dl>
-				</div>
-
-				<div class="order-summary__block">
-					<p class="order-summary__label">Productos</p>
-					<div
-						class="order-summary__products"
-						id="order-products-summary"
-					></div>
-				</div>
-
-				<div class="order-summary__totals" id="order-totals">
-					<div class="order-summary__row">
+				<div class="cart-summary">
+					<div class="cart-summary__row">
 						<span>Subtotal</span>
-						<strong id="order-subtotal">S/ 0.00</strong>
-					</div>
-
-					<div class="order-summary__row">
-						<span id="order-shipping-label">Envío</span>
-						<strong id="order-shipping-amount">S/ 0.00</strong>
-					</div>
-
-					<div class="order-summary__row order-summary__row--total">
-						<span>Total</span>
-						<strong id="order-total">S/ 0.00</strong>
+						<strong id="cart-subtotal">S/ 0.00</strong>
 					</div>
 				</div>
-			</div>
 
-			<div class="payment-options">
-				<button
-					type="button"
-					class="payment-option payment-option--whatsapp"
-					id="pay-whatsapp"
-				>
-					<span>Pedir por WhatsApp</span>
-					<small>Enviamos tu pedido completo por chat</small>
-				</button>
+				<div class="cart-step-actions">
+					<a class="cart-secondary-button" href={catalogHref}>
+						Seguir comprando
+					</a>
 
-				<button
-					type="button"
-					class="payment-option payment-option--yape"
-					id="pay-yape"
-				>
-					<span>Pagar con Yape</span>
-					<small>Yapea y envíanos tu comprobante</small>
-				</button>
-			</div>
+					<button
+						type="button"
+						class="cart-primary-button"
+						id="go-to-step-2"
+						disabled
+					>
+						Continuar con mis datos
+					</button>
+				</div>
+			</section>
 
-			<div class="yape-panel" id="yape-panel" hidden>
-				<div class="yape-panel__details">
-					<p>
-						<span>Yape</span>
-						Gianmarco Santillán
-					</p>
-					<p>
-						<span>Número</span>
-						977 600 400
-					</p>
+			<!-- PASO 2: DATOS DE ENVIO -->
+			<section class="cart-step" data-step="2" hidden>
+				<div class="checkout-grid">
+					<form class="shipping-form" id="shipping-form">
+						<div class="shipping-form__grid">
+							<label class="shipping-field">
+								<span>Nombres</span>
+								<input
+									type="text"
+									name="firstName"
+									required
+									autocomplete="given-name"
+								/>
+							</label>
+
+							<label class="shipping-field">
+								<span>Apellidos</span>
+								<input
+									type="text"
+									name="lastName"
+									required
+									autocomplete="family-name"
+								/>
+							</label>
+
+							<label class="shipping-field">
+								<span>Correo</span>
+								<input
+									type="email"
+									name="email"
+									required
+									autocomplete="email"
+								/>
+							</label>
+
+							<label class="shipping-field">
+								<span>Número</span>
+								<div class="phone-input">
+									<span class="phone-input__prefix">
+										<svg
+											class="phone-input__flag"
+											viewBox="0 0 3 2"
+											aria-hidden="true"
+										>
+											<rect
+												width="3"
+												height="2"
+												fill="#fff"></rect>
+											<rect
+												width="1"
+												height="2"
+												fill="#D91023"></rect>
+											<rect
+												x="2"
+												width="1"
+												height="2"
+												fill="#D91023"></rect>
+										</svg>
+										+51
+									</span>
+
+									<input
+										type="tel"
+										name="phone"
+										required
+										pattern="9[0-9]{8}"
+										maxlength="9"
+										inputmode="numeric"
+										placeholder="9XXXXXXXX"
+										title="Número de celular peruano: 9 dígitos, empieza con 9."
+										autocomplete="tel-national"
+									/>
+								</div>
+							</label>
+
+							<label class="shipping-field">
+								<span>Departamento</span>
+								<select
+									id="select-departamento"
+									name="departamento"
+									required
+								></select>
+							</label>
+
+							<label class="shipping-field">
+								<span>Provincia</span>
+								<select
+									id="select-provincia"
+									name="provincia"
+									required
+									disabled
+								></select>
+							</label>
+
+							<label class="shipping-field">
+								<span>Distrito</span>
+								<select
+									id="select-distrito"
+									name="distrito"
+									required
+									disabled
+								></select>
+							</label>
+						</div>
+
+						<p
+							class="shipping-method-preview"
+							id="shipping-method-preview"
+						>
+							Elige tu departamento para ver el método y costo
+							de envío.
+						</p>
+
+						<label class="shipping-field shipping-field--full">
+							<span>Mensaje para la tarjeta de regalo (opcional)</span>
+							<textarea
+								name="giftMessage"
+								rows="3"
+								placeholder="Escribe aquí el mensaje que quieres incluir en la tarjeta de regalo"
+							></textarea>
+						</label>
+					</form>
+
+					<aside class="order-aside">
+						<p class="order-aside__label">Tu pedido</p>
+
+						<div
+							class="order-aside__products"
+							id="mini-products-summary"
+						></div>
+
+						<div class="order-aside__totals">
+							<div class="order-summary__row">
+								<span>Subtotal</span>
+								<strong id="mini-subtotal">S/ 0.00</strong>
+							</div>
+
+							<div class="order-summary__row">
+								<span id="mini-shipping-label">Envío</span>
+								<strong id="mini-shipping-amount">—</strong>
+							</div>
+
+							<div
+								class="order-summary__row order-summary__row--total"
+							>
+								<span>Total</span>
+								<strong id="mini-total">S/ 0.00</strong>
+							</div>
+						</div>
+					</aside>
 				</div>
 
-				<img
-					class="yape-panel__qr"
-					src={qrPlaceholder}
-					alt="Código QR de Yape para pagar"
-					width="220"
-					height="220"
-				/>
+				<div class="cart-step-actions">
+					<button
+						type="button"
+						class="cart-secondary-button"
+						data-go-step="1"
+					>
+						Volver al carrito
+					</button>
 
-				<a
-					class="cart-primary-button"
-					id="yape-send-proof"
-					target="_blank"
-					rel="noopener noreferrer"
-				>
-					Enviar comprobante
-				</a>
-			</div>
+					<button
+						type="button"
+						class="cart-primary-button"
+						id="go-to-step-3"
+					>
+						Continuar al pago
+					</button>
+				</div>
+			</section>
 
-			<div class="cart-step-actions">
-				<button
-					type="button"
-					class="cart-secondary-button"
-					data-go-step="2"
-				>
-					Volver a mis datos
-				</button>
-			</div>
-		</section>
+			<!-- PASO 3: PAGO -->
+			<section class="cart-step" data-step="3" hidden>
+				<div class="checkout-grid">
+					<div class="order-summary">
+						<div class="order-summary__block">
+							<p class="order-summary__label">Datos del cliente</p>
+							<dl
+								class="order-summary__list"
+								id="order-customer-summary"
+							></dl>
+						</div>
+
+						<div class="order-summary__block">
+							<p class="order-summary__label">Productos</p>
+							<div
+								class="order-summary__products"
+								id="order-products-summary"
+							></div>
+						</div>
+
+						<div class="order-summary__totals" id="order-totals">
+							<div class="order-summary__row">
+								<span>Subtotal</span>
+								<strong id="order-subtotal">S/ 0.00</strong>
+							</div>
+
+							<div class="order-summary__row">
+								<span id="order-shipping-label">Envío</span>
+								<strong id="order-shipping-amount">S/ 0.00</strong>
+							</div>
+
+							<div
+								class="order-summary__row order-summary__row--total"
+							>
+								<span>Total</span>
+								<strong id="order-total">S/ 0.00</strong>
+							</div>
+						</div>
+					</div>
+
+					<aside class="payment-aside">
+						<p class="order-aside__label">Elige cómo pagar</p>
+
+						<div class="payment-options">
+							<button
+								type="button"
+								class="payment-option payment-option--whatsapp"
+								id="pay-whatsapp"
+							>
+								<img src={whatsappIcon} alt="" width="26" height="26" />
+								<span>
+									<strong>Pedir por WhatsApp</strong>
+									<small>Te confirmamos tu pedido por chat</small>
+								</span>
+							</button>
+
+							<button
+								type="button"
+								class="payment-option payment-option--yape"
+								id="pay-yape"
+							>
+								<img
+									class="payment-option__yape-logo"
+									src={yapeLogo}
+									alt="Yape"
+									width="52"
+									height="28"
+								/>
+								<span>
+									<strong>Pagar con Yape</strong>
+									<small>Yapea y envíanos tu comprobante</small>
+								</span>
+							</button>
+						</div>
+
+						<div class="yape-panel" id="yape-panel" hidden>
+							<img
+								class="yape-panel__logo"
+								src={yapeLogo}
+								alt="Yape"
+								width="72"
+								height="38"
+							/>
+
+							<div class="yape-panel__details">
+								<p>
+									<span>Nombre</span>
+									Gianmarco Santillán
+								</p>
+								<p>
+									<span>Número</span>
+									977 600 400
+								</p>
+							</div>
+
+							<div class="yape-panel__qr-frame">
+								<img
+									class="yape-panel__qr"
+									src={yapeQr}
+									alt="Código QR de Yape para pagar"
+									width="180"
+									height="180"
+								/>
+							</div>
+
+							<a
+								class="cart-primary-button"
+								id="yape-send-proof"
+								target="_blank"
+								rel="noopener noreferrer"
+							>
+								Enviar comprobante
+							</a>
+						</div>
+					</aside>
+				</div>
+
+				<div class="cart-step-actions">
+					<button
+						type="button"
+						class="cart-secondary-button"
+						data-go-step="2"
+					>
+						Volver a mis datos
+					</button>
+				</div>
+			</section>
+		</div>
 	</main>
 </BaseLayout>
 
@@ -300,8 +395,6 @@ const qrPlaceholder = `${base}pagos/yape-qr-placeholder.svg`;
 		WHATSAPP_NUMBER,
 		SHIPPING_COST,
 	} from "../lib/constants";
-
-	const base = import.meta.env.BASE_URL;
 
 	const steps = Array.from(
 		document.querySelectorAll<HTMLElement>(
@@ -387,6 +480,11 @@ const qrPlaceholder = `${base}pagos/yape-qr-placeholder.svg`;
 			0,
 		);
 
+	const variantLabelOf = (item: CartItem) =>
+		[item.woodTitle, item.sizeTitle]
+			.filter(Boolean)
+			.join(" · ");
+
 	const renderCartItems = () => {
 		const items = getCart();
 
@@ -398,12 +496,7 @@ const qrPlaceholder = `${base}pagos/yape-qr-placeholder.svg`;
 			const row = document.createElement("div");
 			row.className = "cart-item";
 
-			const variantLabel = [
-				item.woodTitle,
-				item.sizeTitle,
-			]
-				.filter(Boolean)
-				.join(" · ");
+			const variantLabel = variantLabelOf(item);
 
 			row.innerHTML = `
 				<div class="cart-item__media">
@@ -421,7 +514,7 @@ const qrPlaceholder = `${base}pagos/yape-qr-placeholder.svg`;
 							? `<p class="cart-item__variant">${variantLabel}</p>`
 							: ""
 					}
-					<p class="cart-item__price">${formatPEN(item.unitPrice)}</p>
+					<p class="cart-item__price">${formatPEN(item.unitPrice)} c/u</p>
 				</div>
 
 				<div class="cart-item__actions">
@@ -491,6 +584,87 @@ const qrPlaceholder = `${base}pagos/yape-qr-placeholder.svg`;
 		if (getCart().length === 0) return;
 		goToStep(2);
 	});
+
+	// ---------- MINI RESUMEN (PASO 2) ----------
+
+	const miniProductsSummary =
+		document.querySelector<HTMLElement>(
+			"#mini-products-summary",
+		)!;
+
+	const miniSubtotalLabel =
+		document.querySelector<HTMLElement>(
+			"#mini-subtotal",
+		)!;
+
+	const miniShippingLabelEl =
+		document.querySelector<HTMLElement>(
+			"#mini-shipping-label",
+		)!;
+
+	const miniShippingAmountLabel =
+		document.querySelector<HTMLElement>(
+			"#mini-shipping-amount",
+		)!;
+
+	const miniTotalLabel =
+		document.querySelector<HTMLElement>(
+			"#mini-total",
+		)!;
+
+	const renderProductLines = (
+		container: HTMLElement,
+		items: CartItem[],
+	) => {
+		container.innerHTML = items
+			.map((item) => {
+				const variant = variantLabelOf(item);
+
+				return `
+					<div class="order-summary__product">
+						<span>
+							${item.title}${variant ? ` — ${variant}` : ""}
+							× ${item.quantity}
+						</span>
+						<strong>${formatPEN(item.unitPrice * item.quantity)}</strong>
+					</div>
+				`;
+			})
+			.join("");
+	};
+
+	const renderMiniSummary = () => {
+		const items = getCart();
+		const subtotal = getCartSubtotal(items);
+
+		renderProductLines(miniProductsSummary, items);
+		miniSubtotalLabel.textContent = formatPEN(subtotal);
+
+		const departamentoValue =
+			departamentoSelect.value;
+
+		if (!departamentoValue) {
+			miniShippingLabelEl.textContent = "Envío";
+			miniShippingAmountLabel.textContent = "—";
+			miniTotalLabel.textContent = formatPEN(subtotal);
+			return;
+		}
+
+		const isLima = isLimaMetropolitana(
+			departamentoValue,
+		);
+
+		miniShippingLabelEl.textContent = isLima
+			? "Delivery (Lima)"
+			: "Envío a agencia";
+
+		miniShippingAmountLabel.textContent =
+			formatPEN(SHIPPING_COST);
+
+		miniTotalLabel.textContent = formatPEN(
+			subtotal + SHIPPING_COST,
+		);
+	};
 
 	// ---------- PASO 2: DATOS DE ENVIO ----------
 
@@ -563,6 +737,8 @@ const qrPlaceholder = `${base}pagos/yape-qr-placeholder.svg`;
 	const updateShippingPreview = () => {
 		shippingMethodPreview.textContent =
 			getShippingLabel();
+
+		renderMiniSummary();
 	};
 
 	populateSelect(
@@ -613,6 +789,9 @@ const qrPlaceholder = `${base}pagos/yape-qr-placeholder.svg`;
 		distritoSelect.disabled =
 			distritos.length === 0;
 	});
+
+	onCartUpdated(renderMiniSummary);
+	renderMiniSummary();
 
 	const goToStep3Button =
 		document.querySelector<HTMLButtonElement>(
@@ -681,7 +860,7 @@ const qrPlaceholder = `${base}pagos/yape-qr-placeholder.svg`;
 				formData.get("lastName") || "",
 			),
 			email: String(formData.get("email") || ""),
-			phone: String(formData.get("phone") || ""),
+			phone: `+51 ${String(formData.get("phone") || "")}`,
 			departamento:
 				getDepartamentoName(departamentoId),
 			provincia: getProvinciaName(provinciaId),
@@ -727,25 +906,7 @@ const qrPlaceholder = `${base}pagos/yape-qr-placeholder.svg`;
 			}
 		`;
 
-		orderProductsSummary.innerHTML = items
-			.map(
-				(item) => `
-					<div class="order-summary__product">
-						<span>
-							${item.title}${
-								[item.woodTitle, item.sizeTitle]
-									.filter(Boolean)
-									.join(" · ")
-									? ` — ${[item.woodTitle, item.sizeTitle].filter(Boolean).join(" · ")}`
-									: ""
-							}
-							× ${item.quantity}
-						</span>
-						<strong>${formatPEN(item.unitPrice * item.quantity)}</strong>
-					</div>
-				`,
-			)
-			.join("");
+		renderProductLines(orderProductsSummary, items);
 
 		orderSubtotalLabel.textContent =
 			formatPEN(subtotal);
@@ -769,12 +930,7 @@ const qrPlaceholder = `${base}pagos/yape-qr-placeholder.svg`;
 
 		const productLines = items
 			.map((item, index) => {
-				const variant = [
-					item.woodTitle,
-					item.sizeTitle,
-				]
-					.filter(Boolean)
-					.join(" · ");
+				const variant = variantLabelOf(item);
 
 				return `${index + 1}. ${item.title}${
 					variant ? ` (${variant})` : ""
@@ -869,32 +1025,25 @@ const qrPlaceholder = `${base}pagos/yape-qr-placeholder.svg`;
 	});
 </script>
 
-<style>
+<style is:global>
 	.cart-page {
-		min-height: 100vh;
 		padding:
-			clamp(175px, 15vw, 225px)
+			clamp(24px, 3vw, 40px)
 			clamp(20px, 5vw, 82px)
-			clamp(100px, 12vw, 160px);
+			clamp(40px, 5vw, 64px);
 		background: #fff6ed;
 		color: #141414;
 	}
 
-	.cart-breadcrumbs,
-	.cart-steps-indicator,
-	.cart-step {
-		width: min(100%, 900px);
-		margin-inline: auto;
-	}
-
 	.cart-breadcrumbs {
-		margin-bottom: 28px;
+		width: min(100%, 1100px);
+		margin: 0 auto 20px;
 		display: flex;
 		align-items: center;
 		flex-wrap: wrap;
 		gap: 9px;
 		color: rgba(20, 20, 20, 0.5);
-		font-size: 9px;
+		font-size: 13px;
 		font-weight: 600;
 		letter-spacing: 0.07em;
 		text-transform: uppercase;
@@ -905,8 +1054,28 @@ const qrPlaceholder = `${base}pagos/yape-qr-placeholder.svg`;
 		text-decoration: none;
 	}
 
+	.checkout-shell {
+		width: min(100%, 1100px);
+		margin-inline: auto;
+		padding: clamp(22px, 3vw, 38px);
+		border: 1px solid rgba(255, 255, 255, 0.13);
+		border-radius: 28px;
+		background:
+			linear-gradient(
+				135deg,
+				rgba(255, 255, 255, 0.04),
+				rgba(255, 255, 255, 0.008) 46%,
+				rgba(91, 49, 42, 0.025)
+			),
+			rgba(3, 3, 3, 0.985);
+		box-shadow:
+			inset 0 1px 0 rgba(255, 255, 255, 0.1),
+			0 24px 68px rgba(0, 0, 0, 0.4);
+		color: #fff6ed;
+	}
+
 	.cart-steps-indicator {
-		margin-bottom: clamp(36px, 5vw, 56px);
+		margin-bottom: clamp(26px, 4vw, 40px);
 		display: flex;
 		align-items: center;
 		gap: 10px;
@@ -920,9 +1089,9 @@ const qrPlaceholder = `${base}pagos/yape-qr-placeholder.svg`;
 		align-items: center;
 		gap: 8px;
 		padding-bottom: 12px;
-		border-bottom: 2px solid rgba(20, 20, 20, 0.12);
-		color: rgba(20, 20, 20, 0.42);
-		font-size: 11px;
+		border-bottom: 2px solid rgba(255, 255, 255, 0.14);
+		color: rgba(255, 246, 237, 0.42);
+		font-size: 13px;
 		font-weight: 700;
 		letter-spacing: 0.04em;
 		text-transform: uppercase;
@@ -937,14 +1106,14 @@ const qrPlaceholder = `${base}pagos/yape-qr-placeholder.svg`;
 		display: grid;
 		place-items: center;
 		border-radius: 50%;
-		background: rgba(20, 20, 20, 0.08);
-		font-size: 10px;
+		background: rgba(255, 255, 255, 0.08);
+		font-size: 11px;
 	}
 
 	.cart-steps-indicator li.is-active,
 	.cart-steps-indicator li.is-complete {
-		color: #141414;
-		border-color: #141414;
+		color: #fff6ed;
+		border-color: #ff4d2a;
 	}
 
 	.cart-steps-indicator li.is-active span,
@@ -961,28 +1130,35 @@ const qrPlaceholder = `${base}pagos/yape-qr-placeholder.svg`;
 		display: block;
 	}
 
+	.checkout-grid {
+		display: grid;
+		grid-template-columns: minmax(0, 1.35fr) minmax(240px, 0.9fr);
+		gap: 22px;
+		align-items: start;
+	}
+
 	.cart-items {
 		display: flex;
 		flex-direction: column;
-		gap: 18px;
+		gap: 12px;
 	}
 
 	.cart-item {
 		display: grid;
-		grid-template-columns: 84px minmax(0, 1fr) auto auto;
+		grid-template-columns: 64px minmax(0, 1fr) auto auto;
 		align-items: center;
-		gap: 18px;
-		padding: 16px;
-		border: 1px solid rgba(20, 20, 20, 0.1);
-		border-radius: 18px;
-		background: rgba(255, 255, 255, 0.5);
+		gap: 14px;
+		padding: 12px;
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		border-radius: 14px;
+		background: rgba(255, 255, 255, 0.035);
 	}
 
 	.cart-item__media {
-		width: 84px;
-		height: 84px;
+		width: 64px;
+		height: 64px;
 		overflow: hidden;
-		border-radius: 12px;
+		border-radius: 10px;
 		background: #ffffff;
 	}
 
@@ -991,7 +1167,7 @@ const qrPlaceholder = `${base}pagos/yape-qr-placeholder.svg`;
 		width: 100%;
 		height: 100%;
 		object-fit: contain;
-		padding: 8px;
+		padding: 6px;
 	}
 
 	.cart-item__placeholder {
@@ -1000,50 +1176,52 @@ const qrPlaceholder = `${base}pagos/yape-qr-placeholder.svg`;
 		display: grid;
 		place-items: center;
 		color: #5b312a;
-		font-size: 10px;
+		font-size: 9px;
 		font-weight: 700;
-		letter-spacing: 0.1em;
+		letter-spacing: 0.08em;
 	}
 
 	.cart-item__title {
 		margin: 0;
-		font-size: 15px;
+		font-size: 15.5px;
 		font-weight: 600;
 	}
 
 	.cart-item__variant {
-		margin: 4px 0 0;
-		color: rgba(20, 20, 20, 0.55);
-		font-size: 12px;
+		margin: 3px 0 0;
+		color: rgba(255, 246, 237, 0.55);
+		font-size: 13px;
 	}
 
 	.cart-item__price {
-		margin: 6px 0 0;
-		color: rgba(20, 20, 20, 0.6);
-		font-size: 12px;
+		margin: 4px 0 0;
+		color: rgba(255, 246, 237, 0.5);
+		font-size: 13px;
 	}
 
 	.cart-item__actions {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 8px;
+		gap: 6px;
 	}
 
 	.cart-item__quantity {
-		width: 56px;
-		padding: 6px;
-		border: 1px solid rgba(20, 20, 20, 0.18);
-		border-radius: 10px;
+		width: 50px;
+		padding: 5px;
+		border: 1px solid rgba(255, 255, 255, 0.16);
+		border-radius: 8px;
+		background: rgba(255, 255, 255, 0.05);
+		color: #fff6ed;
 		text-align: center;
-		font-size: 13px;
+		font-size: 14px;
 	}
 
 	.cart-item__remove {
 		border: 0;
 		background: transparent;
-		color: #a94737;
-		font-size: 10px;
+		color: #ff8a70;
+		font-size: 12px;
 		font-weight: 700;
 		letter-spacing: 0.05em;
 		text-transform: uppercase;
@@ -1052,48 +1230,48 @@ const qrPlaceholder = `${base}pagos/yape-qr-placeholder.svg`;
 
 	.cart-item__line-total {
 		margin: 0;
-		font-size: 15px;
+		font-size: 15.5px;
 		font-weight: 700;
 		white-space: nowrap;
 	}
 
 	.cart-empty {
-		padding: 50px 20px;
-		border: 1px solid rgba(20, 20, 20, 0.1);
-		border-radius: 18px;
+		padding: 40px 20px;
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		border-radius: 16px;
 		text-align: center;
 	}
 
 	.cart-empty p {
 		margin: 0 0 14px;
-		color: rgba(20, 20, 20, 0.6);
+		color: rgba(255, 246, 237, 0.6);
 	}
 
 	.cart-empty a {
-		color: #141414;
+		color: #fff6ed;
 		font-weight: 700;
 		text-decoration: underline;
 	}
 
 	.cart-summary {
-		margin-top: 26px;
-		padding-top: 20px;
-		border-top: 1px solid rgba(20, 20, 20, 0.12);
+		margin-top: 20px;
+		padding-top: 16px;
+		border-top: 1px solid rgba(255, 255, 255, 0.12);
 	}
 
 	.cart-summary__row {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		font-size: 15px;
+		font-size: 16px;
 	}
 
 	.cart-summary__row strong {
-		font-size: 20px;
+		font-size: 19px;
 	}
 
 	.cart-step-actions {
-		margin-top: 30px;
+		margin-top: 24px;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
@@ -1103,13 +1281,13 @@ const qrPlaceholder = `${base}pagos/yape-qr-placeholder.svg`;
 
 	.cart-primary-button,
 	.cart-secondary-button {
-		min-height: 52px;
-		padding-inline: 24px;
+		min-height: 48px;
+		padding-inline: 22px;
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		border-radius: 14px;
-		font-size: 11px;
+		border-radius: 12px;
+		font-size: 12.5px;
 		font-weight: 700;
 		letter-spacing: 0.06em;
 		text-transform: uppercase;
@@ -1138,27 +1316,28 @@ const qrPlaceholder = `${base}pagos/yape-qr-placeholder.svg`;
 	}
 
 	.cart-secondary-button {
-		border: 1px solid rgba(20, 20, 20, 0.2);
+		border: 1px solid rgba(255, 255, 255, 0.22);
 		background: transparent;
-		color: #141414;
+		color: #fff6ed;
 	}
 
 	.cart-secondary-button:hover {
-		background: rgba(20, 20, 20, 0.05);
+		background: rgba(255, 255, 255, 0.07);
 	}
 
 	.shipping-form__grid {
 		display: grid;
 		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: 18px;
+		gap: 14px;
 	}
 
 	.shipping-field {
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
-		font-size: 12px;
+		gap: 6px;
+		font-size: 13px;
 		font-weight: 600;
+		color: rgba(255, 246, 237, 0.75);
 	}
 
 	.shipping-field--full {
@@ -1168,16 +1347,21 @@ const qrPlaceholder = `${base}pagos/yape-qr-placeholder.svg`;
 	.shipping-field input,
 	.shipping-field select,
 	.shipping-field textarea {
-		padding: 13px 14px;
-		border: 1px solid rgba(20, 20, 20, 0.18);
-		border-radius: 12px;
-		background: #ffffff;
-		font-size: 14px;
+		padding: 11px 12px;
+		border: 1px solid rgba(255, 255, 255, 0.16);
+		border-radius: 10px;
+		background: rgba(255, 255, 255, 0.05);
+		color: #fff6ed;
+		font-size: 15px;
 		font-weight: 400;
 	}
 
+	.shipping-field select option {
+		color: #141414;
+	}
+
 	.shipping-field select:disabled {
-		opacity: 0.5;
+		opacity: 0.4;
 	}
 
 	.shipping-field textarea {
@@ -1185,37 +1369,107 @@ const qrPlaceholder = `${base}pagos/yape-qr-placeholder.svg`;
 		font-family: inherit;
 	}
 
+	.phone-input {
+		display: flex;
+		align-items: stretch;
+		border: 1px solid rgba(255, 255, 255, 0.16);
+		border-radius: 10px;
+		overflow: hidden;
+		background: rgba(255, 255, 255, 0.05);
+	}
+
+	.phone-input__prefix {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		padding: 0 10px;
+		border-right: 1px solid rgba(255, 255, 255, 0.16);
+		color: rgba(255, 246, 237, 0.8);
+		font-size: 14.5px;
+		font-weight: 700;
+		white-space: nowrap;
+	}
+
+	.phone-input__flag {
+		width: 16px;
+		height: 11px;
+		border-radius: 2px;
+		overflow: hidden;
+		flex-shrink: 0;
+	}
+
+	.phone-input input {
+		flex: 1;
+		min-width: 0;
+		border: 0;
+		border-radius: 0;
+		background: transparent;
+	}
+
 	.shipping-method-preview {
-		margin: 20px 0 0;
-		padding: 14px 16px;
-		border: 1px solid rgba(255, 77, 42, 0.3);
-		border-radius: 12px;
-		background: rgba(255, 77, 42, 0.06);
-		color: #141414;
-		font-size: 13px;
+		margin: 16px 0 0;
+		padding: 12px 14px;
+		border: 1px solid rgba(255, 77, 42, 0.35);
+		border-radius: 10px;
+		background: rgba(255, 77, 42, 0.09);
+		color: #fff6ed;
+		font-size: 14.5px;
 		font-weight: 600;
 	}
 
 	.shipping-form .shipping-field--full {
-		margin-top: 22px;
+		margin-top: 18px;
+	}
+
+	.order-aside,
+	.payment-aside {
+		padding: 18px;
+		border: 1px solid rgba(255, 255, 255, 0.12);
+		border-radius: 16px;
+		background: rgba(255, 255, 255, 0.03);
+	}
+
+	.order-aside__label {
+		margin: 0 0 12px;
+		color: #ff4d2a;
+		font-size: 11.5px;
+		font-weight: 700;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+	}
+
+	.order-aside__products {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		padding-bottom: 14px;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+	}
+
+	.order-aside__totals {
+		padding-top: 14px;
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
 	}
 
 	.order-summary {
 		display: flex;
 		flex-direction: column;
-		gap: 24px;
+		gap: 16px;
 	}
 
 	.order-summary__block {
-		padding: 20px;
-		border: 1px solid rgba(20, 20, 20, 0.1);
-		border-radius: 16px;
+		padding: 16px;
+		border: 1px solid rgba(255, 255, 255, 0.12);
+		border-radius: 14px;
+		background: rgba(255, 255, 255, 0.03);
 	}
 
 	.order-summary__label {
-		margin: 0 0 14px;
+		margin: 0 0 12px;
 		color: #ff4d2a;
-		font-size: 10px;
+		font-size: 11.5px;
 		font-weight: 700;
 		letter-spacing: 0.1em;
 		text-transform: uppercase;
@@ -1224,26 +1478,26 @@ const qrPlaceholder = `${base}pagos/yape-qr-placeholder.svg`;
 	.order-summary__list {
 		margin: 0;
 		display: grid;
-		gap: 10px;
+		gap: 8px;
 	}
 
 	.order-summary__list dt {
-		color: rgba(20, 20, 20, 0.5);
-		font-size: 11px;
+		color: rgba(255, 246, 237, 0.48);
+		font-size: 13px;
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
 	}
 
 	.order-summary__list dd {
 		margin: 2px 0 0;
-		font-size: 14px;
+		font-size: 15px;
 		font-weight: 600;
 	}
 
 	.order-summary__products {
 		display: flex;
 		flex-direction: column;
-		gap: 10px;
+		gap: 8px;
 	}
 
 	.order-summary__product {
@@ -1251,54 +1505,63 @@ const qrPlaceholder = `${base}pagos/yape-qr-placeholder.svg`;
 		align-items: baseline;
 		justify-content: space-between;
 		gap: 12px;
-		font-size: 13px;
+		font-size: 14px;
+		color: rgba(255, 246, 237, 0.85);
+	}
+
+	.order-summary__product strong {
+		color: #fff6ed;
+		white-space: nowrap;
 	}
 
 	.order-summary__totals {
-		padding: 20px;
-		border: 1px solid rgba(20, 20, 20, 0.12);
-		border-radius: 16px;
-		background: rgba(20, 20, 20, 0.03);
+		padding: 16px;
+		border: 1px solid rgba(255, 255, 255, 0.14);
+		border-radius: 14px;
+		background: rgba(255, 255, 255, 0.04);
 	}
 
 	.order-summary__row {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		font-size: 13px;
+		font-size: 14.5px;
+		color: rgba(255, 246, 237, 0.7);
+	}
+
+	.order-summary__row strong {
+		color: #fff6ed;
 	}
 
 	.order-summary__row + .order-summary__row {
-		margin-top: 10px;
+		margin-top: 9px;
 	}
 
 	.order-summary__row--total {
-		margin-top: 14px;
-		padding-top: 14px;
-		border-top: 1px solid rgba(20, 20, 20, 0.14);
+		margin-top: 12px;
+		padding-top: 12px;
+		border-top: 1px solid rgba(255, 255, 255, 0.14);
 		font-size: 17px;
 		font-weight: 700;
+		color: #fff6ed;
 	}
 
 	.payment-options {
-		margin-top: 30px;
-		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: 14px;
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
 	}
 
 	.payment-option {
-		min-height: 76px;
-		padding: 16px 18px;
+		min-height: 64px;
+		padding: 12px 14px;
 		display: flex;
-		flex-direction: column;
-		align-items: flex-start;
-		justify-content: center;
-		gap: 4px;
-		border-radius: 16px;
-		border: 1px solid rgba(20, 20, 20, 0.14);
-		background: #ffffff;
-		color: #141414;
+		align-items: center;
+		gap: 12px;
+		border-radius: 14px;
+		border: 1px solid rgba(255, 255, 255, 0.14);
+		background: rgba(255, 255, 255, 0.04);
+		color: #fff6ed;
 		text-align: left;
 		cursor: pointer;
 		transition:
@@ -1306,65 +1569,109 @@ const qrPlaceholder = `${base}pagos/yape-qr-placeholder.svg`;
 			border-color 180ms ease;
 	}
 
+	.payment-option img {
+		flex-shrink: 0;
+	}
+
 	.payment-option span {
-		font-size: 14px;
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	.payment-option strong {
+		font-size: 15px;
 		font-weight: 700;
 	}
 
 	.payment-option small {
-		color: rgba(20, 20, 20, 0.55);
-		font-size: 11px;
+		color: rgba(255, 246, 237, 0.55);
+		font-size: 12.5px;
 	}
 
 	.payment-option:hover {
 		transform: translateY(-2px);
-		border-color: #141414;
+		border-color: rgba(255, 255, 255, 0.35);
 	}
 
 	.payment-option--whatsapp {
-		border-color: rgba(37, 211, 102, 0.4);
+		border-color: rgba(37, 211, 102, 0.35);
 	}
 
 	.payment-option--yape {
-		border-color: rgba(124, 45, 209, 0.35);
+		border-color: rgba(155, 79, 219, 0.4);
+	}
+
+	.payment-option__yape-logo {
+		flex-shrink: 0;
+		width: 52px;
+		height: 28px;
+		object-fit: contain;
+		border-radius: 6px;
+		background: #ffffff;
+		padding: 4px 6px;
+	}
+
+	.yape-panel__logo {
+		width: 72px;
+		height: 38px;
+		object-fit: contain;
 	}
 
 	.yape-panel {
-		margin-top: 20px;
-		padding: 24px;
+		margin-top: 16px;
+		padding: 18px;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 14px;
-		border: 1px solid rgba(20, 20, 20, 0.12);
-		border-radius: 18px;
-		background: rgba(255, 255, 255, 0.6);
+		gap: 12px;
+		border: 1px solid rgba(255, 255, 255, 0.12);
+		border-radius: 14px;
+		background: rgba(255, 255, 255, 0.03);
 		text-align: center;
 	}
 
 	.yape-panel__details p {
 		margin: 0 0 6px;
-		font-size: 14px;
+		font-size: 15px;
+		color: #fff6ed;
 	}
 
 	.yape-panel__details span {
 		margin-right: 6px;
-		color: rgba(20, 20, 20, 0.5);
-		font-size: 11px;
+		color: rgba(255, 246, 237, 0.5);
+		font-size: 13px;
 		font-weight: 700;
 		text-transform: uppercase;
 	}
 
-	.yape-panel__qr {
-		width: 180px;
-		height: 180px;
+	.yape-panel__qr-frame {
+		padding: 10px;
 		border-radius: 14px;
-		border: 1px solid rgba(20, 20, 20, 0.1);
+		background: #fff6ed;
+	}
+
+	.yape-panel__qr {
+		width: 190px;
+		height: 190px;
+		display: block;
+		object-fit: contain;
+	}
+
+	@media (max-width: 860px) {
+		.checkout-grid {
+			grid-template-columns: 1fr;
+		}
 	}
 
 	@media (max-width: 700px) {
 		.cart-page {
-			padding: 150px 14px 90px;
+			padding: 20px 12px 40px;
+		}
+
+		.checkout-shell {
+			padding: 18px 14px;
+			border-radius: 22px;
 		}
 
 		.cart-steps-indicator li span {
@@ -1372,24 +1679,24 @@ const qrPlaceholder = `${base}pagos/yape-qr-placeholder.svg`;
 		}
 
 		.cart-steps-indicator li {
-			font-size: 9px;
+			font-size: 11px;
 			text-align: center;
 			justify-content: center;
 		}
 
 		.cart-item {
-			grid-template-columns: 64px minmax(0, 1fr);
+			grid-template-columns: 56px minmax(0, 1fr);
 			grid-template-areas:
 				"media content"
 				"actions actions"
 				"total total";
-			row-gap: 10px;
+			row-gap: 8px;
 		}
 
 		.cart-item__media {
 			grid-area: media;
-			width: 64px;
-			height: 64px;
+			width: 56px;
+			height: 56px;
 		}
 
 		.cart-item__content {
@@ -1408,10 +1715,6 @@ const qrPlaceholder = `${base}pagos/yape-qr-placeholder.svg`;
 		}
 
 		.shipping-form__grid {
-			grid-template-columns: 1fr;
-		}
-
-		.payment-options {
 			grid-template-columns: 1fr;
 		}
 

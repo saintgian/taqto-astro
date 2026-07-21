@@ -2,6 +2,7 @@
 import BaseLayout from "../../../layouts/BaseLayout.astro";
 import Header from "../../../components/Header.astro";
 import ProductCard from "../../../components/ProductCard.astro";
+import CategoryHeroBanner from "../../../components/CategoryHeroBanner.astro";
 
 import {
 	sanityClient,
@@ -73,7 +74,9 @@ const category =
 	);
 
 if (!category) {
-	return Astro.redirect("/categorias/");
+	return Astro.redirect(
+		`${import.meta.env.BASE_URL}categorias/`,
+	);
 }
 
 const base = import.meta.env.BASE_URL;
@@ -117,34 +120,16 @@ const pageDescription =
 			<span>{category.title}</span>
 		</nav>
 
-		<header class="category-hero">
-			<div>
-				<p class="category-eyebrow">
-					{
-						category.eyebrow ||
-							"Colección TAQTO"
-					}
-				</p>
-
-				<h1>{category.title}</h1>
-
-				<p class="category-description">
-					{category.description}
-				</p>
-			</div>
-
-			<div class="category-count">
-				<strong>{products.length}</strong>
-
-				<span>
-					{
-						products.length === 1
-							? "pieza"
-							: "piezas"
-					}
-				</span>
-			</div>
-		</header>
+		<CategoryHeroBanner
+			categorySlug={category.slug}
+			eyebrow={category.eyebrow || "Colección TAQTO"}
+			title={category.title}
+			description={category.description}
+			count={products.length}
+			countLabel={
+				products.length === 1 ? "pieza" : "piezas"
+			}
+		/>
 
 		{
 			subcategories.length > 0 && (
@@ -161,28 +146,11 @@ const pageDescription =
 										class="subcategory-link"
 										href={`${base}categorias/${category.slug}/${subcategory.slug}/`}
 									>
-										<div>
-											<span>
-												{subcategory.title}
-											</span>
+										{subcategory.title}
 
-											<small>
-												{
-													subcategory.productCount ||
-														0
-												}{" "}
-												{
-													subcategory.productCount ===
-													1
-														? "producto"
-														: "productos"
-												}
-											</small>
-										</div>
-
-										<strong aria-hidden="true">
-											→
-										</strong>
+										<span class="subcategory-link__count">
+											{subcategory.productCount || 0}
+										</span>
 									</a>
 								),
 							)
@@ -242,7 +210,7 @@ const pageDescription =
 	.category-page {
 		min-height: 100vh;
 		padding:
-			clamp(175px, 15vw, 225px)
+			clamp(24px, 3vw, 40px)
 			clamp(20px, 5vw, 82px)
 			clamp(80px, 9vw, 140px);
 		background: #fff6ed;
@@ -250,7 +218,6 @@ const pageDescription =
 	}
 
 	.category-breadcrumbs,
-	.category-hero,
 	.subcategory-navigation,
 	.category-products {
 		width: min(100%, 1450px);
@@ -264,7 +231,7 @@ const pageDescription =
 		flex-wrap: wrap;
 		gap: 9px;
 		color: rgba(20, 20, 20, 0.5);
-		font-size: 9px;
+		font-size: 11px;
 		font-weight: 600;
 		letter-spacing: 0.07em;
 		text-transform: uppercase;
@@ -275,139 +242,74 @@ const pageDescription =
 		text-decoration: none;
 	}
 
-	.category-hero {
-		display: grid;
-		grid-template-columns:
-			minmax(0, 1fr)
-			auto;
-		align-items: end;
-		gap: 50px;
-	}
-
-	.category-hero > div:first-child {
-		max-width: 940px;
-	}
-
-	.category-eyebrow,
 	.section-label {
 		margin: 0 0 14px;
 		color: #ff4d2a;
-		font-size: 10px;
+		font-size: 12px;
 		font-weight: 700;
 		letter-spacing: 0.15em;
 		text-transform: uppercase;
 	}
 
-	.category-hero h1 {
-		margin: 0;
-		font-size: clamp(58px, 9vw, 130px);
-		font-weight: 600;
-		line-height: 0.86;
-		letter-spacing: -0.07em;
-	}
-
-	.category-description {
-		max-width: 680px;
-		margin: 26px 0 0;
-		color: rgba(20, 20, 20, 0.63);
-		font-size: 15px;
-		line-height: 1.65;
-	}
-
-	.category-count {
-		min-width: 145px;
-		padding: 22px;
-		border: 1px solid rgba(20, 20, 20, 0.1);
-		border-radius: 18px;
-		text-align: center;
-	}
-
-	.category-count strong {
-		display: block;
-		font-size: 36px;
-		font-weight: 600;
-		letter-spacing: -0.04em;
-	}
-
-	.category-count span {
-		display: block;
-		margin-top: 4px;
-		color: rgba(20, 20, 20, 0.5);
-		font-size: 9px;
-		font-weight: 600;
-		letter-spacing: 0.08em;
-		text-transform: uppercase;
-	}
-
 	.subcategory-navigation {
-		margin-top: clamp(55px, 7vw, 90px);
-		padding-top: clamp(36px, 4vw, 50px);
+		margin-top: clamp(20px, 2.5vw, 28px);
+		padding-top: 18px;
 		border-top: 1px solid rgba(20, 20, 20, 0.1);
 	}
 
 	.subcategory-navigation__grid {
-		display: grid;
-		grid-template-columns:
-			repeat(2, minmax(0, 1fr));
-		gap: 10px;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 9px;
 	}
 
 	.subcategory-link {
-		min-height: 88px;
-		padding: 18px 21px;
-		display: flex;
+		min-height: 42px;
+		padding: 0 16px;
+		display: inline-flex;
 		align-items: center;
-		justify-content: space-between;
-		gap: 20px;
-		border: 1px solid rgba(20, 20, 20, 0.1);
-		border-radius: 16px;
+		gap: 9px;
+		border: 1px solid rgba(20, 20, 20, 0.14);
+		border-radius: 999px;
 		color: #141414;
+		font-size: 14px;
+		font-weight: 600;
 		text-decoration: none;
 		transition:
 			background-color 180ms ease,
 			color 180ms ease,
-			transform 180ms ease;
+			border-color 180ms ease;
 	}
 
 	.subcategory-link:hover {
 		background: #141414;
+		border-color: #141414;
 		color: #fff6ed;
-		transform: translateY(-2px);
 	}
 
-	.subcategory-link div {
-		display: flex;
-		flex-direction: column;
-		gap: 6px;
+	.subcategory-link__count {
+		min-width: 20px;
+		height: 20px;
+		padding-inline: 5px;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 999px;
+		background: rgba(20, 20, 20, 0.08);
+		font-size: 11px;
+		font-weight: 700;
 	}
 
-	.subcategory-link span {
-		font-size: 17px;
-		font-weight: 600;
-	}
-
-	.subcategory-link small {
-		font-size: 9px;
-		letter-spacing: 0.07em;
-		text-transform: uppercase;
-		opacity: 0.55;
-	}
-
-	.subcategory-link strong {
-		font-size: 18px;
-		transition: transform 180ms ease;
-	}
-
-	.subcategory-link:hover strong {
-		transform: translateX(4px);
+	.subcategory-link:hover .subcategory-link__count {
+		background: rgba(255, 255, 255, 0.16);
 	}
 
 	.category-products {
-		margin-top: clamp(80px, 10vw, 135px);
+		margin-top: clamp(32px, 4vw, 52px);
 	}
 
 	.category-products__header {
-		margin-bottom: 45px;
+		margin-bottom: 26px;
 		display: flex;
 		align-items: end;
 		justify-content: space-between;
@@ -462,30 +364,8 @@ const pageDescription =
 	@media (max-width: 760px) {
 		.category-page {
 			padding:
-				150px 14px
+				20px 14px
 				75px;
-		}
-
-		.category-hero {
-			grid-template-columns: 1fr;
-			align-items: start;
-			gap: 28px;
-		}
-
-		.category-count {
-			width: 100%;
-			display: flex;
-			align-items: center;
-			justify-content: space-between;
-			text-align: left;
-		}
-
-		.category-count span {
-			margin: 0;
-		}
-
-		.subcategory-navigation__grid {
-			grid-template-columns: 1fr;
 		}
 
 		.category-products__header {

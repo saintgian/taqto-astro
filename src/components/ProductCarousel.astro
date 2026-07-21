@@ -1,0 +1,136 @@
+---
+import { sanityClient } from "../lib/sanity";
+import { productDetailQuery } from "../lib/productDetailQuery";
+import ProductCard from "./ProductCard.astro";
+
+interface Product {
+	_id: string;
+	title: string;
+	slug: string;
+	[key: string]: unknown;
+}
+
+const products = await sanityClient.fetch<Product[]>(
+	productDetailQuery,
+);
+
+const track = [...products, ...products];
+---
+
+{
+	products.length > 0 && (
+		<section class="carousel">
+			<div class="carousel__heading">
+				<p class="carousel__eyebrow">
+					Catálogo TAQTO
+				</p>
+
+				<h2>¿Aún no te decides?</h2>
+			</div>
+
+			<div
+				class:list={[
+					"carousel__viewport",
+					{ "is-few": products.length < 4 },
+				]}
+			>
+				<div class="carousel__track">
+					{track.map((product) => (
+						<div class="carousel__item">
+							<ProductCard product={product} />
+						</div>
+					))}
+				</div>
+			</div>
+		</section>
+	)
+}
+
+<style>
+	.carousel {
+		padding:
+			clamp(20px, 3vw, 40px)
+			0
+			clamp(60px, 8vw, 110px);
+		background: var(--color-beige);
+		overflow: hidden;
+	}
+
+	.carousel__heading {
+		width: min(100%, var(--page-width));
+		margin: 0 auto clamp(28px, 3.5vw, 44px);
+		padding-inline: var(--page-padding);
+		text-align: center;
+	}
+
+	.carousel__eyebrow {
+		margin: 0 0 12px;
+		color: var(--color-orange);
+		font-size: 12px;
+		font-weight: 700;
+		letter-spacing: 0.15em;
+		text-transform: uppercase;
+	}
+
+	.carousel__heading h2 {
+		margin: 0;
+		font-size: clamp(28px, 3.6vw, 44px);
+		font-weight: 600;
+		letter-spacing: -0.02em;
+		color: var(--color-black);
+	}
+
+	.carousel__viewport {
+		width: 100%;
+		overflow: hidden;
+		mask-image: linear-gradient(
+			90deg,
+			transparent,
+			#000 6%,
+			#000 94%,
+			transparent
+		);
+	}
+
+	.carousel__track {
+		display: flex;
+		width: max-content;
+		gap: 26px;
+		padding-inline: var(--page-padding);
+		animation: carousel-scroll 32s linear infinite;
+	}
+
+	.carousel__viewport.is-few .carousel__track {
+		animation-duration: 20s;
+	}
+
+	.carousel__viewport:hover .carousel__track {
+		animation-play-state: paused;
+	}
+
+	.carousel__item {
+		width: 280px;
+		flex-shrink: 0;
+	}
+
+	@keyframes carousel-scroll {
+		from {
+			transform: translateX(0);
+		}
+		to {
+			transform: translateX(-50%);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.carousel__track {
+			animation: none;
+		}
+	}
+
+	@media (max-width: 600px) {
+		.carousel__item {
+			width: 220px;
+		}
+	}
+</style>

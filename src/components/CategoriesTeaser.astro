@@ -1,0 +1,199 @@
+---
+import { sanityClient } from "../lib/sanity";
+import { categoryPathsQuery } from "../lib/categoryQueries";
+
+interface Category {
+	_id: string;
+	title: string;
+	description?: string;
+	slug: string;
+}
+
+const base = import.meta.env.BASE_URL;
+
+const categories = await sanityClient.fetch<Category[]>(
+	categoryPathsQuery,
+);
+
+const featured = categories.slice(0, 3);
+---
+
+{
+	featured.length > 0 && (
+		<section class="categories-teaser">
+			<div class="categories-teaser__heading">
+				<p class="categories-teaser__eyebrow">
+					Explora TAQTO
+				</p>
+
+				<h2>
+					Cada categoría, una forma distinta de
+					crear.
+				</h2>
+			</div>
+
+			<div class="categories-teaser__grid">
+				{featured.map((category) => (
+					<a
+						class="categories-teaser__card"
+						href={`${base}categorias/${category.slug}/`}
+					>
+						<div class="categories-teaser__image">
+							<span>Foto próximamente</span>
+						</div>
+
+						<h3>{category.title}</h3>
+
+						{category.description && (
+							<p>{category.description}</p>
+						)}
+
+						<span class="categories-teaser__link">
+							Ver colección
+							<svg
+								viewBox="0 0 24 24"
+								aria-hidden="true"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="1.8"
+							>
+								<path d="M5 12h14" />
+								<path d="m14 7 5 5-5 5" />
+							</svg>
+						</span>
+					</a>
+				))}
+			</div>
+		</section>
+	)
+}
+
+<style>
+	.categories-teaser {
+		padding:
+			clamp(50px, 7vw, 90px)
+			var(--page-padding)
+			clamp(20px, 3vw, 40px);
+		background: var(--color-beige);
+	}
+
+	.categories-teaser__heading {
+		width: min(100%, var(--page-width));
+		margin: 0 auto clamp(32px, 4vw, 52px);
+		text-align: center;
+	}
+
+	.categories-teaser__eyebrow {
+		margin: 0 0 12px;
+		color: var(--color-orange);
+		font-size: 12px;
+		font-weight: 700;
+		letter-spacing: 0.15em;
+		text-transform: uppercase;
+	}
+
+	.categories-teaser__heading h2 {
+		max-width: 620px;
+		margin: 0 auto;
+		font-size: clamp(28px, 3.6vw, 44px);
+		font-weight: 600;
+		line-height: 1.1;
+		letter-spacing: -0.02em;
+		color: var(--color-black);
+	}
+
+	.categories-teaser__grid {
+		width: min(100%, var(--page-width));
+		margin: 0 auto;
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 26px;
+	}
+
+	.categories-teaser__card {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 6px;
+		padding: 26px 22px 30px;
+		border: 1px solid rgba(20, 20, 20, 0.1);
+		border-radius: 22px;
+		background: rgba(255, 255, 255, 0.4);
+		color: var(--color-black);
+		text-align: center;
+		text-decoration: none;
+		transition:
+			transform 220ms ease,
+			border-color 220ms ease,
+			box-shadow 220ms ease;
+	}
+
+	.categories-teaser__card:hover {
+		transform: translateY(-4px);
+		border-color: rgba(20, 20, 20, 0.22);
+		box-shadow: 0 20px 46px rgba(20, 20, 20, 0.1);
+	}
+
+	.categories-teaser__image {
+		width: 100%;
+		aspect-ratio: 4 / 3;
+		margin-bottom: 18px;
+		display: grid;
+		place-items: center;
+		border: 1px dashed rgba(20, 20, 20, 0.22);
+		border-radius: 16px;
+		background: rgba(20, 20, 20, 0.03);
+	}
+
+	.categories-teaser__image span {
+		color: rgba(20, 20, 20, 0.35);
+		font-size: 11px;
+		font-weight: 600;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+	}
+
+	.categories-teaser__card h3 {
+		margin: 0;
+		font-size: 22px;
+		font-weight: 600;
+		letter-spacing: -0.01em;
+	}
+
+	.categories-teaser__card p {
+		max-width: 320px;
+		margin: 8px 0 0;
+		color: rgba(20, 20, 20, 0.6);
+		font-size: 13.5px;
+		line-height: 1.55;
+	}
+
+	.categories-teaser__link {
+		margin-top: 16px;
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		color: var(--color-black);
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+	}
+
+	.categories-teaser__link svg {
+		width: 15px;
+		height: 15px;
+		transition: transform 180ms ease;
+	}
+
+	.categories-teaser__card:hover .categories-teaser__link svg {
+		transform: translateX(4px);
+	}
+
+	@media (max-width: 900px) {
+		.categories-teaser__grid {
+			grid-template-columns: 1fr;
+			max-width: 420px;
+		}
+	}
+</style>

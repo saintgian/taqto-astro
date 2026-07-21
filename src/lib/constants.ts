@@ -1,6 +1,5 @@
 // Numero de WhatsApp de TAQTO usado en header, footer, boton flotante y checkout.
-// TODO: reemplazar por el numero real (formato Peru: 51 + numero, sin espacios ni signos).
-export const WHATSAPP_NUMBER = "51999999999";
+export const WHATSAPP_NUMBER = "51977600400";
 
 export const YAPE_NAME = "Gianmarco Santillan";
 export const YAPE_NUMBER = "977600400";

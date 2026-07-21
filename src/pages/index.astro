@@ -3,6 +3,9 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import Header from "../components/Header.astro";
 import HeroSlider from "../components/HeroSlider.astro";
 import CampaignBanner from "../components/CampaignBanner.astro";
+import CategoriesTeaser from "../components/CategoriesTeaser.astro";
+import OriginStats from "../components/OriginStats.astro";
+import ProductCarousel from "../components/ProductCarousel.astro";
 ---
 
 <BaseLayout
@@ -19,6 +22,10 @@ import CampaignBanner from "../components/CampaignBanner.astro";
 				<CampaignBanner />
 			</div>
 		</section>
+
+		<CategoriesTeaser />
+		<OriginStats />
+		<ProductCarousel />
 	</main>
 </BaseLayout>
 

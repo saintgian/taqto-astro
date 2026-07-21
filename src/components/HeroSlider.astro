@@ -1,4 +1,6 @@
 ---
+const base = import.meta.env.BASE_URL;
+
 const slides = [
 	{
 		eyebrow: "Parrilla peruana premium",
@@ -6,8 +8,8 @@ const slides = [
 		description:
 			"Piezas robustas de madera seleccionada, creadas para acompañar cada corte y cada encuentro.",
 		button: "Descubre tu tabla",
-		href: "/parrilla/",
-		image: "/images/hero/hero-parrilla.webp",
+		href: `${base}categorias/parrilla/`,
+		image: `${base}images/hero/hero-parrilla.webp`,
 		alt: "Tabla parrillera personalizada de madera TAQTO",
 		position: "center right",
 		theme: "dark",
@@ -18,8 +20,8 @@ const slides = [
 		description:
 			"Objetos cálidos y contemporáneos para servir, compartir y hacer especial cada momento.",
 		button: "Explorar la colección",
-		href: "/cocina-y-mesa/",
-		image: "/images/hero/hero-cocina.webp",
+		href: `${base}categorias/cocina-y-mesa/`,
+		image: `${base}images/hero/hero-cocina.webp`,
 		alt: "Accesorios de madera para cocina y mesa TAQTO",
 		position: "center center",
 		theme: "light",
@@ -30,8 +32,8 @@ const slides = [
 		description:
 			"Organizadores y accesorios de madera pensados para trabajar con claridad, orden y estilo.",
 		button: "Ver colección de oficina",
-		href: "/oficina/",
-		image: "/images/hero/hero-oficina.webp",
+		href: `${base}categorias/oficina/`,
+		image: `${base}images/hero/hero-oficina.webp`,
 		alt: "Organizador de escritorio de madera TAQTO",
 		position: "center right",
 		theme: "dark",

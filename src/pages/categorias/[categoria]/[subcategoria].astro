@@ -2,6 +2,7 @@
 import BaseLayout from "../../../layouts/BaseLayout.astro";
 import Header from "../../../components/Header.astro";
 import ProductCard from "../../../components/ProductCard.astro";
+import CategoryHeroBanner from "../../../components/CategoryHeroBanner.astro";
 
 import {
 	sanityClient,
@@ -133,39 +134,21 @@ const pageDescription =
 			<span>{subcategory.title}</span>
 		</nav>
 
-		<header class="subcategory-hero">
-			<div class="subcategory-hero__content">
-				<p class="subcategory-eyebrow">
-					{
-						category.eyebrow ||
-							category.title
-					}
-				</p>
-
-				<h1>{subcategory.title}</h1>
-
-				<p class="subcategory-description">
-					{
-						subcategory.description ||
-							`Explora la colección ${subcategory.title} de TAQTO.`
-					}
-				</p>
-			</div>
-
-			<div class="subcategory-summary">
-				<span>
-					{products.length}
-				</span>
-
-				<p>
-					{
-						products.length === 1
-							? "pieza disponible"
-							: "piezas disponibles"
-					}
-				</p>
-			</div>
-		</header>
+		<CategoryHeroBanner
+			categorySlug={category.slug || ""}
+			eyebrow={category.eyebrow || category.title}
+			title={subcategory.title || ""}
+			description={
+				subcategory.description ||
+					`Explora la colección ${subcategory.title} de TAQTO.`
+			}
+			count={products.length}
+			countLabel={
+				products.length === 1
+					? "pieza disponible"
+					: "piezas disponibles"
+			}
+		/>
 
 		<div class="subcategory-divider"></div>
 
@@ -212,7 +195,7 @@ const pageDescription =
 	.subcategory-page {
 		min-height: 100vh;
 		padding:
-			clamp(175px, 15vw, 225px)
+			clamp(24px, 3vw, 40px)
 			clamp(20px, 5vw, 82px)
 			clamp(80px, 9vw, 135px);
 		background: #fff6ed;
@@ -220,7 +203,6 @@ const pageDescription =
 	}
 
 	.subcategory-breadcrumbs,
-	.subcategory-hero,
 	.subcategory-divider,
 	.product-grid,
 	.subcategory-empty {
@@ -235,7 +217,7 @@ const pageDescription =
 		flex-wrap: wrap;
 		gap: 9px;
 		color: rgba(20, 20, 20, 0.5);
-		font-size: 9px;
+		font-size: 11px;
 		font-weight: 600;
 		letter-spacing: 0.07em;
 		text-transform: uppercase;
@@ -250,74 +232,10 @@ const pageDescription =
 		color: #141414;
 	}
 
-	.subcategory-hero {
-		display: grid;
-		grid-template-columns:
-			minmax(0, 1fr)
-			auto;
-		align-items: end;
-		gap: 50px;
-	}
-
-	.subcategory-hero__content {
-		max-width: 900px;
-	}
-
-	.subcategory-eyebrow {
-		margin: 0 0 14px;
-		color: #ff4d2a;
-		font-size: 10px;
-		font-weight: 700;
-		letter-spacing: 0.15em;
-		text-transform: uppercase;
-	}
-
-	.subcategory-hero h1 {
-		margin: 0;
-		font-size: clamp(50px, 8vw, 116px);
-		font-weight: 600;
-		line-height: 0.88;
-		letter-spacing: -0.065em;
-		text-wrap: balance;
-	}
-
-	.subcategory-description {
-		max-width: 680px;
-		margin: 25px 0 0;
-		color: rgba(20, 20, 20, 0.62);
-		font-size: 15px;
-		line-height: 1.65;
-	}
-
-	.subcategory-summary {
-		min-width: 145px;
-		padding: 21px;
-		border: 1px solid
-			rgba(20, 20, 20, 0.1);
-		border-radius: 18px;
-		text-align: center;
-	}
-
-	.subcategory-summary span {
-		display: block;
-		font-size: 34px;
-		font-weight: 600;
-		letter-spacing: -0.04em;
-	}
-
-	.subcategory-summary p {
-		margin: 5px 0 0;
-		color: rgba(20, 20, 20, 0.5);
-		font-size: 9px;
-		font-weight: 600;
-		letter-spacing: 0.07em;
-		text-transform: uppercase;
-	}
-
 	.subcategory-divider {
 		height: 1px;
-		margin-top: clamp(45px, 6vw, 75px);
-		margin-bottom: clamp(40px, 5vw, 65px);
+		margin-top: clamp(24px, 3vw, 36px);
+		margin-bottom: clamp(24px, 3vw, 36px);
 		background: rgba(20, 20, 20, 0.11);
 	}
 
@@ -343,7 +261,7 @@ const pageDescription =
 	.subcategory-empty__eyebrow {
 		margin: 0 0 12px;
 		color: #ff4d2a;
-		font-size: 9px;
+		font-size: 11px;
 		font-weight: 700;
 		letter-spacing: 0.13em;
 		text-transform: uppercase;
@@ -369,7 +287,7 @@ const pageDescription =
 		align-items: center;
 		gap: 10px;
 		color: #141414;
-		font-size: 10px;
+		font-size: 12px;
 		font-weight: 700;
 		letter-spacing: 0.08em;
 		text-decoration: none;
@@ -389,28 +307,10 @@ const pageDescription =
 	@media (max-width: 700px) {
 		.subcategory-page {
 			padding:
-				150px 14px
+				20px 14px
 				75px;
 		}
 
-		.subcategory-hero {
-			grid-template-columns: 1fr;
-			align-items: start;
-			gap: 28px;
-		}
-
-		.subcategory-summary {
-			min-width: 0;
-			width: 100%;
-			display: flex;
-			align-items: center;
-			justify-content: space-between;
-			text-align: left;
-		}
-
-		.subcategory-summary p {
-			margin: 0;
-		}
 	}
 
 	@media (max-width: 560px) {
