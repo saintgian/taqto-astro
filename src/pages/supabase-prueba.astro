@@ -1,0 +1,153 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { supabase } from "../lib/supabase";
+
+const {
+	data: statuses,
+	error,
+} = await supabase
+	.from("app_status")
+	.select("service, status, message, updated_at")
+	.eq("service", "taqto-store")
+	.limit(1);
+
+const connection = statuses?.[0];
+---
+
+<BaseLayout
+	title="Prueba Supabase | TAQTO"
+	description="Verificación de conexión entre Astro y Supabase."
+>
+	<main class="supabase-test">
+		<section class="supabase-test__card">
+			<p class="supabase-test__eyebrow">
+				TAQTO Backend
+			</p>
+
+			<h1>
+				{
+					error
+						? "No se pudo conectar"
+						: "Supabase conectado"
+				}
+			</h1>
+
+			{
+				error ? (
+					<div class="supabase-test__error">
+						<strong>Error:</strong>
+						<p>{error.message}</p>
+					</div>
+				) : connection ? (
+					<div class="supabase-test__success">
+						<div>
+							<span>Servicio</span>
+							<strong>{connection.service}</strong>
+						</div>
+
+						<div>
+							<span>Estado</span>
+							<strong>{connection.status}</strong>
+						</div>
+
+						<div>
+							<span>Mensaje</span>
+							<strong>{connection.message}</strong>
+						</div>
+					</div>
+				) : (
+					<p class="supabase-test__empty">
+						La conexión respondió, pero no se encontró
+						la fila de prueba.
+					</p>
+				)
+			}
+		</section>
+	</main>
+</BaseLayout>
+
+<style>
+	.supabase-test {
+		min-height: 100vh;
+		padding:
+			clamp(180px, 16vw, 230px)
+			20px
+			100px;
+		display: grid;
+		place-items: center;
+		background: #fff6ed;
+		color: #141414;
+	}
+
+	.supabase-test__card {
+		width: min(100%, 760px);
+		padding: clamp(30px, 5vw, 58px);
+		border: 1px solid rgba(20, 20, 20, 0.1);
+		border-radius: 24px;
+		background: #ffffff;
+		box-shadow:
+			0 24px 70px rgba(20, 20, 20, 0.08);
+	}
+
+	.supabase-test__eyebrow {
+		margin: 0 0 13px;
+		color: #ff4d2a;
+		font-size: 10px;
+		font-weight: 700;
+		letter-spacing: 0.15em;
+		text-transform: uppercase;
+	}
+
+	.supabase-test h1 {
+		margin: 0;
+		font-size: clamp(42px, 7vw, 76px);
+		font-weight: 600;
+		line-height: 0.95;
+		letter-spacing: -0.055em;
+	}
+
+	.supabase-test__success {
+		margin-top: 35px;
+		display: grid;
+		gap: 10px;
+	}
+
+	.supabase-test__success div {
+		min-height: 66px;
+		padding: 15px 18px;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 24px;
+		border: 1px solid rgba(20, 20, 20, 0.1);
+		border-radius: 14px;
+	}
+
+	.supabase-test__success span {
+		color: rgba(20, 20, 20, 0.5);
+		font-size: 10px;
+		font-weight: 600;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+	}
+
+	.supabase-test__success strong {
+		text-align: right;
+	}
+
+	.supabase-test__error {
+		margin-top: 30px;
+		padding: 18px;
+		border-radius: 14px;
+		background: rgba(169, 71, 55, 0.1);
+		color: #8b3428;
+	}
+
+	.supabase-test__error p {
+		margin: 8px 0 0;
+	}
+
+	.supabase-test__empty {
+		margin: 30px 0 0;
+	}
+</style>

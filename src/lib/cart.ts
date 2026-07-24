@@ -1,11 +1,15 @@
 export interface CartItem {
 	id: string;
+	productId: string;
 	slug: string;
 	title: string;
 	image: string;
 	sku: string;
 	woodTitle?: string;
+	woodSlug?: string;
 	sizeTitle?: string;
+	sizeSlug?: string;
+	dimensionsLabel?: string;
 	unitPrice: number;
 	quantity: number;
 }

@@ -170,6 +170,26 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 									disabled
 								></select>
 							</label>
+
+							<label class="shipping-field shipping-field--full">
+								<span>Dirección</span>
+								<input
+									type="text"
+									name="direccion"
+									required
+									placeholder="Av./Jr./Calle, número, urbanización"
+									autocomplete="street-address"
+								/>
+							</label>
+
+							<label class="shipping-field shipping-field--full">
+								<span>Referencia (opcional)</span>
+								<input
+									type="text"
+									name="referencia"
+									placeholder="Ej: frente al parque, edificio azul"
+								/>
+							</label>
 						</div>
 
 						<p
@@ -279,7 +299,15 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 					</div>
 
 					<aside class="payment-aside">
-						<p class="order-aside__label">Elige cómo pagar</p>
+						<p class="order-aside__label">
+							Elige cómo pagar
+						</p>
+
+						<p class="order-confirm__hint">
+							Al elegir un método, registramos tu
+							pedido en nuestro sistema y te damos un
+							código para confirmar el pago.
+						</p>
 
 						<div class="payment-options">
 							<button
@@ -311,6 +339,33 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 									<small>Yapea y envíanos tu comprobante</small>
 								</span>
 							</button>
+						</div>
+
+						<p
+							class="order-confirm__error"
+							id="order-confirm-error"
+							role="alert"
+							hidden
+						></p>
+
+						<div
+							class="order-created"
+							id="order-created-block"
+							hidden
+						>
+							<p class="order-created__label">
+								¡Pedido creado!
+							</p>
+
+							<p
+								class="order-created__code"
+								id="order-created-code"
+							></p>
+
+							<p class="order-created__hint">
+								Guarda este código: lo vas a usar para
+								confirmar tu pago.
+							</p>
 						</div>
 
 						<div class="yape-panel" id="yape-panel" hidden>
@@ -395,6 +450,8 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 		WHATSAPP_NUMBER,
 		SHIPPING_COST,
 	} from "../lib/constants";
+
+	import { supabase } from "../lib/supabase";
 
 	const steps = Array.from(
 		document.querySelectorAll<HTMLElement>(
@@ -865,6 +922,12 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 				getDepartamentoName(departamentoId),
 			provincia: getProvinciaName(provinciaId),
 			distrito: getDistritoName(distritoId),
+			direccion: String(
+				formData.get("direccion") || "",
+			),
+			referencia: String(
+				formData.get("referencia") || "",
+			),
 			giftMessage: String(
 				formData.get("giftMessage") || "",
 			),
@@ -897,6 +960,14 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 			</div>
 			<div>
 				<dt>Dirección</dt>
+				<dd>${customer.direccion}${
+					customer.referencia
+						? ` (${customer.referencia})`
+						: ""
+				}</dd>
+			</div>
+			<div>
+				<dt>Ubicación</dt>
 				<dd>${customer.distrito}, ${customer.provincia}, ${customer.departamento}</dd>
 			</div>
 			${
@@ -918,81 +989,40 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 		orderTotalLabel.textContent = formatPEN(total);
 	};
 
-	const buildWhatsAppOrderMessage = () => {
-		const customer = getCustomerData();
-		const items = getCart();
-		const subtotal = getCartSubtotal(items);
-		const total = subtotal + SHIPPING_COST;
+	const buildWhatsAppOrderMessage = (
+		orderCode: string,
+	) =>
+		`Hola TAQTO, acabo de registrar el pedido ${orderCode}. Quisiera confirmar el pago y la personalización.`;
 
-		const shippingLabel = customer.isLima
-			? "Delivery a domicilio (Lima Metropolitana)"
-			: "Envío a agencia en tu ciudad";
+	const buildWhatsAppReceiptMessage = (
+		orderCode: string,
+	) =>
+		`Hola TAQTO, ya yapeé el pedido ${orderCode}. Adjunto la captura del comprobante.`;
 
-		const productLines = items
-			.map((item, index) => {
-				const variant = variantLabelOf(item);
+	// ---------- CREAR PEDIDO EN SUPABASE ----------
 
-				return `${index + 1}. ${item.title}${
-					variant ? ` (${variant})` : ""
-				} — x${item.quantity} — ${formatPEN(
-					item.unitPrice * item.quantity,
-				)}`;
-			})
-			.join("\n");
+	let createdOrderCode: string | null = null;
+	let orderCreationInFlight = false;
 
-		return [
-			"Hola TAQTO, quiero hacer este pedido:",
-			"",
-			`*Cliente:* ${customer.firstName} ${customer.lastName}`,
-			`*Correo:* ${customer.email}`,
-			`*Teléfono:* ${customer.phone}`,
-			`*Dirección:* ${customer.distrito}, ${customer.provincia}, ${customer.departamento}`,
-			`*Envío:* ${shippingLabel} — ${formatPEN(SHIPPING_COST)}`,
-			customer.giftMessage
-				? `*Mensaje para la tarjeta de regalo:* ${customer.giftMessage}`
-				: "",
-			"",
-			"*Productos:*",
-			productLines,
-			"",
-			`*Subtotal:* ${formatPEN(subtotal)}`,
-			`*Envío:* ${formatPEN(SHIPPING_COST)}`,
-			`*Total:* ${formatPEN(total)}`,
-		]
-			.filter((line) => line !== "")
-			.join("\n");
-	};
+	const orderConfirmError =
+		document.querySelector<HTMLElement>(
+			"#order-confirm-error",
+		)!;
 
-	const buildWhatsAppReceiptMessage = () => {
-		const customer = getCustomerData();
-		const items = getCart();
-		const total =
-			getCartSubtotal(items) + SHIPPING_COST;
+	const orderCreatedBlock =
+		document.querySelector<HTMLElement>(
+			"#order-created-block",
+		)!;
 
-		return [
-			`Hola TAQTO, acabo de yapear mi pedido por un total de ${formatPEN(total)}. Adjunto la captura del comprobante.`,
-			"",
-			`*Cliente:* ${customer.firstName} ${customer.lastName}`,
-			`*Teléfono:* ${customer.phone}`,
-		].join("\n");
-	};
+	const orderCreatedCode =
+		document.querySelector<HTMLElement>(
+			"#order-created-code",
+		)!;
 
 	const payWhatsAppButton =
 		document.querySelector<HTMLButtonElement>(
 			"#pay-whatsapp",
 		)!;
-
-	payWhatsAppButton.addEventListener("click", () => {
-		const message = encodeURIComponent(
-			buildWhatsAppOrderMessage(),
-		);
-
-		window.open(
-			`https://wa.me/${WHATSAPP_NUMBER}?text=${message}`,
-			"_blank",
-			"noopener,noreferrer",
-		);
-	});
 
 	const payYapeButton =
 		document.querySelector<HTMLButtonElement>(
@@ -1009,11 +1039,122 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 			"#yape-send-proof",
 		)!;
 
-	payYapeButton.addEventListener("click", () => {
+	const buildOrderItemsPayload = (items: CartItem[]) =>
+		items.map((item) => ({
+			sanityProductId: item.productId,
+			sanityProductSlug: item.slug,
+			productName: item.title,
+			productSku: item.sku,
+			woodName: item.woodTitle || null,
+			woodSlug: item.woodSlug || null,
+			sizeName: item.sizeTitle || null,
+			sizeSlug: item.sizeSlug || null,
+			dimensionsLabel: item.dimensionsLabel || null,
+			quantity: item.quantity,
+			unitPrice: item.unitPrice,
+		}));
+
+	const ensureOrderCreated = async (
+		paymentMethod: "yape" | "cash_on_delivery",
+	): Promise<string | null> => {
+		if (createdOrderCode) return createdOrderCode;
+		if (orderCreationInFlight) return null;
+
+		const customer = getCustomerData();
+		const items = getCart();
+
+		if (items.length === 0) return null;
+
+		const subtotal = getCartSubtotal(items);
+		const total = subtotal + SHIPPING_COST;
+
+		orderCreationInFlight = true;
+		orderConfirmError.hidden = true;
+
+		payWhatsAppButton.classList.add("is-loading");
+		payYapeButton.classList.add("is-loading");
+
+		const { data, error } = await supabase.rpc(
+			"create_order",
+			{
+				p_payment_method: paymentMethod,
+				p_delivery_method: customer.isLima
+					? "lima_delivery"
+					: "province_agency",
+				p_customer_first_name: customer.firstName,
+				p_customer_last_name: customer.lastName,
+				p_customer_email: customer.email,
+				p_customer_phone: customer.phone,
+				p_delivery_department: customer.departamento,
+				p_delivery_province: customer.provincia,
+				p_delivery_district: customer.distrito,
+				p_delivery_address: customer.direccion,
+				p_delivery_reference:
+					customer.referencia || null,
+				p_customer_notes: customer.giftMessage
+					? `Mensaje para la tarjeta de regalo: ${customer.giftMessage}`
+					: null,
+				p_subtotal: subtotal,
+				p_delivery_cost: SHIPPING_COST,
+				p_total: total,
+				p_items: buildOrderItemsPayload(items),
+			},
+		);
+
+		orderCreationInFlight = false;
+		payWhatsAppButton.classList.remove("is-loading");
+		payYapeButton.classList.remove("is-loading");
+
+		if (error || !data) {
+			orderConfirmError.textContent =
+				"No pudimos registrar tu pedido. Intenta de nuevo o escríbenos directo por WhatsApp.";
+
+			orderConfirmError.hidden = false;
+			return null;
+		}
+
+		createdOrderCode = data as string;
+		orderCreatedBlock.hidden = false;
+		orderCreatedCode.textContent = createdOrderCode;
+
+		return createdOrderCode;
+	};
+
+	payWhatsAppButton.addEventListener(
+		"click",
+		async () => {
+			const code = await ensureOrderCreated(
+				"cash_on_delivery",
+			);
+
+			if (!code) return;
+
+			const message = encodeURIComponent(
+				buildWhatsAppOrderMessage(code),
+			);
+
+			window.open(
+				`https://wa.me/${WHATSAPP_NUMBER}?text=${message}`,
+				"_blank",
+				"noopener,noreferrer",
+			);
+
+			orderCreatedBlock.scrollIntoView({
+				behavior: "smooth",
+				block: "center",
+			});
+		},
+	);
+
+	payYapeButton.addEventListener("click", async () => {
+		const code = await ensureOrderCreated("yape");
+
+		if (!code) return;
+
 		yapePanel.hidden = false;
 
 		const message = encodeURIComponent(
-			buildWhatsAppReceiptMessage(),
+			buildWhatsAppReceiptMessage(code),
 		);
 
 		yapeSendProofLink.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
@@ -1090,7 +1231,7 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 		gap: 8px;
 		padding-bottom: 12px;
 		border-bottom: 2px solid rgba(255, 255, 255, 0.14);
-		color: rgba(255, 246, 237, 0.42);
+		color: rgba(255, 246, 237, 0.6);
 		font-size: 13px;
 		font-weight: 700;
 		letter-spacing: 0.04em;
@@ -1546,6 +1687,61 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 		color: #fff6ed;
 	}
 
+	.order-confirm__hint {
+		margin: 0 0 16px;
+		color: rgba(255, 246, 237, 0.6);
+		font-size: 12.5px;
+		line-height: 1.5;
+	}
+
+	.order-confirm__error {
+		margin: 12px 0 0;
+		padding: 12px 14px;
+		border: 1px solid rgba(220, 90, 70, 0.4);
+		border-radius: 10px;
+		background: rgba(220, 90, 70, 0.12);
+		color: #ff9b86;
+		font-size: 12.5px;
+		line-height: 1.5;
+	}
+
+	.cart-primary-button.is-loading,
+	.payment-option.is-loading {
+		pointer-events: none;
+		opacity: 0.7;
+	}
+
+	.order-created {
+		margin-top: 18px;
+		padding: 18px;
+		border: 1px solid rgba(255, 77, 42, 0.4);
+		border-radius: 14px;
+		background: rgba(255, 77, 42, 0.08);
+		text-align: center;
+	}
+
+	.order-created__label {
+		margin: 0;
+		color: #fff6ed;
+		font-size: 14px;
+		font-weight: 700;
+	}
+
+	.order-created__code {
+		margin: 10px 0;
+		color: #ff8a5c;
+		font-size: 22px;
+		font-weight: 700;
+		letter-spacing: 0.02em;
+	}
+
+	.order-created__hint {
+		margin: 0;
+		color: rgba(255, 246, 237, 0.6);
+		font-size: 12px;
+		line-height: 1.5;
+	}
+
 	.payment-options {
 		display: flex;
 		flex-direction: column;
@@ -1679,7 +1875,8 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 		}
 
 		.cart-steps-indicator li {
-			font-size: 11px;
+			font-size: 10.5px;
+			letter-spacing: 0.02em;
 			text-align: center;
 			justify-content: center;
 		}

@@ -9,8 +9,13 @@ const whatsappMessage = encodeURIComponent(
 
 const whatsappHref =
 	`https://wa.me/${WHATSAPP_NUMBER}?text=${whatsappMessage}`;
+
+const isCartPage =
+	Astro.url.pathname.includes("/carrito");
 ---
 
+{
+	!isCartPage && (
 <a
 	class="whatsapp-float"
 	href={whatsappHref}
@@ -27,6 +32,8 @@ const whatsappHref =
 
 	<span class="whatsapp-float__label">Pedir por WhatsApp</span>
 </a>
+	)
+}
 
 <style>
 	.whatsapp-float {

@@ -270,6 +270,21 @@ const uniqueProductData =
 				stock:
 					product.uniqueProduct
 						?.stockQuantity || 0,
+				woodSlug:
+					product.uniqueProduct?.wood?.slug ||
+					"",
+				woodTitle:
+					product.uniqueProduct?.wood?.title ||
+					"",
+				sizeSlug:
+					product.uniqueProduct?.size?.slug ||
+					"",
+				sizeTitle:
+					product.uniqueProduct?.size?.title ||
+					"",
+				dimensions:
+					product.uniqueProduct?.size
+						?.dimensionsLabel || "",
 			}
 		: null;
 
@@ -279,6 +294,7 @@ const safeVariantJson = JSON.stringify({
 	productMode: product.productMode || "unique",
 	uniqueProduct: uniqueProductData,
 	product: {
+		id: product._id,
 		slug: product.slug,
 		title: product.title,
 		image: mainImageUrl,
@@ -886,8 +902,16 @@ const safeVariantJson = JSON.stringify({
 					salePrice:
 						uniqueProductInfo.salePrice,
 					stock: uniqueProductInfo.stock || 0,
-					woodTitle: "",
-					sizeTitle: "",
+					woodTitle:
+						uniqueProductInfo.woodTitle || "",
+					woodSlug:
+						uniqueProductInfo.woodSlug || "",
+					sizeTitle:
+						uniqueProductInfo.sizeTitle || "",
+					sizeSlug:
+						uniqueProductInfo.sizeSlug || "",
+					dimensions:
+						uniqueProductInfo.dimensions || "",
 				};
 			}
 
@@ -900,7 +924,10 @@ const safeVariantJson = JSON.stringify({
 				salePrice: variant.salePrice,
 				stock: variant.stock || 0,
 				woodTitle: variant.woodTitle || "",
+				woodSlug: variant.woodSlug || "",
 				sizeTitle: variant.sizeTitle || "",
+				sizeSlug: variant.sizeSlug || "",
+				dimensions: variant.dimensions || "",
 			};
 		};
 
@@ -1107,14 +1134,21 @@ const safeVariantJson = JSON.stringify({
 
 				addItem({
 					id: cartId || productInfo.slug,
+					productId: productInfo.id,
 					slug: productInfo.slug,
 					title: productInfo.title,
 					image: productInfo.image || "",
 					sku: selection.sku,
 					woodTitle:
 						selection.woodTitle || undefined,
+					woodSlug:
+						selection.woodSlug || undefined,
 					sizeTitle:
 						selection.sizeTitle || undefined,
+					sizeSlug:
+						selection.sizeSlug || undefined,
+					dimensionsLabel:
+						selection.dimensions || undefined,
 					unitPrice,
 					quantity: getQuantity(),
 				});

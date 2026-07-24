@@ -1,0 +1,214 @@
+---
+import PageLayout from "../layouts/PageLayout.astro";
+
+const base = import.meta.env.BASE_URL;
+const productos = `${base}categorias/`;
+
+const wa = "https://wa.me/51977600400";
+
+const faqs = [
+	{ q: "¿Cuánto demora un pedido en Lima Metropolitana?", a: "El plazo estimado es de dos días hábiles desde la confirmación del pago. Si el producto incluye grabado personalizado, pueden añadirse días de producción, los cuales se informarán antes de confirmar el pedido." },
+	{ q: "¿Realizan envíos a provincias?", a: "Sí. Realizamos envíos a provincias mediante la agencia que el cliente elija." },
+	{ q: "¿Puedo elegir la agencia de transporte?", a: "Sí. Puedes indicarnos la agencia de tu preferencia al momento de coordinar el pedido." },
+	{ q: "¿Cuánto demora un envío a provincias?", a: "El tiempo depende de la ciudad de destino y de las condiciones de la agencia seleccionada. TAQTO coordina la preparación y el despacho, mientras que el tiempo de traslado depende de la agencia." },
+	{ q: "¿Cuánto cuesta el envío?", a: "El costo depende del destino, el tamaño del pedido y la modalidad de entrega. Te informaremos el monto antes de confirmar la compra." },
+	{ q: "¿Desde cuándo se cuenta el plazo de entrega?", a: "El plazo comienza después de la confirmación del pago. En productos personalizados también debe considerarse el tiempo de aprobación y producción del grabado." },
+	{ q: "¿El grabado puede aumentar el tiempo de entrega?", a: "Sí. El grabado láser requiere una etapa adicional de revisión y producción. Te indicaremos el plazo estimado antes de iniciar el pedido." },
+	{ q: "¿Debo aprobar el grabado antes de la producción?", a: "Sí. Antes de producir la pieza se confirma el texto, nombre, frase, imagen, logo o propuesta visual correspondiente." },
+	{ q: "¿Qué ocurre si escribí incorrectamente un nombre o una fecha?", a: "La información aprobada por el cliente será utilizada para producir el grabado. Por eso, recomendamos revisar cuidadosamente nombres, fechas, ortografía y demás detalles antes de confirmar." },
+	{ q: "¿Cómo puedo consultar el envío de un producto?", a: "Puedes escribirnos por WhatsApp indicando el producto que deseas, la cantidad y tu ciudad o distrito de entrega." },
+	{ q: "¿Qué sucede si el pedido presenta una incidencia?", a: "Debes comunicarte con TAQTO y enviar la información y fotografías del caso. Evaluaremos si la incidencia es atribuible al producto o a la entrega y coordinaremos la solución correspondiente cuando aplique." },
+];
+---
+
+<PageLayout
+	title="Envíos en Lima y provincias | TAQTO"
+	description="Conoce los tiempos de entrega de TAQTO en Lima Metropolitana y provincias, costos de envío, pedidos personalizados y coordinación por WhatsApp."
+	eyebrow="Envíos y entregas"
+	heading="Envíos de TAQTO en Lima y provincias"
+>
+	<div class="space-y-14">
+		<!-- Hero intro -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<p>Preparamos cada pedido con cuidado y te informamos el plazo, la modalidad y el costo del envío antes de confirmarlo.</p>
+			<p>Realizamos entregas en Lima Metropolitana y envíos a provincias mediante la agencia que el cliente elija. Las piezas con grabado personalizado pueden requerir días adicionales de producción.</p>
+			<div class="flex flex-wrap gap-3 pt-2">
+				<a href={wa} target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center rounded-lg bg-orange px-5 py-3 text-sm font-semibold text-white">Consultar mi envío</a>
+				<a href={productos} class="inline-flex items-center justify-center rounded-lg border border-black/15 px-5 py-3 text-sm font-semibold text-black">Explorar productos</a>
+			</div>
+			<p class="text-sm text-black/50">El costo del envío se informa antes de confirmar el pedido.</p>
+		</section>
+
+		<!-- Resumen rápido -->
+		<section class="space-y-6 text-base leading-relaxed text-black/70">
+			<h2 class="text-2xl font-semibold text-black">Información clara antes de realizar tu pedido</h2>
+			<dl class="grid gap-6 sm:grid-cols-2">
+				<div class="rounded-xl border border-black/10 p-5">
+					<img src={`${base}icons/envio-lima.svg`} alt="" width="40" height="40" class="mb-3" />
+					<dt class="font-semibold text-black">Lima Metropolitana</dt>
+					<dd class="mt-1">Entrega estimada en dos días hábiles desde la confirmación del pago.</dd>
+				</div>
+				<div class="rounded-xl border border-black/10 p-5">
+					<img src={`${base}icons/envio-provincias.svg`} alt="" width="40" height="40" class="mb-3" />
+					<dt class="font-semibold text-black">Envíos a provincias</dt>
+					<dd class="mt-1">Despachamos mediante la agencia elegida por el cliente. El tiempo de traslado depende del destino.</dd>
+				</div>
+				<div class="rounded-xl border border-black/10 p-5">
+					<img src={`${base}icons/envio-personalizacion.svg`} alt="" width="40" height="40" class="mb-3" />
+					<dt class="font-semibold text-black">Productos personalizados</dt>
+					<dd class="mt-1">Las piezas con grabado láser pueden requerir días adicionales de producción.</dd>
+				</div>
+				<div class="rounded-xl border border-black/10 p-5">
+					<img src={`${base}icons/envio-costo.svg`} alt="" width="40" height="40" class="mb-3" />
+					<dt class="font-semibold text-black">Costo del envío</dt>
+					<dd class="mt-1">Contamos con tarifa plana en Lima y provincia.</dd>
+				</div>
+			</dl>
+		</section>
+
+		<!-- Introducción -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<h2 class="text-2xl font-semibold text-black">Tu pedido, coordinado con claridad</h2>
+			<p>Cada pieza TAQTO requiere una preparación acorde con su material, tamaño y características.</p>
+			<p>Por eso, antes de confirmar tu pedido, revisamos contigo el producto elegido, la personalización cuando corresponda, el destino y la modalidad de envío.</p>
+			<p>Nuestro objetivo es que conozcas las condiciones de entrega desde el inicio, sin costos inesperados ni información ambigua.</p>
+		</section>
+
+		<!-- Lima Metropolitana -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<h2 class="text-2xl font-semibold text-black">Entregas en Lima Metropolitana</h2>
+			<p>Los pedidos con entrega en Lima Metropolitana tienen un plazo estimado de dos días hábiles desde la confirmación del pago.</p>
+			<p>Este plazo corresponde a productos disponibles que no requieren tiempo adicional de personalización. Cuando una pieza incluye un nombre, frase, imagen o logo grabado, te indicaremos previamente los días de producción correspondientes.</p>
+			<ul class="list-disc space-y-1 pl-5">
+				<li>El plazo comienza después de la confirmación del pago.</li>
+				<li>En productos personalizados, el tiempo total considera la aprobación del grabado, la producción de la pieza y la posterior coordinación de la entrega.</li>
+			</ul>
+			<div class="pt-2">
+				<a href={wa} target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center rounded-lg bg-orange px-5 py-3 text-sm font-semibold text-white">Consultar entrega en Lima</a>
+			</div>
+			<p class="text-sm text-black/50">Indícanos el producto y el distrito de entrega para orientarte.</p>
+		</section>
+
+		<!-- Provincias -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<h2 class="text-2xl font-semibold text-black">Envíos a provincias del Perú</h2>
+			<p>Realizamos envíos a provincias mediante la agencia que el cliente elija.</p>
+			<p>El tiempo de traslado depende de la ciudad de destino, la cobertura y las condiciones de la agencia seleccionada. Antes de confirmar el pedido, te informaremos el costo y coordinaremos contigo los datos necesarios para el despacho.</p>
+			<p class="font-medium text-black">Para ayudarte necesitaremos conocer:</p>
+			<ul class="list-disc space-y-1 pl-5">
+				<li>El producto o los productos elegidos.</li>
+				<li>La cantidad de unidades.</li>
+				<li>La ciudad y provincia de destino.</li>
+				<li>La agencia de tu preferencia.</li>
+				<li>La personalización solicitada, cuando corresponda.</li>
+			</ul>
+			<p class="border-l-4 border-orange pl-4 text-lg font-medium text-black">
+				No realizamos el despacho sin que conozcas previamente la modalidad y el costo del envío.
+			</p>
+			<div class="flex flex-wrap gap-3 pt-2">
+				<a href={wa} target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center rounded-lg bg-orange px-5 py-3 text-sm font-semibold text-white">Consultar envío a mi ciudad</a>
+				<a href={productos} class="inline-flex items-center justify-center rounded-lg border border-black/15 px-5 py-3 text-sm font-semibold text-black">Explorar el catálogo</a>
+			</div>
+		</section>
+
+		<!-- Grabado personalizado -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<h2 class="text-2xl font-semibold text-black">¿Tu pedido incluye grabado láser?</h2>
+			<p>Las piezas personalizadas requieren una etapa adicional de revisión y producción.</p>
+			<p>Antes de iniciar el grabado, confirmaremos contigo el nombre, frase, imagen, logo o propuesta visual que se aplicará sobre el producto.</p>
+			<p>La posibilidad de realizar el grabado dependerá del espacio disponible, el material, la legibilidad y las características del diseño.</p>
+			<p>Una vez aprobada la personalización, te informaremos el plazo estimado de producción y entrega.</p>
+			<p class="border-l-4 border-orange pl-4 text-lg font-medium text-black">
+				Revisa cuidadosamente nombres, fechas, frases, ortografía y detalles del diseño antes de aprobar la personalización.
+			</p>
+			<div class="pt-2">
+				<a href={wa} target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center rounded-lg bg-orange px-5 py-3 text-sm font-semibold text-white">Consultar una personalización</a>
+			</div>
+		</section>
+
+		<!-- Cómo funciona el pedido -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<h2 class="text-2xl font-semibold text-black">Del producto elegido hasta la entrega</h2>
+			<ol class="list-decimal space-y-3 pl-5">
+				<li><span class="font-medium text-black">Elige tu producto.</span> Explora el catálogo y selecciona la pieza, medida o presentación que prefieras.</li>
+				<li><span class="font-medium text-black">Confirma los detalles.</span> Coordinamos el destino, la cantidad, la personalización y las condiciones del pedido.</li>
+				<li><span class="font-medium text-black">Realiza el pago.</span> El plazo de preparación comienza después de la confirmación del pago.</li>
+				<li><span class="font-medium text-black">Aprobamos la personalización.</span> Cuando el producto incluye grabado, revisamos contigo el texto, logo, imagen o propuesta visual antes de producirlo.</li>
+				<li><span class="font-medium text-black">Preparamos tu pedido.</span> La pieza se fabrica o acondiciona y se embala según su material, tamaño y características.</li>
+				<li><span class="font-medium text-black">Coordinamos el envío.</span> Te informamos el costo y la modalidad antes de confirmar el despacho.</li>
+			</ol>
+			<div class="pt-2">
+				<a href={wa} target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center rounded-lg border border-black/15 px-5 py-3 text-sm font-semibold text-black">Empezar mi pedido</a>
+			</div>
+		</section>
+
+		<!-- Preparación y embalaje -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<h2 class="text-2xl font-semibold text-black">Preparado de acuerdo con cada producto</h2>
+			<p>Las piezas de madera y cuero requieren una preparación adecuada para su traslado.</p>
+			<p>El embalaje se adapta al tamaño, material y características del producto para protegerlo durante el proceso de entrega.</p>
+			<p>En los pedidos personalizados también verificamos que la información coordinada corresponda con el grabado aprobado antes del despacho.</p>
+			<p class="border-l-4 border-orange pl-4 text-lg font-medium text-black">
+				Cada pedido se prepara de forma individual, de acuerdo con las características reales de la pieza.
+			</p>
+		</section>
+
+		<!-- Costo del envío -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<h2 class="text-2xl font-semibold text-black">Conoce el costo antes de confirmar</h2>
+			<p>El costo del envío depende del destino, el tamaño del pedido y la modalidad de entrega seleccionada.</p>
+			<p>Antes de confirmar tu compra recibirás la información correspondiente al producto, la personalización cuando aplique y el costo del envío.</p>
+			<p>Así podrás revisar las condiciones y el monto total antes de realizar la confirmación final.</p>
+			<p class="border-l-4 border-orange pl-4 text-lg font-medium text-black">
+				Sin costos de envío inesperados: conocerás el monto antes de confirmar tu pedido.
+			</p>
+			<div class="pt-2">
+				<a href={wa} target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center rounded-lg bg-orange px-5 py-3 text-sm font-semibold text-white">Consultar costo de envío</a>
+			</div>
+		</section>
+
+		<!-- Incidencias -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<h2 class="text-2xl font-semibold text-black">¿Tu pedido presentó una incidencia?</h2>
+			<p>Si al recibir tu pedido identificas algún problema atribuible al producto o a la entrega, comunícate con TAQTO para que podamos evaluar el caso.</p>
+			<p>Revisaremos la información disponible y coordinaremos la solución correspondiente cuando la incidencia sea atribuible al producto o al proceso de entrega.</p>
+			<p class="font-medium text-black">Qué información debes enviarnos:</p>
+			<ul class="list-disc space-y-1 pl-5">
+				<li>Nombre de la persona que realizó el pedido.</li>
+				<li>Producto recibido.</li>
+				<li>Descripción de la incidencia.</li>
+				<li>Fotografías claras del producto y del embalaje.</li>
+				<li>Información del envío o agencia utilizada.</li>
+			</ul>
+			<div class="pt-2">
+				<a href={wa} target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center rounded-lg bg-orange px-5 py-3 text-sm font-semibold text-white">Reportar una incidencia</a>
+			</div>
+			<p class="text-sm text-black/50">Conserva el producto y el embalaje mientras evaluamos el caso.</p>
+		</section>
+
+		<!-- FAQ -->
+		<section class="space-y-4">
+			<h2 class="text-2xl font-semibold text-black">Preguntas frecuentes sobre envíos</h2>
+			<div class="divide-y divide-black/10 border-y border-black/10">
+				{faqs.map((item) => (
+					<details class="group py-4">
+						<summary class="cursor-pointer list-none font-medium text-black">{item.q}</summary>
+						<p class="mt-2 text-base leading-relaxed text-black/70">{item.a}</p>
+					</details>
+				))}
+			</div>
+		</section>
+
+		<!-- CTA final -->
+		<section class="space-y-4 rounded-2xl bg-black/5 p-8 text-base leading-relaxed text-black/70">
+			<p class="text-xs font-semibold uppercase tracking-widest text-orange">¿Tienes un destino en mente?</p>
+			<h2 class="text-2xl font-semibold text-black">Confirma las condiciones de tu envío antes de realizar el pedido</h2>
+			<p>Cuéntanos qué producto deseas y dónde debemos entregarlo. Te ayudaremos a revisar el plazo estimado, la personalización, la modalidad disponible y el costo del envío.</p>
+			<div class="flex flex-wrap gap-3 pt-2">
+				<a href={wa} target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center rounded-lg bg-orange px-5 py-3 text-sm font-semibold text-white">Consultar mi envío por WhatsApp</a>
+				<a href={productos} class="inline-flex items-center justify-center rounded-lg border border-black/15 px-5 py-3 text-sm font-semibold text-black">Explorar productos TAQTO</a>
+			</div>
+			<p class="text-sm text-black/50">Indícanos el producto, la cantidad y tu ciudad o distrito de entrega.</p>
+		</section>
+	</div>
+</PageLayout>

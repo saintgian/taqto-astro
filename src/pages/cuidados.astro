@@ -1,0 +1,329 @@
+---
+import PageLayout from "../layouts/PageLayout.astro";
+
+const base = import.meta.env.BASE_URL;
+const productos = `${base}categorias/`;
+const garantia = `${base}garantia/`;
+
+const wa = "https://wa.me/51977600400";
+
+const faqs = [
+	{ q: "¿Puedo colocar una tabla TAQTO en el lavavajillas?", a: "No. Las piezas de madera no deben colocarse en el lavavajillas. El calor, la humedad y los detergentes pueden afectar el material y el acabado." },
+	{ q: "¿Puedo dejar una tabla en remojo?", a: "No. Evita dejarla sumergida o en contacto prolongado con agua." },
+	{ q: "¿Cómo debo secar una tabla de madera?", a: "Retira inmediatamente el exceso de humedad con un paño y deja que termine de secarse en una posición que permita la circulación de aire." },
+	{ q: "¿Puedo secarla bajo el sol?", a: "No es recomendable. El sol directo y el calor intenso pueden alterar el tono, el acabado o la estabilidad de la madera." },
+	{ q: "¿Todos los productos TAQTO pueden lavarse?", a: "No. La forma de limpieza depende de la función, el material y el acabado. Los productos de oficina y algunas piezas de mesa pueden requerir únicamente un paño suave." },
+	{ q: "¿Puedo utilizar alcohol para limpiar la madera?", a: "No recomendamos aplicar alcohol ni otros productos químicos sin confirmar previamente su compatibilidad con el acabado." },
+	{ q: "¿Puedo utilizar aceite de cocina en una tabla?", a: "No recomendamos aplicar aceites de cocina. Antes de utilizar un tratamiento, consulta qué producto es compatible con la pieza y su acabado." },
+	{ q: "¿Cuándo debo realizar mantenimiento?", a: "Cuando la superficie presente cambios de apariencia o resequedad, consulta con TAQTO antes de aplicar aceites, ceras o productos de renovación." },
+	{ q: "¿Las marcas de cuchillo son normales?", a: "En tablas utilizadas para cortar alimentos pueden aparecer marcas superficiales como consecuencia del uso. Su intensidad dependerá de la frecuencia, los utensilios y la manera de utilizar la pieza." },
+	{ q: "¿La madera puede cambiar de color?", a: "Sí. La madera puede desarrollar cambios graduales de tono por el uso, la luz y el paso del tiempo." },
+	{ q: "¿Cómo limpio un organizador de escritorio?", a: "Retira el polvo con un paño seco. Para una marca superficial, utiliza un paño ligeramente humedecido y seca inmediatamente." },
+	{ q: "¿Cómo limpio una pieza de cuero?", a: "Utiliza un paño suave y evita empapar el material. No apliques limpiadores, aceites o acondicionadores sin comprobar su compatibilidad." },
+	{ q: "¿Qué hago si mi producto se deformó?", a: "Deja de exponerlo al agua o al calor y comunícate con TAQTO. Envíanos fotografías y una descripción del uso para orientarte." },
+	{ q: "¿El daño por lavavajillas está cubierto por la garantía?", a: "La garantía comercial no cubre daños causados por exposición inadecuada, incluyendo el uso de lavavajillas." },
+	{ q: "¿Dónde encuentro los cuidados específicos de mi producto?", a: "Revisa la ficha correspondiente o comunícate con TAQTO indicando el nombre del producto." },
+];
+---
+
+<PageLayout
+	title="Cómo cuidar productos de madera | TAQTO"
+	description="Aprende a limpiar, secar, guardar y conservar correctamente tus productos TAQTO de madera y cuero. Evita el lavavajillas, el remojo y el sol directo."
+	eyebrow="Uso y mantenimiento"
+	heading="Cuidados para tus productos TAQTO"
+>
+	<div class="space-y-14">
+		<!-- Hero intro -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<p>La madera y el cuero son materiales naturales que cambian con el uso y el paso del tiempo.</p>
+			<p>Con una limpieza adecuada, un secado inmediato y una buena forma de guardarlos, tus productos pueden conservar mejor su funcionalidad, acabado y apariencia.</p>
+			<div class="flex flex-wrap gap-3 pt-2">
+				<a href="#resumen" class="inline-flex items-center justify-center rounded-lg bg-orange px-5 py-3 text-sm font-semibold text-white">Ver cuidados esenciales</a>
+				<a href={wa} target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center rounded-lg border border-black/15 px-5 py-3 text-sm font-semibold text-black">Consultar sobre mi producto</a>
+			</div>
+			<p class="text-sm text-black/50">Los cuidados pueden variar según el material, el acabado y la función de cada pieza.</p>
+		</section>
+
+		<!-- Resumen rápido -->
+		<section id="resumen" class="space-y-6 text-base leading-relaxed text-black/70">
+			<h2 class="text-2xl font-semibold text-black">Cuatro cuidados que hacen la diferencia</h2>
+			<dl class="grid gap-6 sm:grid-cols-2">
+				<div class="rounded-xl border border-black/10 p-5">
+					<dt class="font-semibold text-black">Lava a mano</dt>
+					<dd class="mt-1">Cuando el producto sea apto para lavado, límpialo manualmente y evita métodos agresivos.</dd>
+				</div>
+				<div class="rounded-xl border border-black/10 p-5">
+					<dt class="font-semibold text-black">Seca inmediatamente</dt>
+					<dd class="mt-1">Retira el exceso de humedad después de la limpieza y permite que la pieza termine de secarse correctamente.</dd>
+				</div>
+				<div class="rounded-xl border border-black/10 p-5">
+					<dt class="font-semibold text-black">Evita el remojo</dt>
+					<dd class="mt-1">No dejes los productos de madera sumergidos ni en contacto prolongado con agua.</dd>
+				</div>
+				<div class="rounded-xl border border-black/10 p-5">
+					<dt class="font-semibold text-black">Protégelos del calor</dt>
+					<dd class="mt-1">No expongas las piezas durante periodos prolongados al sol directo ni a fuentes intensas de calor.</dd>
+				</div>
+			</dl>
+			<p class="border-l-4 border-orange pl-4 text-lg font-medium text-black">
+				Nunca coloques una pieza de madera TAQTO en el lavavajillas.
+			</p>
+		</section>
+
+		<!-- Por qué el cuidado es importante -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<h2 class="text-2xl font-semibold text-black">Un material natural responde a su entorno</h2>
+			<p>La madera puede absorber y liberar humedad. También puede reaccionar frente al calor, el sol directo, los cambios de temperatura y una limpieza inadecuada.</p>
+			<p>El cuero, por su parte, puede cambiar de tono, adquirir marcas y desarrollar una apariencia propia con el uso.</p>
+			<p>Estas transformaciones no siempre representan un defecto. Muchas forman parte del comportamiento natural del material.</p>
+			<p>El cuidado adecuado ayuda a reducir cambios bruscos, conservar el acabado y prolongar la vida útil del producto.</p>
+			<p class="border-l-4 border-orange pl-4 text-lg font-medium text-black">
+				Cuidar una pieza no significa mantenerla intacta para siempre. Significa permitir que envejezca de manera adecuada.
+			</p>
+		</section>
+
+		<!-- Antes del primer uso -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<p class="text-xs font-semibold uppercase tracking-widest text-orange">Primer contacto</p>
+			<h2 class="text-2xl font-semibold text-black">Revisa tu producto antes de utilizarlo</h2>
+			<p>Cuando recibas una pieza TAQTO, observa sus características y revisa las indicaciones correspondientes al producto.</p>
+			<p>La veta, el tono y algunos detalles naturales pueden variar respecto de las fotografías de referencia. Estas diferencias forman parte de la madera o el cuero utilizados.</p>
+			<p class="font-medium text-black">Antes de usarla:</p>
+			<ul class="list-disc space-y-1 pl-5">
+				<li>Retira cuidadosamente el embalaje.</li>
+				<li>Revisa la pieza completa.</li>
+				<li>Identifica si es apta para contacto con alimentos.</li>
+				<li>Consulta las indicaciones específicas de su ficha.</li>
+				<li>Limpia únicamente cuando el tipo de producto lo requiera.</li>
+				<li>No apliques aceites, ceras, limpiadores ni tratamientos sin confirmar su compatibilidad con el acabado.</li>
+			</ul>
+		</section>
+
+		<!-- Tablas -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<p class="text-xs font-semibold uppercase tracking-widest text-orange">Limpieza cotidiana</p>
+			<h2 class="text-2xl font-semibold text-black">Cómo cuidar una tabla de madera</h2>
+			<p>Las tablas destinadas a parrilla, cocina o servicio de alimentos deben limpiarse después de cada uso, evitando que permanezcan húmedas durante periodos prolongados.</p>
+			<ol class="list-decimal space-y-3 pl-5">
+				<li><span class="font-medium text-black">Retira los residuos.</span> Elimina restos de alimentos sin utilizar objetos que dañen innecesariamente la superficie.</li>
+				<li><span class="font-medium text-black">Lava a mano.</span> Cuando corresponda, limpia la tabla manualmente con agua, una esponja suave y una pequeña cantidad de limpiador neutro (sujeto a la validación del acabado).</li>
+				<li><span class="font-medium text-black">Evita el remojo.</span> No dejes la tabla dentro del lavadero, sumergida en agua ni bajo un flujo constante durante periodos prolongados.</li>
+				<li><span class="font-medium text-black">Seca inmediatamente.</span> Retira la humedad con un paño limpio después del lavado.</li>
+				<li><span class="font-medium text-black">Permite que termine de secarse.</span> Coloca la tabla en una posición que permita la circulación de aire por sus diferentes caras.</li>
+			</ol>
+			<p class="border-l-4 border-orange pl-4 text-lg font-medium text-black">
+				Lavar rápido y secar bien es más seguro para la madera que dejarla sumergida.
+			</p>
+		</section>
+
+		<!-- Secar -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<h2 class="text-2xl font-semibold text-black">El secado también forma parte de la limpieza</h2>
+			<p>Después del lavado, no dejes la pieza completamente apoyada sobre una superficie mientras continúa húmeda.</p>
+			<p>La circulación de aire ayuda a que la humedad no permanezca concentrada en una sola cara.</p>
+			<ul class="list-disc space-y-1 pl-5">
+				<li>Retira el exceso de agua con un paño.</li>
+				<li>Deja que ambas caras reciban ventilación.</li>
+				<li>No seques la pieza bajo sol directo.</li>
+				<li>No la coloques junto a hornos, cocinas o fuentes intensas de calor.</li>
+				<li>No utilices secadores de cabello ni aire caliente.</li>
+				<li>Guárdala únicamente cuando se encuentre seca.</li>
+			</ul>
+			<p class="border-l-4 border-orange pl-4 text-lg font-medium text-black">
+				El calor intenso no acelera un secado adecuado: puede afectar la estabilidad y el acabado de la madera.
+			</p>
+		</section>
+
+		<!-- Bandejas y mesa -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<p class="text-xs font-semibold uppercase tracking-widest text-orange">Uso cotidiano</p>
+			<h2 class="text-2xl font-semibold text-black">Bandejas, posavasos y productos de mesa</h2>
+			<p>Las bandejas, posavasos, posatazas y piezas de servicio pueden requerir una limpieza diferente según su función y acabado.</p>
+			<p>Cuando exista contacto con líquidos o alimentos, limpia la superficie sin dejar humedad acumulada.</p>
+			<ul class="list-disc space-y-1 pl-5">
+				<li>Retira derrames tan pronto como sea posible.</li>
+				<li>Utiliza un paño suave.</li>
+				<li>Evita productos abrasivos.</li>
+				<li>No dejes vasos o recipientes húmedos durante periodos innecesariamente largos.</li>
+				<li>No sumerjas el producto, salvo que su ficha indique expresamente que puede lavarse.</li>
+				<li>Seca la pieza después de limpiarla.</li>
+				<li>Evita guardar productos húmedos uno encima de otro.</li>
+			</ul>
+			<p>Cuando la pieza no necesite lavado, puede ser suficiente retirar el polvo y limpiar su superficie con un paño suave ligeramente humedecido.</p>
+		</section>
+
+		<!-- Oficina -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<p class="text-xs font-semibold uppercase tracking-widest text-orange">Madera en espacios interiores</p>
+			<h2 class="text-2xl font-semibold text-black">Cómo cuidar organizadores y soportes</h2>
+			<p>Los organizadores, soportes para celular, bases para laptop y accesorios de escritorio no deben lavarse como una tabla de cocina.</p>
+			<ul class="list-disc space-y-1 pl-5">
+				<li>Retira el polvo con un paño suave y seco.</li>
+				<li>Para marcas superficiales, utiliza un paño ligeramente humedecido.</li>
+				<li>Seca la superficie inmediatamente.</li>
+				<li>Evita pulverizar limpiadores directamente sobre la madera.</li>
+				<li>No utilices alcohol, lejía ni productos abrasivos sin confirmar su compatibilidad.</li>
+				<li>Evita apoyar recipientes húmedos sobre la pieza.</li>
+				<li>Mantén el producto alejado de ventanas con sol directo prolongado.</li>
+				<li>No lo coloques junto a equipos que emitan calor excesivo.</li>
+			</ul>
+			<p>En productos con ranuras o cavidades, retira el polvo con un paño, brocha suave o aire manual controlado. No viertas agua dentro de los compartimentos.</p>
+		</section>
+
+		<!-- Cuero -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<p class="text-xs font-semibold uppercase tracking-widest text-orange">Cuidado del cuero</p>
+			<h2 class="text-2xl font-semibold text-black">Permite que el material envejezca correctamente</h2>
+			<p>El cuero es un material natural que puede desarrollar cambios de tono, marcas y una pátina propia con el uso.</p>
+			<p>Estas transformaciones forman parte de su evolución, siempre que no sean resultado de humedad excesiva, productos agresivos o una exposición inadecuada.</p>
+			<ul class="list-disc space-y-1 pl-5">
+				<li>Retira el polvo con un paño suave y seco.</li>
+				<li>Si necesitas limpiar una marca, utiliza un paño apenas humedecido.</li>
+				<li>No sumerjas el cuero.</li>
+				<li>Evita frotar con fuerza.</li>
+				<li>No utilices alcohol, lejía ni limpiadores domésticos agresivos.</li>
+				<li>No lo expongas durante periodos prolongados al sol directo.</li>
+				<li>Mantén el producto alejado de fuentes intensas de calor.</li>
+				<li>Deja que seque de manera natural si entra en contacto con humedad.</li>
+				<li>No apliques cremas, aceites o acondicionadores sin confirmar que sean adecuados para el tipo de cuero y acabado.</li>
+			</ul>
+			<p class="border-l-4 border-orange pl-4 text-lg font-medium text-black">
+				El cuero no permanece visualmente idéntico: adquiere carácter a medida que acompaña el uso.
+			</p>
+		</section>
+
+		<!-- Madera y cuero -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<h2 class="text-2xl font-semibold text-black">Productos que combinan madera y cuero</h2>
+			<p>Cuando un producto combina madera y cuero, la limpieza debe respetar las necesidades de ambos materiales.</p>
+			<p>Evita sumergir la pieza o aplicar agua de manera abundante. Limpia cada zona por separado y seca inmediatamente cualquier humedad.</p>
+			<ul class="list-disc space-y-1 pl-5">
+				<li>Utiliza paños distintos para cada material.</li>
+				<li>No arrastres humedad desde la madera hacia el cuero.</li>
+				<li>No apliques productos para madera sobre el cuero.</li>
+				<li>No utilices acondicionadores de cuero sobre las superficies de madera.</li>
+				<li>Consulta a TAQTO antes de aplicar cualquier tratamiento de mantenimiento.</li>
+			</ul>
+		</section>
+
+		<!-- Lo que debes evitar -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<p class="text-xs font-semibold uppercase tracking-widest text-orange">Protege tu pieza</p>
+			<h2 class="text-2xl font-semibold text-black">Prácticas que pueden afectar el material</h2>
+			<dl class="grid gap-6 sm:grid-cols-2">
+				<div>
+					<dt class="font-semibold text-black">Lavavajillas</dt>
+					<dd>El calor, los detergentes y la humedad prolongada pueden afectar la madera, las uniones y el acabado.</dd>
+				</div>
+				<div>
+					<dt class="font-semibold text-black">Remojo prolongado</dt>
+					<dd>Mantener una pieza sumergida puede producir cambios en su forma, superficie o estabilidad.</dd>
+				</div>
+				<div>
+					<dt class="font-semibold text-black">Sol directo</dt>
+					<dd>La exposición continua puede modificar el tono, resecar el material y afectar el acabado.</dd>
+				</div>
+				<div>
+					<dt class="font-semibold text-black">Fuentes intensas de calor</dt>
+					<dd>Hornos, cocinas, parrillas calientes, radiadores y otros equipos pueden generar cambios bruscos en la madera o el cuero.</dd>
+				</div>
+				<div>
+					<dt class="font-semibold text-black">Productos abrasivos</dt>
+					<dd>Las esponjas metálicas, polvos limpiadores y químicos agresivos pueden rayar o alterar la superficie.</dd>
+				</div>
+				<div>
+					<dt class="font-semibold text-black">Guardado con humedad</dt>
+					<dd>Almacenar una pieza antes de que termine de secarse puede afectar su conservación.</dd>
+				</div>
+				<div>
+					<dt class="font-semibold text-black">Usos distintos a su función</dt>
+					<dd>Golpes, sobrecarga o utilización para tareas no previstas pueden causar daños que no corresponden al comportamiento normal del producto.</dd>
+				</div>
+			</dl>
+			<p class="border-l-4 border-orange pl-4 text-lg font-medium text-black">
+				La mayoría de los daños evitables ocurre por exceso de agua, calor intenso o métodos de limpieza inadecuados.
+			</p>
+		</section>
+
+		<!-- Mantenimiento del acabado -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<p class="text-xs font-semibold uppercase tracking-widest text-orange">Cuidado a largo plazo</p>
+			<h2 class="text-2xl font-semibold text-black">¿Cuándo necesita mantenimiento una pieza?</h2>
+			<p>Con el tiempo, algunas superficies pueden verse más secas, opacas o diferentes respecto de su apariencia inicial. Esto no significa que cualquier aceite o cera sea adecuado.</p>
+			<p class="font-medium text-black">El tratamiento correcto depende de:</p>
+			<ul class="list-disc space-y-1 pl-5">
+				<li>La especie de madera.</li>
+				<li>El acabado aplicado.</li>
+				<li>El uso del producto.</li>
+				<li>El contacto o no con alimentos.</li>
+				<li>El estado actual de la superficie.</li>
+			</ul>
+			<p>Antes de aplicar un producto de mantenimiento, consulta con TAQTO e indica el nombre de la pieza y, cuando sea posible, envía fotografías claras.</p>
+			<div class="pt-2">
+				<a href={wa} target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center rounded-lg bg-orange px-5 py-3 text-sm font-semibold text-white">Consultar mantenimiento</a>
+			</div>
+			<p class="text-sm text-black/50">No apliques aceites de cocina, barnices domésticos ni productos no identificados.</p>
+		</section>
+
+		<!-- Cambios naturales -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<h2 class="text-2xl font-semibold text-black">La apariencia también evoluciona</h2>
+			<p>La veta y el tono pueden cambiar gradualmente con el uso, la luz y el paso del tiempo.</p>
+			<p>Las tablas de cocina o parrilla también pueden desarrollar marcas superficiales relacionadas con el corte y la preparación de alimentos. En el cuero pueden aparecer cambios de tono, pliegues y marcas propias del contacto cotidiano.</p>
+			<p class="font-medium text-black">Pueden formar parte del envejecimiento natural:</p>
+			<ul class="list-disc space-y-1 pl-5">
+				<li>Cambios graduales de tono.</li>
+				<li>Marcas superficiales de uso.</li>
+				<li>Mayor contraste en ciertas vetas.</li>
+				<li>Variaciones de textura.</li>
+				<li>Pátina en el cuero.</li>
+				<li>Pequeñas diferencias entre zonas de una misma pieza.</li>
+			</ul>
+			<p class="border-l-4 border-orange pl-4 text-lg font-medium text-black">
+				Una pieza natural no permanece inmóvil: conserva la historia de cómo fue utilizada.
+			</p>
+		</section>
+
+		<!-- Cuidado o garantía -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<h2 class="text-2xl font-semibold text-black">¿Cuidado o garantía?</h2>
+			<p>Algunos cambios corresponden al uso normal del producto. Otros pueden requerir una evaluación. Consulta a TAQTO cuando identifiques:</p>
+			<ul class="list-disc space-y-1 pl-5">
+				<li>Una alteración que afecta la funcionalidad.</li>
+				<li>Una separación o falla que parece provenir de la fabricación.</li>
+				<li>Un cambio significativo que apareció sin exposición inadecuada.</li>
+				<li>Una incidencia relacionada con el acabado o la estructura.</li>
+				<li>Una duda sobre si el producto puede continuar utilizándose.</li>
+			</ul>
+			<div class="flex flex-wrap gap-3 pt-2">
+				<a href={wa} target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center rounded-lg bg-orange px-5 py-3 text-sm font-semibold text-white">Solicitar evaluación</a>
+				<a href={garantia} class="inline-flex items-center justify-center rounded-lg border border-black/15 px-5 py-3 text-sm font-semibold text-black">Ver condiciones de garantía</a>
+			</div>
+		</section>
+
+		<!-- FAQ -->
+		<section class="space-y-4">
+			<h2 class="text-2xl font-semibold text-black">Preguntas frecuentes sobre cuidados</h2>
+			<div class="divide-y divide-black/10 border-y border-black/10">
+				{faqs.map((item) => (
+					<details class="group py-4">
+						<summary class="cursor-pointer list-none font-medium text-black">{item.q}</summary>
+						<p class="mt-2 text-base leading-relaxed text-black/70">{item.a}</p>
+					</details>
+				))}
+			</div>
+		</section>
+
+		<!-- CTA final -->
+		<section class="space-y-4 rounded-2xl bg-black/5 p-8 text-base leading-relaxed text-black/70">
+			<p class="text-xs font-semibold uppercase tracking-widest text-orange">Cuida la historia de tu pieza</p>
+			<h2 class="text-2xl font-semibold text-black">Un cuidado sencillo puede acompañarla durante más tiempo</h2>
+			<p>Limpia según su función, evita el exceso de agua y protege el material del sol y el calor intenso. Cuando tengas dudas sobre el lavado, el acabado o el mantenimiento, consulta antes de aplicar un tratamiento.</p>
+			<div class="flex flex-wrap gap-3 pt-2">
+				<a href={wa} target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center rounded-lg bg-orange px-5 py-3 text-sm font-semibold text-white">Consultar cuidados por WhatsApp</a>
+				<a href={productos} class="inline-flex items-center justify-center rounded-lg border border-black/15 px-5 py-3 text-sm font-semibold text-black">Explorar productos TAQTO</a>
+			</div>
+			<p class="text-sm text-black/50">Indícanos el nombre del producto y envíanos una fotografía para orientarte con mayor precisión.</p>
+		</section>
+	</div>
+</PageLayout>

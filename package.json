@@ -14,7 +14,12 @@
   "dependencies": {
     "@sanity/client": "^7.24.0",
     "@sanity/image-url": "^2.1.1",
+    "@supabase/supabase-js": "^2.110.8",
     "astro": "^7.1.1",
     "astro-portabletext": "^0.13.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "tailwindcss": "^4.3.3"
   }
 }

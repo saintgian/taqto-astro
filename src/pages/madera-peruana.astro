@@ -1,0 +1,289 @@
+---
+import PageLayout from "../layouts/PageLayout.astro";
+
+const base = import.meta.env.BASE_URL;
+const productos = `${base}categorias/`;
+const cuidados = `${base}cuidados/`;
+const nosotros = `${base}nosotros/`;
+
+const wa = "https://wa.me/51977600400";
+
+const faqs = [
+	{ q: "¿TAQTO utiliza madera peruana?", a: "Sí. La madera peruana forma parte central de nuestro sistema de productos y de nuestra identidad como marca." },
+	{ q: "¿La madera proviene de proveedores certificados?", a: "Trabajamos con proveedores certificados y documentación vigente relacionada con la procedencia de los materiales." },
+	{ q: "¿Qué certificaciones tienen los proveedores?", a: "Las certificaciones pueden variar según el proveedor y el lote. La información específica debe comunicarse únicamente cuando la certificación correspondiente se encuentre vigente y disponible para verificación." },
+	{ q: "¿Todas las maderas provienen de la Amazonía peruana?", a: "Parte de las especies utilizadas está vinculada con el territorio amazónico peruano. El origen específico depende de la especie, el proveedor y el lote correspondiente." },
+	{ q: "¿Qué especies utiliza TAQTO?", a: "Nuestro sistema contempla huayruro, pumaquiro, cachimbo y shihuahuaco, además de otras combinaciones de materiales según el producto y la disponibilidad." },
+	{ q: "¿Utilizan shihuahuaco?", a: "El shihuahuaco se trabaja de manera limitada y únicamente cuando la documentación legal y la trazabilidad del lote respaldan su utilización." },
+	{ q: "¿Por qué dos productos del mismo modelo pueden verse diferentes?", a: "Porque la madera es un material natural. La veta, el tono y los matices cambian de una pieza a otra, incluso cuando el modelo y las medidas son iguales." },
+	{ q: "¿Una variación de veta se considera un defecto?", a: "No. Las variaciones naturales de veta, tono y textura forman parte de la identidad del material y no representan por sí mismas un defecto." },
+	{ q: "¿Qué significa trazabilidad?", a: "Es la información que permite relacionar el material con su especie, proveedor, lote y documentación disponible antes de su transformación." },
+	{ q: "¿TAQTO es una marca completamente sostenible?", a: "Preferimos no utilizar afirmaciones ambientales absolutas. Comunicamos aquello que podemos respaldar: proveedores certificados, documentación, identificación de especies, materialidad honesta y productos pensados para permanecer." },
+	{ q: "¿Cómo puedo cuidar una pieza de madera?", a: "Los cuidados dependen del producto y del acabado. Como regla general, evita el lavavajillas, el remojo prolongado, el sol directo y las fuentes intensas de calor." },
+];
+---
+
+<PageLayout
+	title="Madera peruana y origen responsable | TAQTO"
+	description="Conoce las maderas peruanas de TAQTO, su origen, trazabilidad, proveedores certificados y la historia natural que hace diferente a cada pieza."
+	eyebrow="Material y origen"
+	heading="Madera peruana con origen responsable"
+>
+	<div class="space-y-14">
+		<!-- Hero intro -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<p>Cada pieza comienza mucho antes de llegar a nuestro taller.</p>
+			<p>Comienza en la historia natural de la madera, en los bosques del Perú y en una cadena de proveedores que debe trabajar con documentación, trazabilidad y responsabilidad.</p>
+			<p>En TAQTO elegimos madera peruana para crear objetos contemporáneos que conserven la identidad, la calidez y las variaciones reales del material.</p>
+			<div class="flex flex-wrap gap-3 pt-2">
+				<a href="#material" class="inline-flex items-center justify-center rounded-lg bg-orange px-5 py-3 text-sm font-semibold text-white">Conocer nuestras maderas</a>
+				<a href={productos} class="inline-flex items-center justify-center rounded-lg border border-black/15 px-5 py-3 text-sm font-semibold text-black">Explorar productos</a>
+			</div>
+			<p class="text-sm text-black/50">Trabajamos con proveedores certificados y documentación vigente.</p>
+		</section>
+
+		<!-- Introducción -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<h2 class="text-2xl font-semibold text-black">La madera no es solamente una materia prima</h2>
+			<p>Cada tabla conserva señales de su origen.</p>
+			<p>La dirección de la veta, los cambios de tono, la densidad y los pequeños rasgos naturales se forman durante el crecimiento del árbol. Por eso no existen dos piezas exactamente iguales.</p>
+			<p>Nuestro trabajo no busca borrar esas diferencias. Busca comprenderlas, seleccionarlas y convertirlas en parte visible del diseño.</p>
+			<p>Cada producto TAQTO reúne así varias historias: la del bosque, la del material, la del taller y la de la persona que finalmente lo utiliza.</p>
+			<p class="border-l-4 border-orange pl-4 text-lg font-medium text-black">
+				Una pieza de madera no comienza cuando la fabricamos. Su historia ya estaba escrita en la veta.
+			</p>
+		</section>
+
+		<!-- Madera peruana -->
+		<section id="material" class="space-y-4 text-base leading-relaxed text-black/70">
+			<p class="text-xs font-semibold uppercase tracking-widest text-orange">Nuestro material</p>
+			<h2 class="text-2xl font-semibold text-black">Diseñamos con madera peruana</h2>
+			<p>Elegir madera peruana es una decisión vinculada con nuestra identidad como marca y con la manera en que entendemos el diseño.</p>
+			<p>Las especies que utilizamos presentan diferentes tonos, vetas, densidades y comportamientos. Estas características influyen en la apariencia, el peso, el uso y la construcción de cada producto.</p>
+			<p>En lugar de uniformar artificialmente todas las piezas, trabajamos reconociendo las propiedades reales del material.</p>
+			<p class="font-medium text-black">Lo que valoramos de la madera peruana:</p>
+			<ul class="list-disc space-y-1 pl-5">
+				<li>Su diversidad de tonos y vetas.</li>
+				<li>Su relación con el territorio peruano.</li>
+				<li>Su capacidad para acompañar objetos de uso cotidiano.</li>
+				<li>La calidez que aporta a hogares, mesas y espacios de trabajo.</li>
+				<li>La posibilidad de crear piezas con identidad propia.</li>
+				<li>Su conexión con una tradición local de trabajo en madera.</li>
+			</ul>
+			<div class="pt-2">
+				<a href={productos} class="inline-flex items-center justify-center rounded-lg border border-black/15 px-5 py-3 text-sm font-semibold text-black">Explorar piezas de madera peruana</a>
+			</div>
+		</section>
+
+		<!-- Amazonía -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<p class="text-xs font-semibold uppercase tracking-widest text-orange">Territorio y origen</p>
+			<h2 class="text-2xl font-semibold text-black">Una materialidad conectada con la Amazonía peruana</h2>
+			<p>Los bosques de la Amazonía peruana albergan una gran diversidad de especies, tonalidades y estructuras naturales.</p>
+			<p>Parte de las maderas que llegan a nuestro taller se vincula con este territorio. Por eso entendemos que su uso exige más que una elección estética: requiere conocer su procedencia y trabajar con proveedores que puedan respaldar el origen del material.</p>
+			<p>La Amazonía no es una textura decorativa ni un argumento publicitario. Es un ecosistema vivo del que provienen materiales con una historia, un valor y una responsabilidad.</p>
+			<p class="border-l-4 border-orange pl-4 text-lg font-medium text-black">
+				Hablar del origen de la madera también significa reconocer el territorio del que proviene.
+			</p>
+		</section>
+
+		<!-- Proveedores certificados -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<p class="text-xs font-semibold uppercase tracking-widest text-orange">Respaldo documental</p>
+			<h2 class="text-2xl font-semibold text-black">Trabajamos con proveedores certificados</h2>
+			<p>TAQTO adquiere madera mediante proveedores certificados que respaldan la procedencia de los materiales con documentación vigente.</p>
+			<p>Esta información permite tomar decisiones más responsables sobre las especies, los lotes y las condiciones en las que una madera puede incorporarse a nuestros productos.</p>
+			<p>La certificación y la trazabilidad no deben funcionar como frases decorativas. Deben estar asociadas a información real y verificable.</p>
+			<p class="font-medium text-black">Nuestro criterio de trabajo:</p>
+			<ul class="list-disc space-y-1 pl-5">
+				<li>Seleccionar proveedores formales y certificados.</li>
+				<li>Solicitar documentación relacionada con la procedencia.</li>
+				<li>Identificar las especies utilizadas.</li>
+				<li>Mantener información de trazabilidad de los materiales.</li>
+				<li>Comunicar certificaciones únicamente cuando existe respaldo vigente.</li>
+				<li>Evitar afirmaciones ambientales absolutas que no puedan demostrarse.</li>
+			</ul>
+			<p class="border-l-4 border-orange pl-4 text-lg font-medium text-black">
+				La confianza no se construye con una etiqueta verde. Se construye con información que puede comprobarse.
+			</p>
+			<div class="flex flex-wrap gap-3 pt-2">
+				<a href="#especies" class="inline-flex items-center justify-center rounded-lg bg-orange px-5 py-3 text-sm font-semibold text-white">Conocer nuestros materiales</a>
+				<a href={wa} target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center rounded-lg border border-black/15 px-5 py-3 text-sm font-semibold text-black">Consultar sobre una especie</a>
+			</div>
+		</section>
+
+		<!-- Trazabilidad -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<h2 class="text-2xl font-semibold text-black">Del proveedor al taller</h2>
+			<p>La trazabilidad permite conservar información sobre la madera antes de transformarla en un producto terminado.</p>
+			<p>Dependiendo de la especie y del lote, esta documentación puede incluir información del proveedor, identificación del material, procedencia y respaldos comerciales o legales.</p>
+			<p>En TAQTO mantenemos esta información como parte de nuestro sistema interno de materiales.</p>
+			<p>Esto no significa que todas las piezas sean idénticas. La documentación ayuda a conocer el origen; la veta y el tono continúan siendo naturalmente variables.</p>
+			<ol class="list-decimal space-y-3 pl-5">
+				<li><span class="font-medium text-black">Selección del proveedor.</span> Trabajamos con proveedores que puedan respaldar formalmente los materiales que ofrecen.</li>
+				<li><span class="font-medium text-black">Identificación de la madera.</span> Registramos la especie y la información disponible del lote.</li>
+				<li><span class="font-medium text-black">Revisión del material.</span> Evaluamos tono, veta, estructura y características de uso.</li>
+				<li><span class="font-medium text-black">Diseño y fabricación.</span> Cada pieza se trabaja considerando las propiedades reales de la madera.</li>
+				<li><span class="font-medium text-black">Producto terminado.</span> La madera conserva su identidad natural dentro de un objeto funcional y contemporáneo.</li>
+			</ol>
+		</section>
+
+		<!-- Nuestras maderas -->
+		<section id="especies" class="space-y-4 text-base leading-relaxed text-black/70">
+			<p class="text-xs font-semibold uppercase tracking-widest text-orange">Especies en uso</p>
+			<h2 class="text-2xl font-semibold text-black">Diferentes maderas, diferentes expresiones</h2>
+			<p>Cada especie presenta cualidades propias. Su tono, dibujo, densidad y disponibilidad influyen en el tipo de producto para el que puede utilizarse.</p>
+			<dl class="grid gap-6 sm:grid-cols-2">
+				<div>
+					<dt class="font-semibold text-black">Huayruro</dt>
+					<dd>Una madera de presencia marcada, reconocible por sus tonos cálidos y variaciones expresivas. Se utiliza en piezas donde la veta y el carácter visual tienen un papel importante.</dd>
+				</div>
+				<div>
+					<dt class="font-semibold text-black">Pumaquiro</dt>
+					<dd>Una alternativa versátil para diferentes tipos de producto y niveles de producción. Su expresión puede variar según el corte y las características naturales de cada pieza.</dd>
+				</div>
+				<div>
+					<dt class="font-semibold text-black">Cachimbo</dt>
+					<dd>Una madera que funciona como alternativa intermedia dentro de nuestro sistema de materiales. Permite desarrollar piezas cálidas y funcionales para diferentes contextos de uso.</dd>
+				</div>
+				<div>
+					<dt class="font-semibold text-black">Shihuahuaco</dt>
+					<dd>Se trabaja de manera limitada y únicamente cuando la documentación legal y la trazabilidad del lote respaldan su utilización. Su incorporación depende de la disponibilidad y de las condiciones verificables del material.</dd>
+				</div>
+			</dl>
+			<p class="text-sm text-black/50">Las especies disponibles pueden cambiar según el producto, el lote y la documentación vigente.</p>
+			<div class="pt-2">
+				<a href={productos} class="inline-flex items-center justify-center rounded-lg border border-black/15 px-5 py-3 text-sm font-semibold text-black">Ver productos disponibles</a>
+			</div>
+		</section>
+
+		<!-- Cada pieza tiene una historia -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<h2 class="text-2xl font-semibold text-black">Una veta que no puede repetirse</h2>
+			<p>La madera registra su crecimiento mediante líneas, cambios de color y variaciones de textura.</p>
+			<p>Cuando transformamos el material, esa información no desaparece. Permanece visible en la superficie, en el canto y en los detalles de cada producto.</p>
+			<p>Por eso dos tablas del mismo modelo pueden presentar diferencias naturales sin dejar de responder al mismo diseño, medida o función. La geometría puede repetirse. La veta, no.</p>
+			<dl class="grid gap-6 sm:grid-cols-2">
+				<div>
+					<dt class="font-semibold text-black">El bosque</dt>
+					<dd>El territorio y las condiciones naturales en las que se desarrolló la madera.</dd>
+				</div>
+				<div>
+					<dt class="font-semibold text-black">El material</dt>
+					<dd>Una especie con características particulares de tono, veta y estructura.</dd>
+				</div>
+				<div>
+					<dt class="font-semibold text-black">El taller</dt>
+					<dd>Las manos, herramientas y procesos que transforman el material.</dd>
+				</div>
+				<div>
+					<dt class="font-semibold text-black">El diseño</dt>
+					<dd>Una forma pensada para cumplir una función concreta.</dd>
+				</div>
+				<div>
+					<dt class="font-semibold text-black">La persona</dt>
+					<dd>El uso, los momentos y los recuerdos que se incorporan con el tiempo.</dd>
+				</div>
+			</dl>
+			<p class="border-l-4 border-orange pl-4 text-lg font-medium text-black">
+				Cada pieza llega con una historia natural y continúa escribiéndola a través del uso.
+			</p>
+		</section>
+
+		<!-- Variaciones naturales -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<p class="text-xs font-semibold uppercase tracking-widest text-orange">Ninguna pieza es idéntica</p>
+			<h2 class="text-2xl font-semibold text-black">La variación forma parte del material</h2>
+			<p>Las fotografías de nuestros productos son referenciales.</p>
+			<p>La veta, el tono, los matices y ciertos detalles naturales pueden variar entre una pieza y otra. Estas diferencias no son errores ni imitaciones del material: son consecuencia de trabajar con madera real.</p>
+			<p>Incluso dentro de una misma tabla pueden convivir zonas más claras, oscuras, rectas o expresivas.</p>
+			<ul class="list-disc space-y-1 pl-5">
+				<li>Dirección de la veta.</li>
+				<li>Intensidad del tono.</li>
+				<li>Contraste entre zonas.</li>
+				<li>Distribución de líneas naturales.</li>
+				<li>Pequeños rasgos propios de la madera.</li>
+				<li>Cambios graduales producidos por el tiempo y el uso.</li>
+			</ul>
+			<p class="border-l-4 border-orange pl-4 text-lg font-medium text-black">
+				No buscamos que la madera parezca artificialmente uniforme. Buscamos que cada pieza conserve una identidad auténtica.
+			</p>
+		</section>
+
+		<!-- Diseñar para permanecer -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<p class="text-xs font-semibold uppercase tracking-widest text-orange">Uso y duración</p>
+			<h2 class="text-2xl font-semibold text-black">El cuidado también forma parte de la responsabilidad</h2>
+			<p>La relación responsable con la madera no termina cuando se fabrica el producto.</p>
+			<p>Diseñar objetos funcionales, reparables cuando corresponda y pensados para utilizarse durante el tiempo ayuda a evitar que el material se convierta rápidamente en un objeto descartable. El cuidado adecuado también prolonga la vida de cada pieza.</p>
+			<ul class="list-disc space-y-1 pl-5">
+				<li>Elegir una pieza adecuada para el uso esperado.</li>
+				<li>Utilizarla según su función.</li>
+				<li>Limpiarla de acuerdo con el material y acabado.</li>
+				<li>Evitar el lavavajillas y el remojo prolongado.</li>
+				<li>Secarla después de la limpieza.</li>
+				<li>Evitar la exposición continua al sol o al calor intenso.</li>
+				<li>Mantenerla y renovarla cuando el acabado lo requiera.</li>
+			</ul>
+			<div class="flex flex-wrap gap-3 pt-2">
+				<a href={cuidados} class="inline-flex items-center justify-center rounded-lg bg-orange px-5 py-3 text-sm font-semibold text-white">Ver guía de cuidados</a>
+				<a href={wa} target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center rounded-lg border border-black/15 px-5 py-3 text-sm font-semibold text-black">Consultar sobre mi producto</a>
+			</div>
+		</section>
+
+		<!-- Qué significa sostenibilidad -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<h2 class="text-2xl font-semibold text-black">Precisión antes que promesas</h2>
+			<p>Para TAQTO, comunicar sostenibilidad significa hablar con claridad sobre aquello que podemos respaldar.</p>
+			<p>Significa trabajar con proveedores certificados, conservar documentación, identificar las especies utilizadas, respetar las variaciones naturales y diseñar productos pensados para permanecer.</p>
+			<p>No utilizamos expresiones como “cero impacto”, “completamente ecológico” o “100 % sostenible” cuando no existe evidencia suficiente para demostrarlas. Preferimos comunicar el origen y las condiciones de cada material con un alcance claro.</p>
+			<dl class="grid gap-6 sm:grid-cols-2">
+				<div>
+					<dt class="font-semibold text-black">Origen documentado</dt>
+					<dd>Trabajar con información verificable del proveedor o lote.</dd>
+				</div>
+				<div>
+					<dt class="font-semibold text-black">Materialidad honesta</dt>
+					<dd>Mostrar la madera como es, sin ocultar artificialmente sus variaciones.</dd>
+				</div>
+				<div>
+					<dt class="font-semibold text-black">Diseño útil</dt>
+					<dd>Utilizar el material para crear objetos con una función real.</dd>
+				</div>
+				<div>
+					<dt class="font-semibold text-black">Uso consciente</dt>
+					<dd>Ayudar al cliente a elegir, utilizar y cuidar correctamente cada pieza.</dd>
+				</div>
+				<div>
+					<dt class="font-semibold text-black">Mejora continua</dt>
+					<dd>Revisar materiales, proveedores y procesos a medida que TAQTO crece.</dd>
+				</div>
+			</dl>
+		</section>
+
+		<!-- FAQ -->
+		<section class="space-y-4">
+			<h2 class="text-2xl font-semibold text-black">Preguntas frecuentes sobre nuestras maderas</h2>
+			<div class="divide-y divide-black/10 border-y border-black/10">
+				{faqs.map((item) => (
+					<details class="group py-4">
+						<summary class="cursor-pointer list-none font-medium text-black">{item.q}</summary>
+						<p class="mt-2 text-base leading-relaxed text-black/70">{item.a}</p>
+					</details>
+				))}
+			</div>
+		</section>
+
+		<!-- CTA final -->
+		<section class="space-y-4 rounded-2xl bg-black/5 p-8 text-base leading-relaxed text-black/70">
+			<p class="text-xs font-semibold uppercase tracking-widest text-orange">Conoce el material</p>
+			<h2 class="text-2xl font-semibold text-black">Una historia natural convertida en diseño</h2>
+			<p>Descubre piezas de madera peruana que conservan la identidad del material y la transforman en objetos para la parrilla, la mesa, el hogar y la oficina. Cada veta es diferente. Cada pieza continúa una historia.</p>
+			<div class="flex flex-wrap gap-3 pt-2">
+				<a href={productos} class="inline-flex items-center justify-center rounded-lg bg-orange px-5 py-3 text-sm font-semibold text-white">Explorar productos de madera</a>
+				<a href={nosotros} class="inline-flex items-center justify-center rounded-lg border border-black/15 px-5 py-3 text-sm font-semibold text-black">Conocer TAQTO</a>
+			</div>
+			<p class="text-sm text-black/50">Diseñado y hecho en Lima, Perú.</p>
+		</section>
+	</div>
+</PageLayout>

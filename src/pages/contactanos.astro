@@ -1,0 +1,208 @@
+---
+import PageLayout from "../layouts/PageLayout.astro";
+
+const base = import.meta.env.BASE_URL;
+const productos = `${base}categorias/`;
+const envios = `${base}envios/`;
+
+const wa = "https://wa.me/51977600400";
+const mail = "mailto:ventas@taqto.com.pe";
+const ig = "https://www.instagram.com/taqto.pe/";
+const fb = "https://www.facebook.com/taqto.pe";
+const tt = "https://www.tiktok.com/@taqto.pe";
+
+const faqs = [
+	{ q: "¿Cuál es el WhatsApp de TAQTO?", a: "Puedes comunicarte con TAQTO al +51 977 600 400." },
+	{ q: "¿Cuál es el correo de TAQTO?", a: "El correo comercial es ventas@taqto.com.pe." },
+	{ q: "¿Cuáles son las redes sociales oficiales de TAQTO?", a: "Puedes encontrarnos en Instagram y TikTok como @taqto.pe, y en Facebook como TAQTO Perú." },
+	{ q: "¿TAQTO tiene una tienda física?", a: "Actualmente no contamos con una tienda física abierta al público. Funcionamos como taller de diseño y producción." },
+	{ q: "¿Dónde se encuentra el taller?", a: "Nuestro taller se encuentra en San Juan de Miraflores, Lima. La ubicación exacta no se publica como un punto de atención comercial abierto." },
+	{ q: "¿Puedo visitar el taller?", a: "Actualmente no ofrecemos atención presencial permanente. Las consultas y coordinaciones se realizan mediante WhatsApp, correo o redes sociales." },
+	{ q: "¿Puedo recoger un pedido en el taller?", a: "La disponibilidad de recojo debe consultarse previamente por WhatsApp. No debe asumirse que el taller funciona como un punto de recojo permanente." },
+	{ q: "¿Puedo consultar precios por WhatsApp?", a: "Sí. Envíanos el nombre, enlace o captura del producto para revisar sus características y condiciones." },
+	{ q: "¿Qué canal debo utilizar para una cotización empresarial?", a: "Para cotizaciones con información detallada puedes escribir a ventas@taqto.com.pe. También puedes iniciar la consulta por WhatsApp." },
+	{ q: "¿Atienden pedidos personalizados?", a: "Sí. Puedes consultar la viabilidad de personalizar una pieza con un nombre, frase, imagen o logo mediante grabado láser." },
+	{ q: "¿Realizan envíos a provincias?", a: "Sí. Los envíos a provincias se coordinan mediante la agencia elegida por el cliente." },
+	{ q: "¿Dónde puedo reportar una incidencia?", a: "Puedes escribir al WhatsApp +51 977 600 400 indicando el producto, la fecha de entrega, una descripción del caso y fotografías claras." },
+];
+---
+
+<PageLayout
+	title="Contáctanos | WhatsApp y redes de TAQTO Perú"
+	description="Contacta a TAQTO Perú por WhatsApp, correo o redes sociales. Consulta productos, personalizaciones, envíos y pedidos empresariales desde nuestro taller en Lima."
+	eyebrow="Contáctanos"
+	heading="Conversemos sobre tu próxima pieza"
+>
+	<div class="space-y-14">
+		<!-- Hero intro -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<p>¿Tienes una consulta sobre un producto, una personalización o un envío?</p>
+			<p>
+				Escríbenos y cuéntanos qué necesitas. Te ayudaremos a revisar las opciones disponibles, las características de la pieza y las condiciones de tu pedido.
+			</p>
+			<div class="flex flex-wrap gap-3 pt-2">
+				<a href={wa} target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center rounded-lg bg-orange px-5 py-3 text-sm font-semibold text-white">
+					Escribir por WhatsApp
+				</a>
+				<a href={mail} class="inline-flex items-center justify-center rounded-lg border border-black/15 px-5 py-3 text-sm font-semibold text-black">
+					Enviar un correo
+				</a>
+			</div>
+			<p class="text-sm text-black/50">
+				Atención digital desde nuestro taller en San Juan de Miraflores, Lima.
+			</p>
+		</section>
+
+		<!-- Canales oficiales -->
+		<section class="space-y-6 text-base leading-relaxed text-black/70">
+			<h2 class="text-2xl font-semibold text-black">Elige cómo deseas comunicarte</h2>
+
+			<div class="space-y-4">
+				<div class="rounded-xl border border-black/10 p-5">
+					<img src={`${base}icons/contacto-whatsapp.svg`} alt="" width="36" height="36" class="mb-3" />
+					<h3 class="font-semibold text-black">WhatsApp</h3>
+					<p class="mt-1">El canal más directo para consultar productos, medidas, personalizaciones, disponibilidad, envíos e incidencias.</p>
+					<p class="mt-2 font-medium text-black">+51 977 600 400</p>
+					<a href={wa} target="_blank" rel="noopener noreferrer" class="mt-3 inline-flex items-center justify-center rounded-lg bg-orange px-4 py-2 text-sm font-semibold text-white">Conversar por WhatsApp</a>
+					<p class="mt-2 text-sm text-black/50">Envíanos el nombre, enlace o captura del producto para ayudarte con mayor precisión.</p>
+				</div>
+
+				<div class="rounded-xl border border-black/10 p-5">
+					<img src={`${base}icons/contacto-correo.svg`} alt="" width="36" height="36" class="mb-3" />
+					<h3 class="font-semibold text-black">Correo comercial</h3>
+					<p class="mt-1">Utiliza el correo para solicitudes empresariales, cotizaciones por volumen, propuestas comerciales o consultas que requieran enviar información más detallada.</p>
+					<p class="mt-2 font-medium text-black">ventas@taqto.com.pe</p>
+					<a href={mail} class="mt-3 inline-flex items-center justify-center rounded-lg border border-black/15 px-4 py-2 text-sm font-semibold text-black">Enviar correo</a>
+					<p class="mt-2 text-sm text-black/50">Incluye el producto, la cantidad aproximada, la ciudad de entrega y la fecha requerida.</p>
+				</div>
+
+				<div class="rounded-xl border border-black/10 p-5">
+					<img src={`${base}icons/contacto-instagram.svg`} alt="" width="36" height="36" class="mb-3" />
+					<h3 class="font-semibold text-black">Instagram · @taqto.pe</h3>
+					<p class="mt-1">Descubre nuestras piezas, personalizaciones, materiales, procesos y formas de integrar TAQTO en la parrilla, la mesa, el hogar y la oficina.</p>
+					<a href={ig} target="_blank" rel="noopener noreferrer" class="mt-3 inline-flex items-center justify-center rounded-lg border border-black/15 px-4 py-2 text-sm font-semibold text-black">Ver Instagram</a>
+				</div>
+
+				<div class="rounded-xl border border-black/10 p-5">
+					<img src={`${base}icons/contacto-facebook.svg`} alt="" width="36" height="36" class="mb-3" />
+					<h3 class="font-semibold text-black">Facebook · TAQTO Perú</h3>
+					<p class="mt-1">Encuentra novedades, productos, publicaciones de la marca e información para comunicarte con TAQTO Perú.</p>
+					<a href={fb} target="_blank" rel="noopener noreferrer" class="mt-3 inline-flex items-center justify-center rounded-lg border border-black/15 px-4 py-2 text-sm font-semibold text-black">Ver Facebook</a>
+				</div>
+
+				<div class="rounded-xl border border-black/10 p-5">
+					<img src={`${base}icons/contacto-tiktok.svg`} alt="" width="36" height="36" class="mb-3" />
+					<h3 class="font-semibold text-black">TikTok · @taqto.pe</h3>
+					<p class="mt-1">Conoce el proceso detrás de las piezas, detalles de fabricación, personalizaciones y contenido de uso cotidiano.</p>
+					<a href={tt} target="_blank" rel="noopener noreferrer" class="mt-3 inline-flex items-center justify-center rounded-lg border border-black/15 px-4 py-2 text-sm font-semibold text-black">Ver TikTok</a>
+				</div>
+			</div>
+		</section>
+
+		<!-- Somos un taller -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<img src={`${base}icons/contacto-taller.svg`} alt="" width="40" height="40" />
+			<p class="text-xs font-semibold uppercase tracking-widest text-orange">Cómo trabajamos</p>
+			<h2 class="text-2xl font-semibold text-black">Un taller de diseño y producción</h2>
+			<p>TAQTO funciona como un taller donde diseñamos, fabricamos, personalizamos y preparamos piezas de madera y cuero.</p>
+			<p>Nuestro espacio está organizado para trabajar cada producto y pedido, por lo que actualmente no contamos con una tienda física abierta al público ni con atención presencial permanente.</p>
+			<p>Puedes conocer nuestras piezas a través de la web y nuestras redes sociales. Para consultas, pedidos y coordinaciones, puedes escribirnos directamente por WhatsApp o correo.</p>
+			<p class="border-l-4 border-orange pl-4 text-lg font-medium text-black">
+				Somos un taller de producción, no una tienda física. La atención y coordinación de pedidos se realiza mediante nuestros canales digitales.
+			</p>
+			<div class="flex flex-wrap gap-3 pt-2">
+				<a href={wa} target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center rounded-lg bg-orange px-5 py-3 text-sm font-semibold text-white">Consultar un producto</a>
+				<a href={productos} class="inline-flex items-center justify-center rounded-lg border border-black/15 px-5 py-3 text-sm font-semibold text-black">Explorar productos</a>
+			</div>
+		</section>
+
+		<!-- Ubicación general -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<p class="text-xs font-semibold uppercase tracking-widest text-orange">Desde Lima</p>
+			<h2 class="text-2xl font-semibold text-black">Nuestro taller se encuentra en San Juan de Miraflores</h2>
+			<p>Diseñamos y preparamos nuestras piezas desde un taller ubicado en San Juan de Miraflores, Lima.</p>
+			<p>Desde aquí coordinamos pedidos para Lima Metropolitana y envíos a provincias mediante la modalidad acordada con cada cliente.</p>
+			<p>Debido a que se trata de un espacio de producción y no de una tienda abierta al público, no publicamos la dirección exacta como un punto de atención comercial.</p>
+			<ul class="list-disc space-y-1 pl-5">
+				<li><span class="font-medium text-black">Ubicación general:</span> San Juan de Miraflores, Lima, Perú.</li>
+				<li><span class="font-medium text-black">Modalidad de atención:</span> WhatsApp, correo electrónico y redes sociales.</li>
+				<li><span class="font-medium text-black">Tienda física:</span> actualmente no contamos con una tienda física abierta al público.</li>
+				<li><span class="font-medium text-black">Atención presencial:</span> no ofrecemos atención presencial permanente.</li>
+			</ul>
+			<div class="flex flex-wrap gap-3 pt-2">
+				<a href={wa} target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center rounded-lg bg-orange px-5 py-3 text-sm font-semibold text-white">Consultar modalidad de entrega</a>
+				<a href={envios} class="inline-flex items-center justify-center rounded-lg border border-black/15 px-5 py-3 text-sm font-semibold text-black">Ver información de envíos</a>
+			</div>
+		</section>
+
+		<!-- Motivos de consulta -->
+		<section class="space-y-6 text-base leading-relaxed text-black/70">
+			<h2 class="text-2xl font-semibold text-black">Elige el motivo de tu consulta</h2>
+			<dl class="grid gap-6 sm:grid-cols-2">
+				<div>
+					<dt class="font-semibold text-black">Consulta sobre un producto</dt>
+					<dd>Para conocer medidas, materiales, acabados, disponibilidad, cuidados o variantes de una pieza.</dd>
+				</div>
+				<div>
+					<dt class="font-semibold text-black">Personalización</dt>
+					<dd>Para consultar la aplicación de un nombre, frase, imagen o logo mediante grabado láser.</dd>
+				</div>
+				<div>
+					<dt class="font-semibold text-black">Envíos</dt>
+					<dd>Para conocer el costo y la modalidad de entrega en Lima Metropolitana o provincias.</dd>
+				</div>
+				<div>
+					<dt class="font-semibold text-black">Empresas y pedidos por volumen</dt>
+					<dd>Para regalos corporativos, productos para restaurantes, hoteles, cafeterías o pedidos desde 12 unidades.</dd>
+				</div>
+				<div>
+					<dt class="font-semibold text-black">Garantía o incidencia</dt>
+					<dd>Para solicitar la evaluación de una posible falla o informar una incidencia relacionada con el producto o la entrega.</dd>
+				</div>
+			</dl>
+		</section>
+
+		<!-- Contacto para empresas -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<p class="text-xs font-semibold uppercase tracking-widest text-orange">Empresas</p>
+			<h2 class="text-2xl font-semibold text-black">Regalos corporativos y pedidos por volumen</h2>
+			<p>Desarrollamos piezas personalizadas para empresas, restaurantes, hoteles, cafeterías y otros espacios profesionales.</p>
+			<p>Podemos ayudarte a revisar el producto, la cantidad, las medidas, la personalización, el empaque y las condiciones comerciales del pedido.</p>
+			<p>En pedidos corporativos trabajamos mediante co-branding: la identidad del cliente convive con el sello TAQTO.</p>
+			<div class="flex flex-wrap gap-3 pt-2">
+				<a href={mail} class="inline-flex items-center justify-center rounded-lg bg-orange px-5 py-3 text-sm font-semibold text-white">Escribir a ventas@taqto.com.pe</a>
+				<a href={wa} target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center rounded-lg border border-black/15 px-5 py-3 text-sm font-semibold text-black">Cotizar por WhatsApp</a>
+			</div>
+			<p class="text-sm text-black/50">Para cotizaciones detalladas, recomendamos utilizar el correo comercial.</p>
+		</section>
+
+		<!-- FAQ -->
+		<section class="space-y-4">
+			<h2 class="text-2xl font-semibold text-black">Preguntas frecuentes de contacto</h2>
+			<div class="divide-y divide-black/10 border-y border-black/10">
+				{faqs.map((item) => (
+					<details class="group py-4">
+						<summary class="cursor-pointer list-none font-medium text-black">{item.q}</summary>
+						<p class="mt-2 text-base leading-relaxed text-black/70">{item.a}</p>
+					</details>
+				))}
+			</div>
+		</section>
+
+		<!-- CTA final -->
+		<section class="space-y-4 rounded-2xl bg-black/5 p-8 text-base leading-relaxed text-black/70">
+			<p class="text-xs font-semibold uppercase tracking-widest text-orange">Hablemos de tu pedido</p>
+			<h2 class="text-2xl font-semibold text-black">Cuéntanos qué pieza estás buscando</h2>
+			<p>Envíanos el producto que te interesa, la cantidad y tu ciudad o distrito. Te ayudaremos a revisar las opciones disponibles, la personalización y las condiciones de entrega.</p>
+			<div class="flex flex-wrap gap-3 pt-2">
+				<a href={wa} target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center rounded-lg bg-orange px-5 py-3 text-sm font-semibold text-white">Escribir al +51 977 600 400</a>
+				<a href={mail} class="inline-flex items-center justify-center rounded-lg border border-black/15 px-5 py-3 text-sm font-semibold text-black">Enviar correo a ventas</a>
+			</div>
+			<p class="text-sm text-black/50">
+				<a href={ig} target="_blank" rel="noopener noreferrer" class="underline">Instagram</a> ·
+				<a href={fb} target="_blank" rel="noopener noreferrer" class="underline">Facebook</a> ·
+				<a href={tt} target="_blank" rel="noopener noreferrer" class="underline">TikTok</a>
+			</p>
+		</section>
+	</div>
+</PageLayout>
