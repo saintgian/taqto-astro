@@ -8,7 +8,7 @@ export default defineConfig({
 	site: "https://saintgian.github.io",
 
 	base: isProduction
-		? "/taqto-astro"
+		? "/taqto-astro/"
 		: "/",
 
 	vite: {
