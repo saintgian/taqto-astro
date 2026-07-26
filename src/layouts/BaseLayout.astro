@@ -6,44 +6,33 @@ interface Props {
 	title: string;
 	description?: string;
 }
-const base = import.meta.env.BASE_URL;
+
+/*
+ * En localhost normalmente será:
+ * /taqto-astro/
+ *
+ * En GitHub Pages:
+ * /taqto-astro/
+ */
+const rawBase = import.meta.env.BASE_URL;
+
+const base = rawBase.endsWith("/")
+	? rawBase
+	: `${rawBase}/`;
 
 const {
 	title,
 	description = "Piezas peruanas de madera y cuero con grabado láser personalizado gratuito.",
 } = Astro.props;
----
 
-<!doctype html>
-<html lang="es">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-
-		<link
-	rel="icon"
-	type="image/svg+xml"
-	href={`${base}brand/isotipo/isotipo-colorprincipal01.svg`}
-/>
-
-		<meta name="description" content={description} />
-		<meta name="theme-color" content="#141414" />
-
-		<title>{title}</title>
-	</head>
-
-	<body id="top">
-	<slot />
-
-	<Footer />
-	<WhatsAppFloatButton />
-</body>
-</html>
-
-<style is:global>
+/*
+ * Este bloque se inserta sin que Vite procese las rutas.
+ * Las fuentes continúan dentro de public/fonts.
+ */
+const fontFaceCss = `
 	@font-face {
 		font-family: "Poppins";
-		src: url("/fonts/poppins-v24-latin-300.woff2") format("woff2");
+		src: url("${base}fonts/poppins-v24-latin-300.woff2") format("woff2");
 		font-weight: 300;
 		font-style: normal;
 		font-display: swap;
@@ -51,7 +40,7 @@ const {
 
 	@font-face {
 		font-family: "Poppins";
-		src: url("/fonts/poppins-v24-latin-regular.woff2") format("woff2");
+		src: url("${base}fonts/poppins-v24-latin-regular.woff2") format("woff2");
 		font-weight: 400;
 		font-style: normal;
 		font-display: swap;
@@ -59,7 +48,7 @@ const {
 
 	@font-face {
 		font-family: "Poppins";
-		src: url("/fonts/poppins-v24-latin-500.woff2") format("woff2");
+		src: url("${base}fonts/poppins-v24-latin-500.woff2") format("woff2");
 		font-weight: 500;
 		font-style: normal;
 		font-display: swap;
@@ -67,7 +56,7 @@ const {
 
 	@font-face {
 		font-family: "Poppins";
-		src: url("/fonts/poppins-v24-latin-600.woff2") format("woff2");
+		src: url("${base}fonts/poppins-v24-latin-600.woff2") format("woff2");
 		font-weight: 600;
 		font-style: normal;
 		font-display: swap;
@@ -75,12 +64,58 @@ const {
 
 	@font-face {
 		font-family: "Poppins";
-		src: url("/fonts/poppins-v24-latin-700.woff2") format("woff2");
+		src: url("${base}fonts/poppins-v24-latin-700.woff2") format("woff2");
 		font-weight: 700;
 		font-style: normal;
 		font-display: swap;
 	}
+`;
+---
 
+<!doctype html>
+<html lang="es">
+	<head>
+		<meta charset="UTF-8" />
+
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1"
+		/>
+
+		<!--
+			No es procesado por Vite.
+			Las rutas conservan el BASE_URL de Astro.
+		-->
+		<style is:inline set:html={fontFaceCss}></style>
+
+		<link
+			rel="icon"
+			type="image/svg+xml"
+			href={`${base}brand/isotipo/isotipo-colorprincipal01.svg`}
+		/>
+
+		<meta
+			name="description"
+			content={description}
+		/>
+
+		<meta
+			name="theme-color"
+			content="#141414"
+		/>
+
+		<title>{title}</title>
+	</head>
+
+	<body id="top">
+		<slot />
+
+		<Footer />
+		<WhatsAppFloatButton />
+	</body>
+</html>
+
+<style is:global>
 	:root {
 		--color-black: #141414;
 		--color-beige: #fff6ed;
@@ -115,6 +150,7 @@ const {
 		font-weight: 400;
 		text-rendering: optimizeLegibility;
 		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
 	}
 
 	h1,
