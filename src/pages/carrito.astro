@@ -1089,6 +1089,14 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 
 		if (items.length === 0) return null;
 
+		if (!supabase) {
+			orderConfirmError.textContent =
+				"El registro de pedidos no está disponible en este momento. Escríbenos directo por WhatsApp para completar tu compra.";
+
+			orderConfirmError.hidden = false;
+			return null;
+		}
+
 		const subtotal = getCartSubtotal(items);
 		const total = subtotal + SHIPPING_COST;
 
