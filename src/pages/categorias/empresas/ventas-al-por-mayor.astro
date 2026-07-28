@@ -1,0 +1,199 @@
+---
+import PageLayout from "../../../layouts/PageLayout.astro";
+import Breadcrumbs from "../../../components/Breadcrumbs.astro";
+import { WHATSAPP_NUMBER } from "../../../lib/constants";
+
+const base = import.meta.env.BASE_URL;
+
+const empresasHref = `${base}categorias/empresas/`;
+const regalosHref = `${base}categorias/empresas/regalos-corporativos/`;
+const catalogHref = `${base}categorias/`;
+
+const whatsappMessage = encodeURIComponent(
+	"Hola TAQTO, quisiera cotizar un pedido al por mayor.",
+);
+
+const whatsappHref = `https://wa.me/${WHATSAPP_NUMBER}?text=${whatsappMessage}`;
+---
+
+<PageLayout
+	title="Ventas al por mayor | TAQTO"
+	description="Pedidos al por mayor de piezas TAQTO en madera y cuero, con pedido mínimo de 12 unidades, pago al contado y cobertura nacional."
+	eyebrow="Empresas"
+	heading="Ventas al por mayor"
+>
+	<div class="space-y-14">
+		<Breadcrumbs
+			items={[
+				{ label: "Inicio", href: base },
+				{ label: "Categorías", href: `${base}categorias/` },
+				{ label: "Empresas", href: empresasHref },
+				{ label: "Ventas al por mayor" },
+			]}
+		/>
+
+		<!-- Introducción -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<p>
+				Atendemos pedidos al por mayor de piezas TAQTO en madera y
+				cuero, para negocios que buscan reponer stock, equipar un
+				espacio o revender nuestras colecciones.
+			</p>
+			<p>
+				El pedido mínimo al por mayor es de 12 unidades, con pago al
+				contado y sin crédito.
+			</p>
+		</section>
+
+		<!-- Tipos de negocios atendidos -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<h2 class="text-2xl font-semibold text-black">
+				Tipos de negocios atendidos
+			</h2>
+			<ul class="list-disc space-y-2 pl-5">
+				<li>Restaurantes y parrillas que equipan su servicio de mesa.</li>
+				<li>Tiendas y showrooms que revenden piezas de madera y cuero.</li>
+				<li>
+					Negocios de decoración u oficina que buscan piezas para
+					su catálogo.
+				</li>
+				<li>
+					Empresas que necesitan volumen de una misma pieza para
+					distintos usos internos.
+				</li>
+			</ul>
+		</section>
+
+		<!-- Beneficios de pedidos al por mayor -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<h2 class="text-2xl font-semibold text-black">
+				Beneficios de comprar al por mayor
+			</h2>
+
+			<dl class="grid gap-6 sm:grid-cols-2">
+				<div>
+					<dt class="font-semibold text-black">
+						Cobertura nacional
+					</dt>
+					<dd>
+						Enviamos a todo el Perú, con tarifa plana en Lima y
+						embalaje adecuado según el producto.
+					</dd>
+				</div>
+				<div>
+					<dt class="font-semibold text-black">
+						Personalización disponible
+					</dt>
+					<dd>
+						Grabado láser de logo, imagen, frase o nombre,
+						incluido y sujeto a viabilidad técnica y condiciones
+						vigentes.
+					</dd>
+				</div>
+				<div>
+					<dt class="font-semibold text-black">
+						Atención directa
+					</dt>
+					<dd>
+						Coordinamos tu pedido por WhatsApp, con seguimiento
+						cercano desde la cotización hasta la entrega.
+					</dd>
+				</div>
+				<div>
+					<dt class="font-semibold text-black">
+						Materialidad consistente
+					</dt>
+					<dd>
+						Madera y cuero con veta, tono y textura que varían de
+						forma natural entre unidades, tal como se muestra en
+						nuestras fotos referenciales.
+					</dd>
+				</div>
+			</dl>
+		</section>
+
+		<!-- Proceso de cotización -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<h2 class="text-2xl font-semibold text-black">
+				Proceso de cotización
+			</h2>
+
+			<ol class="grid gap-6 sm:grid-cols-3">
+				<li>
+					<p class="text-3xl font-semibold text-black">1</p>
+					<p class="font-semibold text-black">Cuéntanos tu pedido</p>
+					<p>
+						Escríbenos por WhatsApp con la pieza, la cantidad
+						(mínimo 12 unidades) y si necesitas personalización.
+					</p>
+				</li>
+				<li>
+					<p class="text-3xl font-semibold text-black">2</p>
+					<p class="font-semibold text-black">Confirmamos condiciones</p>
+					<p>
+						Te confirmamos disponibilidad, tiempos y el costo de
+						envío según tu ciudad o región.
+					</p>
+				</li>
+				<li>
+					<p class="text-3xl font-semibold text-black">3</p>
+					<p class="font-semibold text-black">Pago y despacho</p>
+					<p>
+						El pedido se confirma con pago al contado y se
+						despacha a nivel nacional una vez producido.
+					</p>
+				</li>
+			</ol>
+		</section>
+
+		<!-- Condiciones comerciales -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<h2 class="text-2xl font-semibold text-black">
+				Condiciones comerciales
+			</h2>
+			<ul class="list-disc space-y-2 pl-5">
+				<li>Pedido mínimo de 12 unidades.</li>
+				<li>Pago al contado, sin crédito.</li>
+				<li>Cobertura nacional, con tarifa plana en Lima.</li>
+				<li>Embalaje según el tipo de producto.</li>
+			</ul>
+			<p>
+				¿Buscas además un regalo con el logo de tu empresa? Revisa
+				también nuestros
+				<a href={regalosHref} class="font-semibold text-black underline">
+					regalos corporativos
+				</a>.
+			</p>
+		</section>
+
+		<!-- CTA final -->
+		<section class="space-y-4 rounded-2xl bg-black/5 p-8 text-base leading-relaxed text-black/70">
+			<p class="text-xs font-semibold uppercase tracking-widest text-orange">
+				Cotiza tu pedido al por mayor
+			</p>
+			<h2 class="text-2xl font-semibold text-black">
+				Conversemos sobre tu volumen
+			</h2>
+			<p>
+				Escríbenos por WhatsApp con la pieza y la cantidad que
+				necesitas (mínimo 12 unidades) y te confirmamos condiciones.
+			</p>
+			<div class="flex flex-wrap gap-3 pt-2">
+				<a
+					href={whatsappHref}
+					target="_blank"
+					rel="noopener noreferrer"
+					class="inline-flex items-center justify-center rounded-lg bg-orange px-5 py-3 text-sm font-semibold text-white"
+				>
+					Cotizar por WhatsApp
+				</a>
+				<a
+					href={catalogHref}
+					class="inline-flex items-center justify-center rounded-lg border border-black/15 px-5 py-3 text-sm font-semibold text-black"
+				>
+					Ver piezas TAQTO
+				</a>
+			</div>
+		</section>
+	</div>
+</PageLayout>

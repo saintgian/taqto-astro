@@ -1,7 +1,11 @@
 ---
 import { sanityClient } from "../lib/sanity";
 import { navigationCategoriesQuery } from "../lib/categoryQueries";
-import { WHATSAPP_NUMBER } from "../lib/constants";
+import {
+	WHATSAPP_NUMBER,
+	EMPRESAS_CATEGORY_SLUG,
+	EMPRESAS_SUBCATEGORIES,
+} from "../lib/constants";
 
 interface Props {
 	whatsappNumber?: string;
@@ -41,26 +45,37 @@ const navCategories =
 	);
 
 const empresasCategory = navCategories.find(
-	(category) => category.slug === "empresas",
+	(category) => category.slug === EMPRESAS_CATEGORY_SLUG,
 );
 
 /* 1. COMPRAR */
 const shoppingLinks = navCategories
-	.filter((category) => category.slug !== "empresas")
+	.filter(
+		(category) => category.slug !== EMPRESAS_CATEGORY_SLUG,
+	)
 	.map((category) => ({
 		label: category.title,
 		href: getUrl(`/categorias/${category.slug}/`),
 	}));
 
 /* 2. EMPRESAS */
-const businessLinks = (
-	empresasCategory?.subcategories || []
-).map((subcategory) => ({
-	label: subcategory.title,
-	href: getUrl(
-		`/categorias/empresas/${subcategory.slug}/`,
-	),
-}));
+// "Empresas" no tiene subcategorias de producto en Sanity: sus dos
+// paginas (regalos corporativos y venta al por mayor) son contenido
+// estatico. Se completan aqui para que el pie de pagina las enlace.
+const empresasSubcategories =
+	empresasCategory?.subcategories &&
+	empresasCategory.subcategories.length > 0
+		? empresasCategory.subcategories
+		: EMPRESAS_SUBCATEGORIES;
+
+const businessLinks = empresasSubcategories.map(
+	(subcategory) => ({
+		label: subcategory.title,
+		href: getUrl(
+			`/categorias/empresas/${subcategory.slug}/`,
+		),
+	}),
+);
 
 /* 3. INFORMACIÓN */
 const informationLinks = [

@@ -1358,10 +1358,14 @@ const safeVariantJson = JSON.stringify({
 					? selection.salePrice
 					: selection.price;
 
+				const engravingText =
+					engravingInput?.value.trim() || "";
+
 				const cartId = [
 					productInfo.slug,
 					selection.woodTitle,
 					selection.sizeTitle,
+					engravingText,
 				]
 					.filter(Boolean)
 					.join("__");
@@ -1384,8 +1388,7 @@ const safeVariantJson = JSON.stringify({
 					dimensionsLabel:
 						selection.dimensions || undefined,
 					engravingText:
-						engravingInput?.value.trim() ||
-						undefined,
+						engravingText || undefined,
 					unitPrice,
 					quantity: getQuantity(),
 				});

@@ -1,0 +1,171 @@
+---
+import PageLayout from "../../../layouts/PageLayout.astro";
+import Breadcrumbs from "../../../components/Breadcrumbs.astro";
+import { WHATSAPP_NUMBER } from "../../../lib/constants";
+
+const base = import.meta.env.BASE_URL;
+
+const empresasHref = `${base}categorias/empresas/`;
+const mayoreoHref = `${base}categorias/empresas/ventas-al-por-mayor/`;
+const catalogHref = `${base}categorias/`;
+
+const whatsappMessage = encodeURIComponent(
+	"Hola TAQTO, quisiera cotizar regalos corporativos con co-branding para mi empresa.",
+);
+
+const whatsappHref = `https://wa.me/${WHATSAPP_NUMBER}?text=${whatsappMessage}`;
+---
+
+<PageLayout
+	title="Regalos corporativos con co-branding | TAQTO"
+	description="Regalos corporativos de madera y cuero con grabado láser y co-branding: el sello TAQTO permanece visible junto a la marca de tu empresa."
+	eyebrow="Empresas"
+	heading="Regalos corporativos"
+>
+	<div class="space-y-14">
+		<Breadcrumbs
+			items={[
+				{ label: "Inicio", href: base },
+				{ label: "Categorías", href: `${base}categorias/` },
+				{ label: "Empresas", href: empresasHref },
+				{ label: "Regalos corporativos" },
+			]}
+		/>
+
+		<!-- Introducción -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<p>
+				Diseñamos regalos corporativos de madera y cuero para
+				clientes, colaboradores y aliados de tu empresa, con grabado
+				láser y co-branding: tu marca y el sello TAQTO conviven en la
+				misma pieza.
+			</p>
+			<p>
+				Trabajamos con co-branding, no con marca blanca. El sello
+				TAQTO permanece visible junto a la identidad de tu empresa,
+				preferentemente al reverso y, según el producto, en la base o
+				una esquina.
+			</p>
+		</section>
+
+		<!-- Usos corporativos -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<h2 class="text-2xl font-semibold text-black">Usos corporativos</h2>
+			<p>
+				Piezas de nuestras colecciones de parrilla, cocina y mesa,
+				oficina, y kits y regalos pueden personalizarse como regalo
+				corporativo, entre ellas:
+			</p>
+			<ul class="list-disc space-y-2 pl-5">
+				<li>Regalos de fin de año para colaboradores.</li>
+				<li>Detalles de bienvenida para nuevos integrantes.</li>
+				<li>Obsequios para clientes o aliados estratégicos.</li>
+				<li>
+					Piezas de oficina co-brandeadas para escritorios y salas
+					de reuniones.
+				</li>
+			</ul>
+		</section>
+
+		<!-- Personalización -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<h2 class="text-2xl font-semibold text-black">Personalización</h2>
+			<p>
+				Cada pieza incluye grabado láser de un logo o imagen y una
+				frase o nombre, sujeto a viabilidad técnica y a las
+				condiciones vigentes al momento del pedido.
+			</p>
+			<p>
+				La veta, el tono y la textura de la madera varían de forma
+				natural entre piezas; nuestras fotos son referenciales y
+				conservamos la forma, proporción y acabado real de cada
+				producto.
+			</p>
+		</section>
+
+		<!-- Proceso de solicitud y aprobación -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<h2 class="text-2xl font-semibold text-black">
+				Proceso de solicitud y aprobación
+			</h2>
+
+			<ol class="grid gap-6 sm:grid-cols-3">
+				<li>
+					<p class="text-3xl font-semibold text-black">1</p>
+					<p class="font-semibold text-black">Cuéntanos tu proyecto</p>
+					<p>
+						Escríbenos por WhatsApp con la pieza que te interesa,
+						la cantidad y el logo o imagen que quieres grabar.
+					</p>
+				</li>
+				<li>
+					<p class="text-3xl font-semibold text-black">2</p>
+					<p class="font-semibold text-black">Revisamos el co-branding</p>
+					<p>
+						Confirmamos contigo la ubicación del grabado y la
+						viabilidad técnica de tu logo o marca sobre la pieza.
+					</p>
+				</li>
+				<li>
+					<p class="text-3xl font-semibold text-black">3</p>
+					<p class="font-semibold text-black">Aprobación y producción</p>
+					<p>
+						Una vez aprobado el detalle final, coordinamos
+						producción, grabado y entrega a nivel nacional.
+					</p>
+				</li>
+			</ol>
+		</section>
+
+		<!-- Información necesaria para cotizar -->
+		<section class="space-y-4 text-base leading-relaxed text-black/70">
+			<h2 class="text-2xl font-semibold text-black">
+				Información necesaria para cotizar
+			</h2>
+			<p>Para preparar tu cotización, cuéntanos:</p>
+			<ul class="list-disc space-y-2 pl-5">
+				<li>La pieza o colección que te interesa.</li>
+				<li>La cantidad aproximada de unidades.</li>
+				<li>El logo, imagen o frase que quieres grabar.</li>
+				<li>La ciudad o región de entrega.</li>
+			</ul>
+			<p>
+				¿Buscas además reponer stock o comprar en volumen? Revisa
+				también nuestras
+				<a href={mayoreoHref} class="font-semibold text-black underline">
+					ventas al por mayor
+				</a>.
+			</p>
+		</section>
+
+		<!-- CTA final -->
+		<section class="space-y-4 rounded-2xl bg-black/5 p-8 text-base leading-relaxed text-black/70">
+			<p class="text-xs font-semibold uppercase tracking-widest text-orange">
+				Cotiza tu regalo corporativo
+			</p>
+			<h2 class="text-2xl font-semibold text-black">
+				Diseñemos tu co-branding
+			</h2>
+			<p>
+				Escríbenos por WhatsApp y cuéntanos qué pieza, cantidad y logo
+				necesitas para tu regalo corporativo.
+			</p>
+			<div class="flex flex-wrap gap-3 pt-2">
+				<a
+					href={whatsappHref}
+					target="_blank"
+					rel="noopener noreferrer"
+					class="inline-flex items-center justify-center rounded-lg bg-orange px-5 py-3 text-sm font-semibold text-white"
+				>
+					Cotizar por WhatsApp
+				</a>
+				<a
+					href={catalogHref}
+					class="inline-flex items-center justify-center rounded-lg border border-black/15 px-5 py-3 text-sm font-semibold text-black"
+				>
+					Ver piezas TAQTO
+				</a>
+			</div>
+		</section>
+	</div>
+</PageLayout>

@@ -18,6 +18,21 @@ export interface CartItem {
 const STORAGE_KEY = "taqto_cart";
 const CART_UPDATED_EVENT = "cart:updated";
 
+function isValidCartItem(value: unknown): value is CartItem {
+	if (!value || typeof value !== "object") return false;
+
+	const item = value as Partial<CartItem>;
+
+	return (
+		typeof item.id === "string" &&
+		item.id.length > 0 &&
+		typeof item.title === "string" &&
+		Number.isFinite(item.unitPrice) &&
+		Number.isFinite(item.quantity) &&
+		(item.quantity as number) > 0
+	);
+}
+
 function readStorage(): CartItem[] {
 	if (typeof window === "undefined") return [];
 
@@ -26,7 +41,12 @@ function readStorage(): CartItem[] {
 		if (!raw) return [];
 
 		const parsed = JSON.parse(raw);
-		return Array.isArray(parsed) ? parsed : [];
+		if (!Array.isArray(parsed)) return [];
+
+		// Descarta entradas corruptas o de versiones anteriores del
+		// carrito (campos faltantes, precios/cantidades no numéricos)
+		// para evitar totales en NaN que bloqueen el checkout.
+		return parsed.filter(isValidCartItem);
 	} catch {
 		return [];
 	}

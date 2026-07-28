@@ -1,7 +1,11 @@
 ---
 import { sanityClient } from "../lib/sanity";
 import { navigationCategoriesQuery } from "../lib/categoryQueries";
-import { WHATSAPP_NUMBER } from "../lib/constants";
+import {
+	WHATSAPP_NUMBER,
+	EMPRESAS_CATEGORY_SLUG,
+	EMPRESAS_SUBCATEGORIES,
+} from "../lib/constants";
 
 interface NavSubcategory {
 	_id: string;
@@ -17,10 +21,21 @@ interface NavCategory {
 	subcategories?: NavSubcategory[];
 }
 
-const productCategories =
+const fetchedCategories =
 	await sanityClient.fetch<NavCategory[]>(
 		navigationCategoriesQuery,
 	);
+
+// "Empresas" no tiene subcategorias de producto en Sanity: sus dos
+// enlaces (regalos corporativos y venta al por mayor) son paginas de
+// contenido estaticas. Se completan aqui para que el mismo dropdown del
+// header las muestre sin duplicar el menu.
+const productCategories = fetchedCategories.map((category) =>
+	category.slug === EMPRESAS_CATEGORY_SLUG &&
+	(!category.subcategories || category.subcategories.length === 0)
+		? { ...category, subcategories: EMPRESAS_SUBCATEGORIES }
+		: category,
+);
 
 const base = import.meta.env.BASE_URL;
 
