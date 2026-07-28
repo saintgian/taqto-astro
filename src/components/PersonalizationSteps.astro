@@ -1,0 +1,360 @@
+---
+interface Props {
+	imageSrc?: string;
+	imageAlt?: string;
+	ctaHref: string;
+}
+
+const {
+	imageSrc,
+	imageAlt = "Detalle de una pieza TAQTO personalizada mediante grabado láser",
+	ctaHref,
+} = Astro.props;
+
+const steps = [
+	{
+		number: "01",
+		title: "Elige tu pieza",
+		description:
+			"Encuentra el diseño que acompañará tu mesa, cocina, parrilla o espacio de trabajo.",
+	},
+	{
+		number: "02",
+		title: "Selecciona la madera",
+		description:
+			"Escoge entre las maderas disponibles y sus variaciones naturales de tono y veta.",
+	},
+	{
+		number: "03",
+		title: "Añade tu grabado",
+		description:
+			"Personaliza la pieza con un nombre, una frase o una imagen preparada para grabado láser.",
+	},
+];
+---
+
+<section
+	class="personalization"
+	aria-labelledby="personalization-title"
+>
+	<div class="personalization__container">
+		<div class="personalization__media">
+			{
+				imageSrc ? (
+					<img
+						src={imageSrc}
+						alt={imageAlt}
+						width="1200"
+						height="1500"
+						loading="lazy"
+						decoding="async"
+					/>
+				) : (
+					<div class="personalization__placeholder">
+						<span>Foto próximamente</span>
+					</div>
+				)
+			}
+		</div>
+
+		<div class="personalization__content">
+			<header class="personalization__header">
+				<p class="personalization__eyebrow">
+					Personalización TAQTO
+				</p>
+
+				<h2 id="personalization-title">
+					Una pieza hecha para ti
+				</h2>
+
+				<p class="personalization__intro">
+					Elige el diseño, selecciona la madera y añade un
+					nombre, una frase o una imagen.
+				</p>
+			</header>
+
+			<ol class="personalization__steps">
+				{
+					steps.map((step) => (
+						<li class="personalization__step">
+							<span
+								class="personalization__number"
+								aria-hidden="true"
+							>
+								{step.number}
+							</span>
+
+							<div class="personalization__step-copy">
+								<h3>{step.title}</h3>
+								<p>{step.description}</p>
+							</div>
+						</li>
+					))
+				}
+			</ol>
+
+			<a class="personalization__cta" href={ctaHref}>
+				Empieza a personalizar
+				<span aria-hidden="true">→</span>
+			</a>
+		</div>
+	</div>
+</section>
+
+<style>
+	.personalization {
+		padding:
+			clamp(60px, 8vw, 120px)
+			var(--page-padding);
+		background: var(--color-beige);
+		color: var(--color-black);
+	}
+
+	.personalization__container {
+		display: grid;
+		width: min(100%, var(--page-width));
+		margin-inline: auto;
+		grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+		align-items: stretch;
+		gap: clamp(40px, 6vw, 90px);
+	}
+
+	.personalization__media {
+		min-height: clamp(420px, 50vw, 620px);
+		overflow: hidden;
+		border-radius: 24px;
+		background: #eadfd3;
+	}
+
+	.personalization__media img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: center;
+	}
+
+	.personalization__placeholder {
+		display: grid;
+		width: 100%;
+		height: 100%;
+		min-height: 320px;
+		place-items: center;
+		border: 1px dashed rgba(20, 20, 20, 0.22);
+		border-radius: 24px;
+		background: rgba(20, 20, 20, 0.03);
+	}
+
+	.personalization__placeholder span {
+		color: rgba(20, 20, 20, 0.35);
+		font-size: 11px;
+		font-weight: 600;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+	}
+
+	.personalization__content {
+		display: flex;
+		align-self: center;
+		flex-direction: column;
+		padding-block: clamp(8px, 2vw, 20px);
+	}
+
+	.personalization__header {
+		max-width: 560px;
+	}
+
+	.personalization__eyebrow {
+		margin: 0 0 14px;
+		color: var(--color-orange);
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+	}
+
+	.personalization__header h2 {
+		margin: 0;
+		font-size: clamp(30px, 4vw, 48px);
+		font-weight: 600;
+		line-height: 1.05;
+		letter-spacing: -0.02em;
+	}
+
+	.personalization__intro {
+		max-width: 480px;
+		margin: 16px 0 0;
+		color: rgba(20, 20, 20, 0.66);
+		font-size: 14.5px;
+		line-height: 1.6;
+	}
+
+	.personalization__steps {
+		position: relative;
+		display: grid;
+		gap: 0;
+		margin: clamp(32px, 4vw, 48px) 0 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.personalization__steps::before {
+		position: absolute;
+		top: 30px;
+		bottom: 30px;
+		left: 27px;
+		width: 1px;
+		background: rgba(20, 20, 20, 0.18);
+		content: "";
+	}
+
+	.personalization__step {
+		position: relative;
+		display: grid;
+		grid-template-columns: 56px minmax(0, 1fr);
+		gap: 20px;
+		padding: 0 0 28px;
+	}
+
+	.personalization__step:last-child {
+		padding-bottom: 0;
+	}
+
+	.personalization__number {
+		position: relative;
+		z-index: 1;
+		display: grid;
+		width: 56px;
+		height: 56px;
+		place-items: center;
+		border: 1px solid rgba(20, 20, 20, 0.16);
+		border-radius: 50%;
+		background: var(--color-beige);
+		color: var(--color-brown);
+		font-size: 16px;
+		font-weight: 600;
+		letter-spacing: -0.02em;
+	}
+
+	.personalization__step-copy h3 {
+		margin: 0;
+		font-size: 19px;
+		font-weight: 600;
+		letter-spacing: -0.02em;
+	}
+
+	.personalization__step-copy p {
+		max-width: 440px;
+		margin: 8px 0 0;
+		color: rgba(20, 20, 20, 0.62);
+		font-size: 13.5px;
+		line-height: 1.55;
+	}
+
+	.personalization__cta {
+		display: inline-flex;
+		width: fit-content;
+		min-height: 48px;
+		align-items: center;
+		justify-content: center;
+		gap: 12px;
+		margin-top: clamp(28px, 4vw, 44px);
+		padding: 0 22px;
+		border: 1px solid var(--color-brown);
+		border-radius: 999px;
+		background: var(--color-brown);
+		color: var(--color-beige);
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 0.09em;
+		text-decoration: none;
+		text-transform: uppercase;
+		transition:
+			background-color 180ms ease,
+			border-color 180ms ease,
+			transform 180ms ease;
+	}
+
+	.personalization__cta span {
+		font-size: 16px;
+		transition: transform 180ms ease;
+	}
+
+	.personalization__cta:focus-visible {
+		outline: 2px solid var(--color-orange);
+		outline-offset: 4px;
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.personalization__cta:hover {
+			border-color: var(--color-black);
+			background: var(--color-black);
+		}
+
+		.personalization__cta:hover span {
+			transform: translateX(4px);
+		}
+	}
+
+	@media (max-width: 900px) {
+		.personalization__container {
+			grid-template-columns: 1fr;
+			gap: 40px;
+		}
+
+		.personalization__media {
+			min-height: auto;
+			aspect-ratio: 4 / 5;
+		}
+
+		.personalization__content {
+			padding-block: 0;
+		}
+	}
+
+	@media (max-width: 600px) {
+		.personalization {
+			padding: 64px 18px;
+		}
+
+		.personalization__container {
+			gap: 32px;
+		}
+
+		.personalization__media {
+			border-radius: 18px;
+		}
+
+		.personalization__placeholder {
+			border-radius: 18px;
+		}
+
+		.personalization__header h2 {
+			font-size: clamp(30px, 10vw, 42px);
+		}
+
+		.personalization__steps {
+			margin-top: 30px;
+		}
+
+		.personalization__steps::before {
+			left: 23px;
+		}
+
+		.personalization__step {
+			grid-template-columns: 48px minmax(0, 1fr);
+			gap: 16px;
+			padding-bottom: 24px;
+		}
+
+		.personalization__number {
+			width: 48px;
+			height: 48px;
+			font-size: 14px;
+		}
+
+		.personalization__cta {
+			width: 100%;
+		}
+	}
+</style>

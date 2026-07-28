@@ -1,0 +1,813 @@
+---
+---
+
+<div
+	class="product-search"
+	id="product-search-panel"
+	data-search-panel
+	aria-hidden="true"
+>
+	<div class="product-search__backdrop" data-search-backdrop></div>
+
+	<div
+		class="product-search__box"
+		role="dialog"
+		aria-modal="true"
+		aria-label="Buscar productos"
+	>
+		<div class="product-search__field">
+			<svg
+				class="product-search__field-icon"
+				viewBox="0 0 24 24"
+				aria-hidden="true"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="1.8"
+			>
+				<circle cx="11" cy="11" r="6.5"></circle>
+				<path d="m16 16 4 4"></path>
+			</svg>
+
+			<label class="sr-only" for="product-search-input">
+				Buscar productos
+			</label>
+
+			<input
+				id="product-search-input"
+				type="text"
+				inputmode="search"
+				autocomplete="off"
+				spellcheck="false"
+				placeholder="Buscar productos, categorías, madera..."
+				data-search-input
+			/>
+
+			<button
+				type="button"
+				class="product-search__close"
+				aria-label="Cerrar búsqueda"
+				data-search-close
+			>
+				<svg
+					viewBox="0 0 24 24"
+					aria-hidden="true"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="1.8"
+				>
+					<path d="M6 6l12 12M18 6 6 18"></path>
+				</svg>
+			</button>
+		</div>
+
+		<p class="sr-only" role="status" aria-live="polite" data-search-status>
+		</p>
+
+		<div class="product-search__panel-body">
+			<p class="product-search__hint" data-search-initial>
+				Escribe al menos 2 letras para buscar.
+			</p>
+
+			<p class="product-search__hint" data-search-loading hidden>
+				Buscando…
+			</p>
+
+			<p class="product-search__hint" data-search-empty hidden>
+				No encontramos productos con esa búsqueda.
+			</p>
+
+			<p class="product-search__hint product-search__hint--error" data-search-error hidden>
+				No se pudo cargar el buscador. Intenta de nuevo.
+			</p>
+
+			<ul
+				class="product-search__results"
+				role="listbox"
+				aria-label="Resultados de búsqueda"
+				data-search-results
+			></ul>
+		</div>
+	</div>
+</div>
+
+<template data-search-result-template>
+	<li class="product-search__result" role="presentation">
+		<a class="product-search__result-link" role="option">
+			<span class="product-search__result-media">
+				<img data-role="image" alt="" loading="lazy" />
+				<span class="product-search__result-placeholder" data-role="placeholder">TAQTO</span>
+			</span>
+
+			<span class="product-search__result-content">
+				<span class="product-search__result-category" data-role="category"></span>
+				<span class="product-search__result-title" data-role="title"></span>
+				<span class="product-search__result-price" data-role="price"></span>
+			</span>
+
+			<span class="product-search__result-arrow" aria-hidden="true">→</span>
+		</a>
+	</li>
+</template>
+
+<style>
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border: 0;
+	}
+
+	.product-search {
+		position: fixed;
+		inset: 0;
+		z-index: 320;
+		visibility: hidden;
+	}
+
+	.product-search.is-open {
+		visibility: visible;
+	}
+
+	.product-search__backdrop {
+		position: absolute;
+		inset: 0;
+		background: rgba(20, 16, 14, 0.32);
+		opacity: 0;
+		transition: opacity 200ms ease;
+	}
+
+	.product-search.is-open .product-search__backdrop {
+		opacity: 1;
+	}
+
+	.product-search__box {
+		position: absolute;
+		top: 104px;
+		right: max(14px, calc((100vw - 1540px) / 2 + 14px));
+		width: min(420px, calc(100vw - 28px));
+		max-height: min(72vh, 620px);
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
+		border: 1px solid rgba(20, 16, 14, 0.1);
+		border-radius: 20px;
+		background: #fffaf3;
+		box-shadow:
+			0 24px 60px rgba(20, 16, 14, 0.18),
+			0 2px 8px rgba(20, 16, 14, 0.08);
+		opacity: 0;
+		transform: translateY(-10px);
+		pointer-events: none;
+		transition:
+			opacity 200ms ease,
+			transform 200ms ease;
+	}
+
+	.product-search.is-open .product-search__box {
+		opacity: 1;
+		transform: translateY(0);
+		pointer-events: auto;
+	}
+
+	.product-search__field {
+		position: relative;
+		display: flex;
+		align-items: center;
+		flex: 0 0 auto;
+		gap: 10px;
+		padding: 14px 14px;
+		border-bottom: 1px solid rgba(20, 16, 14, 0.08);
+	}
+
+	.product-search__field-icon {
+		flex: 0 0 20px;
+		width: 20px;
+		height: 20px;
+		color: #5b312a;
+	}
+
+	.product-search__field input {
+		flex: 1;
+		min-width: 0;
+		border: 0;
+		background: transparent;
+		color: #141414;
+		font-size: 15px;
+		font-family: inherit;
+	}
+
+	.product-search__field input::placeholder {
+		color: rgba(20, 16, 14, 0.4);
+	}
+
+	.product-search__field input:focus {
+		outline: none;
+	}
+
+	.product-search__close {
+		flex: 0 0 32px;
+		width: 32px;
+		height: 32px;
+		display: grid;
+		place-items: center;
+		border: 0;
+		border-radius: 50%;
+		background: rgba(20, 16, 14, 0.06);
+		color: #5b312a;
+		cursor: pointer;
+		transition: background-color 160ms ease;
+	}
+
+	.product-search__close:hover {
+		background: rgba(20, 16, 14, 0.12);
+	}
+
+	.product-search__close svg {
+		width: 15px;
+		height: 15px;
+	}
+
+	.product-search__panel-body {
+		overflow-y: auto;
+	}
+
+	.product-search__hint {
+		margin: 0;
+		padding: 28px 20px;
+		color: rgba(20, 16, 14, 0.55);
+		font-size: 13.5px;
+		text-align: center;
+	}
+
+	.product-search__hint--error {
+		color: #c23b1e;
+	}
+
+	.product-search__results {
+		margin: 0;
+		padding: 6px;
+		list-style: none;
+	}
+
+	.product-search__result-link {
+		display: flex;
+		align-items: center;
+		min-height: 44px;
+		gap: 12px;
+		padding: 8px;
+		border-radius: 14px;
+		color: inherit;
+		text-decoration: none;
+		transition: background-color 140ms ease;
+	}
+
+	.product-search__result-link:hover,
+	.product-search__result-link:focus-visible,
+	.product-search__result-link.is-active {
+		background: rgba(91, 49, 42, 0.07);
+	}
+
+	.product-search__result-link:focus-visible {
+		outline: 2px solid #ff4d2a;
+		outline-offset: 2px;
+	}
+
+	.product-search__result-media {
+		position: relative;
+		flex: 0 0 52px;
+		width: 52px;
+		height: 52px;
+		overflow: hidden;
+		border: 1px solid rgba(20, 16, 14, 0.08);
+		border-radius: 12px;
+		background: #ffffff;
+	}
+
+	.product-search__result-media img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		padding: 5px;
+		object-fit: contain;
+	}
+
+	.product-search__result-placeholder {
+		position: absolute;
+		inset: 0;
+		display: grid;
+		place-items: center;
+		color: #5b312a;
+		font-size: 8px;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+	}
+
+	.product-search__result-content {
+		display: flex;
+		min-width: 0;
+		flex: 1;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	.product-search__result-category {
+		color: #ff4d2a;
+		font-size: 10px;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+	}
+
+	.product-search__result-category:empty {
+		display: none;
+	}
+
+	.product-search__result-title {
+		overflow: hidden;
+		color: #141414;
+		font-size: 14px;
+		font-weight: 600;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+	}
+
+	.product-search__result-price {
+		color: rgba(20, 16, 14, 0.6);
+		font-size: 12.5px;
+		font-weight: 600;
+	}
+
+	.product-search__result-price:empty {
+		display: none;
+	}
+
+	.product-search__result-arrow {
+		flex: 0 0 auto;
+		color: rgba(20, 16, 14, 0.3);
+		font-size: 14px;
+	}
+
+	@media (max-width: 1180px) {
+		.product-search__box {
+			top: 76px;
+			right: 10px;
+			left: 10px;
+			width: auto;
+		}
+	}
+
+	@media (max-width: 680px) {
+		.product-search__close {
+			flex-basis: 44px;
+			width: 44px;
+			height: 44px;
+		}
+
+		.product-search__box {
+			top: auto;
+			bottom: 0;
+			right: 0;
+			left: 0;
+			width: 100%;
+			max-height: 82vh;
+			border-radius: 20px 20px 0 0;
+			transform: translateY(16px);
+		}
+
+		.product-search.is-open .product-search__box {
+			transform: translateY(0);
+		}
+
+		.product-search__result-title {
+			white-space: normal;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.product-search__backdrop,
+		.product-search__box,
+		.product-search__result-link {
+			transition: none;
+		}
+	}
+</style>
+
+<script>
+	interface SearchItem {
+		id: string;
+		title: string;
+		slug: string;
+		category: string;
+		subcategory: string;
+		wood: string;
+		image: string;
+		imageAlt: string;
+		price: string;
+	}
+
+	interface ScoredItem {
+		item: SearchItem;
+		score: number;
+	}
+
+	const base = import.meta.env.BASE_URL;
+	const searchIndexUrl = `${base}search-index.json`;
+	const productHrefFor = (slug: string) => `${base}productos/${slug}/`;
+
+	const MAX_RESULTS = 6;
+	const MIN_QUERY_LENGTH = 2;
+	const DEBOUNCE_MS = 200;
+
+	let cachedIndex: SearchItem[] | null = null;
+	let indexPromise: Promise<SearchItem[]> | null = null;
+	let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+	let lastFocusedTrigger: HTMLElement | null = null;
+
+	const normalize = (value: string) =>
+		value
+			.normalize("NFD")
+			.replace(/[̀-ͯ]/g, "")
+			.toLowerCase()
+			.trim()
+			.replace(/\s+/g, " ");
+
+	const haystackOf = (item: SearchItem) =>
+		normalize(
+			[item.title, item.category, item.subcategory, item.wood]
+				.filter(Boolean)
+				.join(" "),
+		);
+
+	async function loadIndex(): Promise<SearchItem[]> {
+		if (cachedIndex) return cachedIndex;
+		if (indexPromise) return indexPromise;
+
+		indexPromise = fetch(searchIndexUrl)
+			.then((response) => {
+				if (!response.ok) {
+					throw new Error(`search index ${response.status}`);
+				}
+				return response.json();
+			})
+			.then((data: SearchItem[]) => {
+				cachedIndex = data;
+				return data;
+			});
+
+		return indexPromise;
+	}
+
+	function scoreItem(item: SearchItem, normalizedQuery: string): number {
+		const normalizedTitle = normalize(item.title);
+
+		if (normalizedTitle === normalizedQuery) return 100;
+		if (normalizedTitle.startsWith(normalizedQuery)) return 80;
+		if (normalizedTitle.includes(normalizedQuery)) return 50;
+
+		return 20;
+	}
+
+	function search(items: SearchItem[], query: string): SearchItem[] {
+		const normalizedQuery = normalize(query);
+		const words = normalizedQuery.split(" ").filter(Boolean);
+
+		if (words.length === 0) return [];
+
+		const scored: ScoredItem[] = [];
+
+		for (const item of items) {
+			const haystack = haystackOf(item);
+			const matchesAll = words.every((word) => haystack.includes(word));
+
+			if (!matchesAll) continue;
+
+			scored.push({ item, score: scoreItem(item, normalizedQuery) });
+		}
+
+		scored.sort((a, b) => b.score - a.score);
+
+		return scored.slice(0, MAX_RESULTS).map((entry) => entry.item);
+	}
+
+	function initSearchPanel() {
+		const panel = document.querySelector<HTMLElement>(
+			"[data-search-panel]",
+		);
+
+		if (!panel || panel.dataset.initialized === "true") return;
+		panel.dataset.initialized = "true";
+
+		const backdrop = panel.querySelector<HTMLElement>(
+			"[data-search-backdrop]",
+		);
+		const box = panel.querySelector<HTMLElement>(".product-search__box");
+		const input = panel.querySelector<HTMLInputElement>(
+			"[data-search-input]",
+		);
+		const closeButton = panel.querySelector<HTMLButtonElement>(
+			"[data-search-close]",
+		);
+		const resultsList = panel.querySelector<HTMLElement>(
+			"[data-search-results]",
+		);
+		const status = panel.querySelector<HTMLElement>(
+			"[data-search-status]",
+		);
+		const initialHint = panel.querySelector<HTMLElement>(
+			"[data-search-initial]",
+		);
+		const loadingHint = panel.querySelector<HTMLElement>(
+			"[data-search-loading]",
+		);
+		const emptyHint = panel.querySelector<HTMLElement>(
+			"[data-search-empty]",
+		);
+		const errorHint = panel.querySelector<HTMLElement>(
+			"[data-search-error]",
+		);
+		const template = document.querySelector<HTMLTemplateElement>(
+			"[data-search-result-template]",
+		);
+
+		if (
+			!backdrop ||
+			!box ||
+			!input ||
+			!closeButton ||
+			!resultsList ||
+			!status ||
+			!initialHint ||
+			!loadingHint ||
+			!emptyHint ||
+			!errorHint ||
+			!template
+		) {
+			return;
+		}
+
+		const triggers = () =>
+			Array.from(
+				document.querySelectorAll<HTMLElement>(
+					"[data-search-trigger]",
+				),
+			);
+
+		const setHint = (
+			target: "initial" | "loading" | "empty" | "error" | "none",
+		) => {
+			initialHint.hidden = target !== "initial";
+			loadingHint.hidden = target !== "loading";
+			emptyHint.hidden = target !== "empty";
+			errorHint.hidden = target !== "error";
+		};
+
+		const clearResults = () => {
+			resultsList.innerHTML = "";
+		};
+
+		const renderResults = (items: SearchItem[]) => {
+			clearResults();
+
+			items.forEach((item) => {
+				const node = template.content.firstElementChild?.cloneNode(
+					true,
+				) as HTMLElement;
+
+				const link = node.querySelector<HTMLAnchorElement>(
+					".product-search__result-link",
+				);
+				const image = node.querySelector<HTMLImageElement>(
+					'[data-role="image"]',
+				);
+				const placeholder = node.querySelector<HTMLElement>(
+					'[data-role="placeholder"]',
+				);
+				const category = node.querySelector<HTMLElement>(
+					'[data-role="category"]',
+				);
+				const title = node.querySelector<HTMLElement>(
+					'[data-role="title"]',
+				);
+				const price = node.querySelector<HTMLElement>(
+					'[data-role="price"]',
+				);
+
+				if (link) {
+					link.href = productHrefFor(item.slug);
+					link.setAttribute("aria-label", `Ver ${item.title}`);
+				}
+
+				if (image) {
+					if (item.image) {
+						image.src = item.image;
+						image.alt = item.imageAlt || item.title;
+					} else {
+						image.remove();
+					}
+				}
+
+				if (placeholder && item.image) {
+					placeholder.remove();
+				}
+
+				if (category) {
+					category.textContent = item.subcategory || item.category;
+				}
+
+				if (title) {
+					title.textContent = item.title;
+				}
+
+				if (price) {
+					price.textContent = item.price;
+				}
+
+				resultsList.appendChild(node);
+			});
+
+			resultsList.hidden = items.length === 0;
+		};
+
+		const announce = (count: number, query: string) => {
+			if (query.length < MIN_QUERY_LENGTH) {
+				status.textContent = "";
+				return;
+			}
+
+			status.textContent =
+				count === 0
+					? `Sin resultados para "${query}"`
+					: `${count} ${
+							count === 1 ? "resultado" : "resultados"
+						} para "${query}"`;
+		};
+
+		const runSearch = async (query: string) => {
+			const trimmed = query.trim();
+
+			if (trimmed.length < MIN_QUERY_LENGTH) {
+				clearResults();
+				resultsList.hidden = true;
+				setHint("initial");
+				announce(0, trimmed);
+				return;
+			}
+
+			setHint("loading");
+			resultsList.hidden = true;
+
+			try {
+				const items = await loadIndex();
+				const results = search(items, trimmed);
+
+				if (input.value.trim() !== trimmed) return;
+
+				if (results.length === 0) {
+					clearResults();
+					resultsList.hidden = true;
+					setHint("empty");
+				} else {
+					setHint("none");
+					renderResults(results);
+				}
+
+				announce(results.length, trimmed);
+			} catch {
+				clearResults();
+				resultsList.hidden = true;
+				setHint("error");
+			}
+		};
+
+		const onInput = () => {
+			if (debounceTimer) clearTimeout(debounceTimer);
+
+			debounceTimer = setTimeout(() => {
+				runSearch(input.value);
+			}, DEBOUNCE_MS);
+		};
+
+		const isOpen = () => panel.classList.contains("is-open");
+
+		const openPanel = (trigger: HTMLElement) => {
+			if (isOpen()) return;
+
+			lastFocusedTrigger = trigger;
+
+			panel.classList.add("is-open");
+			panel.setAttribute("aria-hidden", "false");
+
+			triggers().forEach((element) => {
+				element.setAttribute("aria-expanded", "true");
+			});
+
+			setHint("initial");
+			clearResults();
+			input.value = "";
+			status.textContent = "";
+
+			input.focus();
+
+			loadIndex().catch(() => {});
+		};
+
+		const closePanel = () => {
+			if (!isOpen()) return;
+
+			panel.classList.remove("is-open");
+			panel.setAttribute("aria-hidden", "true");
+
+			triggers().forEach((element) => {
+				element.setAttribute("aria-expanded", "false");
+			});
+
+			lastFocusedTrigger?.focus();
+			lastFocusedTrigger = null;
+		};
+
+		triggers().forEach((trigger) => {
+			trigger.addEventListener("click", (event) => {
+				event.preventDefault();
+
+				if (isOpen()) {
+					closePanel();
+				} else {
+					openPanel(trigger);
+				}
+			});
+		});
+
+		closeButton.addEventListener("click", closePanel);
+		backdrop.addEventListener("click", closePanel);
+
+		input.addEventListener("input", onInput);
+
+		input.addEventListener("keydown", (event) => {
+			const links = Array.from(
+				resultsList.querySelectorAll<HTMLAnchorElement>(
+					".product-search__result-link",
+				),
+			);
+
+			if (event.key === "ArrowDown" && links.length > 0) {
+				event.preventDefault();
+				links[0].focus();
+			}
+		});
+
+		resultsList.addEventListener("keydown", (event) => {
+			const links = Array.from(
+				resultsList.querySelectorAll<HTMLAnchorElement>(
+					".product-search__result-link",
+				),
+			);
+
+			const currentIndex = links.findIndex(
+				(link) => link === document.activeElement,
+			);
+
+			if (event.key === "ArrowDown") {
+				event.preventDefault();
+				const next = links[currentIndex + 1];
+				if (next) next.focus();
+			} else if (event.key === "ArrowUp") {
+				event.preventDefault();
+				if (currentIndex <= 0) {
+					input.focus();
+				} else {
+					links[currentIndex - 1].focus();
+				}
+			}
+		});
+
+		document.addEventListener("keydown", (event) => {
+			if (event.key === "Escape" && isOpen()) {
+				closePanel();
+			}
+		});
+
+		document.addEventListener("click", (event) => {
+			if (!isOpen()) return;
+			if (!(event.target instanceof Node)) return;
+
+			const clickedTrigger = triggers().some((trigger) =>
+				trigger.contains(event.target as Node),
+			);
+
+			if (
+				!box.contains(event.target) &&
+				!clickedTrigger
+			) {
+				closePanel();
+			}
+		});
+	}
+
+	initSearchPanel();
+	document.addEventListener("astro:page-load", initSearchPanel);
+</script>

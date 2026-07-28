@@ -1,0 +1,527 @@
+---
+interface WoodGuideImage {
+	src: string;
+	alt: string;
+	width: number;
+	height: number;
+}
+
+interface WoodGuideItem {
+	id: string;
+	name: string;
+	description?: string;
+	image?: WoodGuideImage;
+}
+
+interface Props {
+	woods: WoodGuideItem[];
+}
+
+const { woods = [] } = Astro.props;
+
+const visibleWoods = woods.filter(
+	(wood) => wood.id?.trim() && wood.name?.trim(),
+);
+
+const safeId = (value: string): string =>
+	value
+		.toLowerCase()
+		.trim()
+		.replace(/[^a-z0-9-_]+/g, "-")
+		.replace(/^-+|-+$/g, "");
+
+const componentId = `wood-guide-${safeId(
+	visibleWoods[0]?.id || "materials",
+)}`;
+---
+
+{
+	visibleWoods.length > 0 && (
+		<section
+			class="wood-guide"
+			aria-labelledby={`${componentId}-title`}
+			data-wood-guide
+		>
+			<div class="wood-guide__container">
+				<header class="wood-guide__header">
+					<p class="wood-guide__eyebrow">
+						Materiales TAQTO
+					</p>
+
+					<div class="wood-guide__heading">
+						<h2 id={`${componentId}-title`}>
+							Conoce nuestras maderas
+						</h2>
+
+						<p>
+							Explora las especies disponibles
+							en nuestras piezas.
+						</p>
+					</div>
+				</header>
+
+				<div
+					class="wood-guide__tabs"
+					role="tablist"
+					aria-label="Selecciona una especie de madera"
+				>
+					{
+						visibleWoods.map((wood, index) => {
+							const tabId = `${componentId}-tab-${index}`;
+							const panelId = `${componentId}-panel-${index}`;
+
+							return (
+								<button
+									id={tabId}
+									class="wood-guide__tab"
+									type="button"
+									role="tab"
+									aria-selected={index === 0 ? "true" : "false"}
+									aria-controls={panelId}
+									tabindex={index === 0 ? 0 : -1}
+									data-wood-tab
+									data-wood-tab-index={index}
+								>
+									{wood.name}
+								</button>
+							);
+						})
+					}
+				</div>
+
+				<div class="wood-guide__panels">
+					{
+						visibleWoods.map((wood, index) => {
+							const tabId = `${componentId}-tab-${index}`;
+							const panelId = `${componentId}-panel-${index}`;
+
+							return (
+								<article
+									id={panelId}
+									class:list={[
+										"wood-guide__panel",
+										index === 0 && "is-active",
+									]}
+									role="tabpanel"
+									aria-labelledby={tabId}
+									aria-hidden={index === 0 ? "false" : "true"}
+									hidden={index !== 0}
+									data-wood-panel
+								>
+									<div class="wood-guide__media">
+										{
+											wood.image ? (
+												<img
+													src={wood.image.src}
+													alt={wood.image.alt}
+													width={wood.image.width}
+													height={wood.image.height}
+													loading="lazy"
+													decoding="async"
+												/>
+											) : (
+												<div class="wood-guide__placeholder">
+													<span>Foto próximamente</span>
+												</div>
+											)
+										}
+									</div>
+
+									<div class="wood-guide__content">
+										<p class="wood-guide__selected-label">
+											Madera seleccionada
+										</p>
+
+										<h3>{wood.name}</h3>
+
+										{
+											wood.description && (
+												<p class="wood-guide__description">
+													{wood.description}
+												</p>
+											)
+										}
+									</div>
+								</article>
+							);
+						})
+					}
+				</div>
+
+				<p class="wood-guide__note">
+					<span aria-hidden="true">✦</span>
+					La veta y el tono pueden variar
+					naturalmente entre piezas.
+				</p>
+			</div>
+		</section>
+	)
+}
+
+<script>
+	const initializeWoodGuide = () => {
+		const sections = document.querySelectorAll<HTMLElement>(
+			"[data-wood-guide]",
+		);
+
+		sections.forEach((section) => {
+			if (section.dataset.initialized === "true") {
+				return;
+			}
+
+			section.dataset.initialized = "true";
+
+			const tabs = Array.from(
+				section.querySelectorAll<HTMLButtonElement>(
+					"[data-wood-tab]",
+				),
+			);
+
+			const panels = Array.from(
+				section.querySelectorAll<HTMLElement>(
+					"[data-wood-panel]",
+				),
+			);
+
+			if (tabs.length === 0 || panels.length === 0) {
+				return;
+			}
+
+			const activateTab = (
+				index: number,
+				moveFocus = false,
+			) => {
+				const normalizedIndex =
+					((index % tabs.length) + tabs.length) % tabs.length;
+
+				tabs.forEach((tab, tabIndex) => {
+					const isSelected = tabIndex === normalizedIndex;
+
+					tab.setAttribute(
+						"aria-selected",
+						isSelected ? "true" : "false",
+					);
+
+					tab.setAttribute(
+						"tabindex",
+						isSelected ? "0" : "-1",
+					);
+				});
+
+				panels.forEach((panel, panelIndex) => {
+					const isSelected = panelIndex === normalizedIndex;
+
+					panel.classList.toggle("is-active", isSelected);
+					panel.hidden = !isSelected;
+					panel.setAttribute(
+						"aria-hidden",
+						isSelected ? "false" : "true",
+					);
+				});
+
+				if (moveFocus) {
+					tabs[normalizedIndex]?.focus();
+				}
+			};
+
+			tabs.forEach((tab, index) => {
+				tab.addEventListener("click", () => {
+					activateTab(index);
+				});
+
+				tab.addEventListener("keydown", (event) => {
+					let nextIndex: number | null = null;
+
+					switch (event.key) {
+						case "ArrowRight":
+						case "ArrowDown":
+							nextIndex = index + 1;
+							break;
+
+						case "ArrowLeft":
+						case "ArrowUp":
+							nextIndex = index - 1;
+							break;
+
+						case "Home":
+							nextIndex = 0;
+							break;
+
+						case "End":
+							nextIndex = tabs.length - 1;
+							break;
+					}
+
+					if (nextIndex === null) {
+						return;
+					}
+
+					event.preventDefault();
+					activateTab(nextIndex, true);
+				});
+			});
+		});
+	};
+
+	initializeWoodGuide();
+
+	document.addEventListener(
+		"astro:page-load",
+		initializeWoodGuide,
+	);
+</script>
+
+<style>
+	.wood-guide {
+		padding:
+			clamp(64px, 8vw, 130px)
+			var(--page-padding);
+		background: #ffffff;
+		color: var(--color-black);
+	}
+
+	.wood-guide__container {
+		width: min(100%, var(--page-width));
+		margin-inline: auto;
+	}
+
+	.wood-guide__header {
+		display: grid;
+		grid-template-columns:
+			minmax(0, 0.42fr)
+			minmax(0, 1fr);
+		align-items: end;
+		gap: clamp(24px, 5vw, 80px);
+		margin-bottom: clamp(32px, 4vw, 52px);
+	}
+
+	.wood-guide__eyebrow {
+		margin: 0 0 8px;
+		color: var(--color-orange);
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+	}
+
+	.wood-guide__heading h2 {
+		max-width: 780px;
+		margin: 0;
+		color: var(--color-black);
+		font-size: clamp(30px, 4.4vw, 56px);
+		font-weight: 600;
+		line-height: 1.02;
+		letter-spacing: -0.03em;
+	}
+
+	.wood-guide__heading > p {
+		max-width: 480px;
+		margin: 14px 0 0;
+		color: rgba(20, 20, 20, 0.64);
+		font-size: 14.5px;
+		line-height: 1.6;
+	}
+
+	.wood-guide__tabs {
+		display: flex;
+		gap: clamp(20px, 3vw, 44px);
+		overflow-x: auto;
+		margin-bottom: clamp(30px, 4vw, 48px);
+		border-bottom: 1px solid rgba(20, 20, 20, 0.14);
+		scrollbar-width: thin;
+	}
+
+	.wood-guide__tab {
+		position: relative;
+		min-height: 48px;
+		flex: 0 0 auto;
+		padding: 0 0 14px;
+		border: 0;
+		background: transparent;
+		color: rgba(20, 20, 20, 0.5);
+		font: inherit;
+		font-size: clamp(16px, 1.6vw, 22px);
+		font-weight: 600;
+		letter-spacing: -0.02em;
+		cursor: pointer;
+		transition: color 180ms ease;
+	}
+
+	.wood-guide__tab::after {
+		position: absolute;
+		right: 0;
+		bottom: -1px;
+		left: 0;
+		height: 2px;
+		background: var(--color-brown);
+		content: "";
+		transform: scaleX(0);
+		transform-origin: left;
+		transition: transform 220ms ease;
+	}
+
+	.wood-guide__tab[aria-selected="true"] {
+		color: var(--color-black);
+	}
+
+	.wood-guide__tab[aria-selected="true"]::after {
+		transform: scaleX(1);
+	}
+
+	.wood-guide__tab:focus-visible {
+		outline: 2px solid var(--color-orange);
+		outline-offset: 4px;
+	}
+
+	.wood-guide__panel {
+		display: grid;
+		grid-template-columns:
+			minmax(0, 1.18fr)
+			minmax(280px, 0.82fr);
+		align-items: center;
+		gap: clamp(36px, 5vw, 90px);
+	}
+
+	.wood-guide__panel[hidden] {
+		display: none;
+	}
+
+	.wood-guide__media {
+		aspect-ratio: 5 / 4;
+		overflow: hidden;
+		border-radius: 22px;
+		background: var(--color-beige);
+	}
+
+	.wood-guide__media img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: center;
+	}
+
+	.wood-guide__placeholder {
+		display: grid;
+		width: 100%;
+		height: 100%;
+		place-items: center;
+		border: 1px dashed rgba(20, 20, 20, 0.22);
+		border-radius: 22px;
+		background: rgba(20, 20, 20, 0.03);
+	}
+
+	.wood-guide__placeholder span {
+		color: rgba(20, 20, 20, 0.35);
+		font-size: 11px;
+		font-weight: 600;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+	}
+
+	.wood-guide__content {
+		max-width: 520px;
+	}
+
+	.wood-guide__selected-label {
+		margin: 0;
+		color: var(--color-orange);
+		font-size: 10px;
+		font-weight: 700;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+	}
+
+	.wood-guide__content h3 {
+		margin: 10px 0 0;
+		color: var(--color-black);
+		font-size: clamp(30px, 3.8vw, 48px);
+		font-weight: 600;
+		line-height: 1.02;
+		letter-spacing: -0.03em;
+	}
+
+	.wood-guide__description {
+		margin: 18px 0 0;
+		color: rgba(20, 20, 20, 0.68);
+		font-size: 14.5px;
+		line-height: 1.6;
+	}
+
+	.wood-guide__note {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		margin: clamp(32px, 4vw, 52px) 0 0;
+		padding-top: 20px;
+		border-top: 1px solid rgba(20, 20, 20, 0.12);
+		color: rgba(20, 20, 20, 0.64);
+		font-size: 12.5px;
+		line-height: 1.5;
+	}
+
+	.wood-guide__note span {
+		color: var(--color-orange);
+		font-size: 12px;
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.wood-guide__tab:hover {
+			color: var(--color-brown);
+		}
+	}
+
+	@media (max-width: 960px) {
+		.wood-guide__header {
+			grid-template-columns: 1fr;
+			gap: 12px;
+		}
+
+		.wood-guide__panel {
+			grid-template-columns: 1fr;
+			gap: 28px;
+		}
+
+		.wood-guide__media {
+			aspect-ratio: 16 / 10;
+		}
+
+		.wood-guide__content {
+			max-width: 640px;
+		}
+	}
+
+	@media (max-width: 680px) {
+		.wood-guide {
+			padding: 64px 18px;
+		}
+
+		.wood-guide__header {
+			margin-bottom: 26px;
+		}
+
+		.wood-guide__heading h2 {
+			font-size: clamp(30px, 10vw, 42px);
+		}
+
+		.wood-guide__tabs {
+			gap: 24px;
+			margin-inline: -18px;
+			padding-inline: 18px;
+		}
+
+		.wood-guide__tab {
+			min-height: 44px;
+			font-size: 18px;
+		}
+
+		.wood-guide__media {
+			aspect-ratio: 4 / 3;
+			border-radius: 16px;
+		}
+
+		.wood-guide__content h3 {
+			font-size: 32px;
+		}
+	}
+</style>

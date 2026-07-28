@@ -6,6 +6,68 @@ import CampaignBanner from "../components/CampaignBanner.astro";
 import CategoriesTeaser from "../components/CategoriesTeaser.astro";
 import OriginStats from "../components/OriginStats.astro";
 import ProductCarousel from "../components/ProductCarousel.astro";
+import FeaturedProducts from "../components/FeaturedProducts.astro";
+import PersonalizationSteps from "../components/PersonalizationSteps.astro";
+import LifestyleGallery from "../components/LifestyleGallery.astro";
+import WoodGuide from "../components/WoodGuide.astro";
+import PurchaseProcess from "../components/PurchaseProcess.astro";
+import CustomerProof from "../components/CustomerProof.astro";
+import BusinessGateway from "../components/BusinessGateway.astro";
+
+const rawBase = import.meta.env.BASE_URL;
+const base = rawBase.endsWith("/") ? rawBase : `${rawBase}/`;
+
+// Los archivos de imagen todavía no existen en public/images/home/, así que
+// cada componente muestra un placeholder hasta que se agreguen en esas rutas.
+// PersonalizationSteps (sin imageSrc) usará: images/home/personalizacion-grabado.webp
+// BusinessGateway (sin image) usará: images/home/empresas-regalos-corporativos.webp
+
+const lifestyleItems = [
+	{
+		label: "Parrilla",
+		title: "Encuentros alrededor del fuego",
+		description:
+			"Piezas resistentes para preparar, servir y compartir.",
+		href: `${base}categorias/parrilla/`,
+		// futuro: images/home/lifestyle-parrilla.webp
+	},
+	{
+		label: "Oficina",
+		title: "Orden y precisión en tu escritorio",
+		description:
+			"Accesorios de madera que organizan y acompañan tu jornada.",
+		href: `${base}categorias/oficina/`,
+		// futuro: images/home/lifestyle-oficina.webp
+	},
+	{
+		label: "Cocina y mesa",
+		title: "Piezas para servir y compartir",
+		description:
+			"Funcionales y contemporáneas, listas para la mesa.",
+		href: `${base}categorias/cocina-y-mesa/`,
+		// futuro: images/home/lifestyle-cocina-mesa.webp
+	},
+];
+
+// Todas las especies confirmadas y activas en Sanity (studio/schemaTypes/woodType.ts).
+// Rutas futuras: images/home/maderas/<id>.webp
+const woodGuideItems = [
+	{ id: "huayruro", name: "Huayruro" },
+	{ id: "pumaquiro", name: "Pumaquiro" },
+	{ id: "shihuahuaco", name: "Shihuahuaco" },
+	{ id: "cachimbo", name: "Cachimbo" },
+	{ id: "teca", name: "Teca" },
+];
+
+const purchaseLinks = [
+	{ label: "Envíos", href: `${base}envios/` },
+	{ label: "Cuidados", href: `${base}cuidados/` },
+	{ label: "Garantía", href: `${base}garantia/` },
+	{
+		label: "Preguntas frecuentes",
+		href: `${base}preguntas-frecuentes/`,
+	},
+];
 ---
 
 <BaseLayout
@@ -17,14 +79,38 @@ import ProductCarousel from "../components/ProductCarousel.astro";
 	<main>
 		<HeroSlider />
 
+		<CategoriesTeaser />
+
+		<FeaturedProducts />
+
+		<PersonalizationSteps
+			imageAlt="Detalle cercano de una pieza TAQTO personalizada mediante grabado láser"
+			ctaHref={`${base}categorias/`}
+		/>
+
 		<section class="campaign-section">
 			<div class="campaign-section__container">
 				<CampaignBanner />
 			</div>
 		</section>
 
-		<CategoriesTeaser />
+		<LifestyleGallery items={lifestyleItems} />
+
+		<WoodGuide woods={woodGuideItems} />
+
 		<OriginStats />
+
+		<PurchaseProcess links={purchaseLinks} />
+
+		<CustomerProof mode="projects" items={[]} />
+
+		<BusinessGateway
+			mainHref={`${base}categorias/empresas/`}
+			corporateGiftsHref={`${base}categorias/empresas/regalos-corporativos/`}
+			wholesaleHref={`${base}categorias/empresas/ventas-al-por-mayor/`}
+			theme="dark"
+		/>
+
 		<ProductCarousel />
 	</main>
 </BaseLayout>

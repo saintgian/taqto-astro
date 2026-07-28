@@ -1,0 +1,377 @@
+---
+interface LifestyleItem {
+	label: string;
+	title: string;
+	description?: string;
+	href: string;
+	image?: {
+		src: string;
+		alt: string;
+		width: number;
+		height: number;
+	};
+}
+
+interface Props {
+	items: LifestyleItem[];
+}
+
+const { items = [] } = Astro.props;
+
+const visibleItems = items.slice(0, 3);
+---
+
+{
+	visibleItems.length > 0 && (
+		<section
+			class="lifestyle-gallery"
+			aria-labelledby="lifestyle-gallery-title"
+		>
+			<div class="lifestyle-gallery__container">
+				<header class="lifestyle-gallery__header">
+					<div>
+						<p class="lifestyle-gallery__eyebrow">
+							TAQTO en tu día a día
+						</p>
+
+						<h2 id="lifestyle-gallery-title">
+							Diseñadas para momentos reales
+						</h2>
+					</div>
+
+					<p class="lifestyle-gallery__intro">
+						Piezas funcionales para compartir,
+						organizar y acompañar cada día.
+					</p>
+				</header>
+
+				<ul
+					class="lifestyle-gallery__grid"
+					aria-label="Momentos y espacios con piezas TAQTO"
+				>
+					{
+						visibleItems.map((item, index) => (
+							<li
+								class:list={[
+									"lifestyle-gallery__item",
+									index === 0 &&
+										"lifestyle-gallery__item--main",
+								]}
+							>
+								<article class="lifestyle-card">
+									<a
+										class="lifestyle-card__media"
+										href={item.href}
+										aria-label={`Ver ${item.title}`}
+									>
+										{
+											item.image ? (
+												<img
+													src={item.image.src}
+													alt={item.image.alt}
+													width={item.image.width}
+													height={item.image.height}
+													loading="lazy"
+													decoding="async"
+												/>
+											) : (
+												<div class="lifestyle-card__placeholder">
+													<span>Foto próximamente</span>
+												</div>
+											)
+										}
+									</a>
+
+									<div class="lifestyle-card__caption">
+										<p class="lifestyle-card__label">
+											{item.label}
+										</p>
+
+										<h3>
+											<a href={item.href}>
+												{item.title}
+											</a>
+										</h3>
+
+										{
+											item.description && (
+												<p class="lifestyle-card__description">
+													{item.description}
+												</p>
+											)
+										}
+
+										<a
+											class="lifestyle-card__link"
+											href={item.href}
+										>
+											Descubrir
+											<span aria-hidden="true">→</span>
+										</a>
+									</div>
+								</article>
+							</li>
+						))
+					}
+				</ul>
+			</div>
+		</section>
+	)
+}
+
+<style>
+	.lifestyle-gallery {
+		padding:
+			clamp(64px, 8vw, 130px)
+			var(--page-padding);
+		background: #ffffff;
+		color: var(--color-black);
+	}
+
+	.lifestyle-gallery__container {
+		width: min(100%, var(--page-width));
+		margin-inline: auto;
+	}
+
+	.lifestyle-gallery__header {
+		display: grid;
+		grid-template-columns:
+			minmax(0, 1.25fr)
+			minmax(280px, 0.75fr);
+		align-items: end;
+		gap: clamp(24px, 5vw, 80px);
+		margin-bottom: clamp(36px, 5vw, 64px);
+	}
+
+	.lifestyle-gallery__eyebrow {
+		margin: 0 0 14px;
+		color: var(--color-orange);
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+	}
+
+	.lifestyle-gallery__header h2 {
+		max-width: 780px;
+		margin: 0;
+		color: var(--color-black);
+		font-size: clamp(30px, 4.4vw, 56px);
+		font-weight: 600;
+		line-height: 1.02;
+		letter-spacing: -0.03em;
+	}
+
+	.lifestyle-gallery__intro {
+		max-width: 420px;
+		margin: 0 0 4px;
+		color: rgba(20, 20, 20, 0.64);
+		font-size: 14.5px;
+		line-height: 1.6;
+	}
+
+	.lifestyle-gallery__grid {
+		display: grid;
+		grid-template-columns:
+			minmax(0, 1.55fr)
+			minmax(280px, 0.8fr);
+		grid-template-rows: repeat(2, minmax(0, 1fr));
+		gap: clamp(20px, 2.5vw, 36px);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.lifestyle-gallery__item {
+		min-width: 0;
+	}
+
+	.lifestyle-gallery__item--main {
+		grid-row: 1 / 3;
+	}
+
+	.lifestyle-card {
+		display: flex;
+		height: 100%;
+		flex-direction: column;
+	}
+
+	.lifestyle-card__media {
+		position: relative;
+		display: block;
+		overflow: hidden;
+		border-radius: 20px;
+		background: var(--color-beige);
+		color: inherit;
+		text-decoration: none;
+	}
+
+	.lifestyle-gallery__item--main .lifestyle-card__media {
+		flex: 1;
+		min-height: clamp(420px, 52vw, 680px);
+	}
+
+	.lifestyle-gallery__item:not(.lifestyle-gallery__item--main)
+		.lifestyle-card__media {
+		aspect-ratio: 4 / 3;
+	}
+
+	.lifestyle-card__media img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: center;
+	}
+
+	.lifestyle-card__placeholder {
+		display: grid;
+		width: 100%;
+		height: 100%;
+		min-height: 220px;
+		place-items: center;
+		border: 1px dashed rgba(20, 20, 20, 0.22);
+		border-radius: 20px;
+		background: rgba(20, 20, 20, 0.03);
+	}
+
+	.lifestyle-card__placeholder span {
+		color: rgba(20, 20, 20, 0.35);
+		font-size: 11px;
+		font-weight: 600;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+	}
+
+	.lifestyle-card__caption {
+		padding-top: 16px;
+	}
+
+	.lifestyle-card__label {
+		margin: 0 0 6px;
+		color: var(--color-orange);
+		font-size: 10px;
+		font-weight: 700;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+	}
+
+	.lifestyle-card__caption h3 {
+		margin: 0;
+		font-size: clamp(18px, 1.8vw, 26px);
+		font-weight: 600;
+		line-height: 1.12;
+		letter-spacing: -0.02em;
+	}
+
+	.lifestyle-card__caption h3 a {
+		color: var(--color-black);
+		text-decoration: none;
+		transition: color 180ms ease;
+	}
+
+	.lifestyle-card__description {
+		max-width: 480px;
+		margin: 9px 0 0;
+		color: rgba(20, 20, 20, 0.62);
+		font-size: 13px;
+		line-height: 1.55;
+	}
+
+	.lifestyle-card__link {
+		display: inline-flex;
+		min-height: 40px;
+		align-items: center;
+		gap: 8px;
+		margin-top: 8px;
+		color: var(--color-brown);
+		font-size: 10px;
+		font-weight: 700;
+		letter-spacing: 0.09em;
+		text-decoration: none;
+		text-transform: uppercase;
+	}
+
+	.lifestyle-card__link span {
+		font-size: 14px;
+		transition: transform 180ms ease;
+	}
+
+	.lifestyle-card__media:focus-visible,
+	.lifestyle-card__caption h3 a:focus-visible,
+	.lifestyle-card__link:focus-visible {
+		outline: 2px solid var(--color-orange);
+		outline-offset: 4px;
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.lifestyle-card__caption h3 a:hover {
+			color: var(--color-brown);
+		}
+
+		.lifestyle-card__link:hover span {
+			transform: translateX(4px);
+		}
+	}
+
+	@media (max-width: 980px) {
+		.lifestyle-gallery__header {
+			grid-template-columns: 1fr;
+			gap: 18px;
+		}
+
+		.lifestyle-gallery__intro {
+			max-width: 600px;
+		}
+
+		.lifestyle-gallery__grid {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			grid-template-rows: auto;
+		}
+
+		.lifestyle-gallery__item--main {
+			grid-column: 1 / -1;
+			grid-row: auto;
+		}
+
+		.lifestyle-gallery__item--main .lifestyle-card__media {
+			min-height: 0;
+			aspect-ratio: 16 / 10;
+		}
+	}
+
+	@media (max-width: 680px) {
+		.lifestyle-gallery {
+			padding: 64px 18px;
+		}
+
+		.lifestyle-gallery__header {
+			margin-bottom: 30px;
+		}
+
+		.lifestyle-gallery__header h2 {
+			font-size: clamp(30px, 10vw, 42px);
+		}
+
+		.lifestyle-gallery__grid {
+			grid-template-columns: 1fr;
+			gap: 32px;
+		}
+
+		.lifestyle-gallery__item--main {
+			grid-column: auto;
+		}
+
+		.lifestyle-gallery__item--main .lifestyle-card__media,
+		.lifestyle-gallery__item:not(.lifestyle-gallery__item--main)
+			.lifestyle-card__media {
+			aspect-ratio: 4 / 5;
+			min-height: 0;
+		}
+
+		.lifestyle-card__media,
+		.lifestyle-card__placeholder {
+			border-radius: 16px;
+		}
+	}
+</style>

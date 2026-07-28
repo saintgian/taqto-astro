@@ -1,0 +1,318 @@
+---
+interface PurchaseLink {
+	label: string;
+	href: string;
+}
+
+interface Props {
+	links?: PurchaseLink[];
+}
+
+const { links = [] } = Astro.props;
+
+const steps = [
+	{
+		number: "01",
+		title: "Elige tu pieza",
+		description:
+			"Explora el catálogo y encuentra el diseño que mejor se adapte a tu espacio, uso o regalo.",
+	},
+	{
+		number: "02",
+		title: "Define la personalización",
+		description:
+			"Selecciona las opciones disponibles y añade el nombre, frase o imagen que quieras grabar.",
+	},
+	{
+		number: "03",
+		title: "Confirmamos los detalles",
+		description:
+			"Revisamos la información necesaria para preparar correctamente tu pieza antes de producirla.",
+	},
+	{
+		number: "04",
+		title: "Preparamos y enviamos",
+		description:
+			"Trabajamos tu pedido, lo embalamos con cuidado y coordinamos el envío correspondiente.",
+	},
+];
+
+const visibleLinks = links.filter(
+	(link) =>
+		link.label?.trim().length > 0 &&
+		link.href?.trim().length > 0,
+);
+---
+
+<section
+	class="purchase-process"
+	aria-labelledby="purchase-process-title"
+>
+	<div class="purchase-process__container">
+		<header class="purchase-process__header">
+			<p class="purchase-process__eyebrow">
+				Proceso de compra
+			</p>
+
+			<h2 id="purchase-process-title">
+				De tu elección a tu entrega
+			</h2>
+
+			<p class="purchase-process__intro">
+				Un proceso claro para que sepas qué ocurre
+				desde que eliges tu pieza hasta que la recibes.
+			</p>
+		</header>
+
+		<ol class="purchase-process__steps">
+			{
+				steps.map((step) => (
+					<li class="purchase-process__step">
+						<div
+							class="purchase-process__marker"
+							aria-hidden="true"
+						>
+							<span>{step.number}</span>
+						</div>
+
+						<div class="purchase-process__content">
+							<h3>{step.title}</h3>
+							<p>{step.description}</p>
+						</div>
+					</li>
+				))
+			}
+		</ol>
+
+		{
+			visibleLinks.length > 0 && (
+				<nav
+					class="purchase-process__links"
+					aria-label="Información sobre tu compra"
+				>
+					<ul>
+						{
+							visibleLinks.map((link) => (
+								<li>
+									<a href={link.href}>
+										{link.label}
+										<span aria-hidden="true">→</span>
+									</a>
+								</li>
+							))
+						}
+					</ul>
+				</nav>
+			)
+		}
+	</div>
+</section>
+
+<style>
+	.purchase-process {
+		padding:
+			clamp(60px, 8vw, 120px)
+			var(--page-padding);
+		background: var(--color-beige);
+		color: var(--color-black);
+	}
+
+	.purchase-process__container {
+		width: min(100%, var(--page-width));
+		margin-inline: auto;
+	}
+
+	.purchase-process__header {
+		max-width: 700px;
+		margin-bottom: clamp(36px, 5vw, 64px);
+	}
+
+	.purchase-process__eyebrow {
+		margin: 0 0 14px;
+		color: var(--color-orange);
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+	}
+
+	.purchase-process__header h2 {
+		margin: 0;
+		color: var(--color-black);
+		font-size: clamp(30px, 4.4vw, 54px);
+		font-weight: 600;
+		line-height: 1.02;
+		letter-spacing: -0.03em;
+	}
+
+	.purchase-process__intro {
+		max-width: 560px;
+		margin: 14px 0 0;
+		color: rgba(20, 20, 20, 0.65);
+		font-size: 14.5px;
+		line-height: 1.6;
+	}
+
+	.purchase-process__steps {
+		position: relative;
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: clamp(18px, 2.5vw, 32px);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.purchase-process__steps::before {
+		position: absolute;
+		z-index: 0;
+		top: 27px;
+		right: calc(12.5% - 1px);
+		left: calc(12.5% - 1px);
+		height: 1px;
+		background: rgba(20, 20, 20, 0.16);
+		content: "";
+	}
+
+	.purchase-process__step {
+		position: relative;
+		z-index: 1;
+		min-width: 0;
+	}
+
+	.purchase-process__marker {
+		display: grid;
+		width: 54px;
+		height: 54px;
+		place-items: center;
+		border: 1px solid rgba(92, 49, 42, 0.28);
+		border-radius: 50%;
+		background: var(--color-beige);
+	}
+
+	.purchase-process__marker span {
+		color: var(--color-brown);
+		font-size: 12px;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+	}
+
+	.purchase-process__content {
+		padding-top: 20px;
+	}
+
+	.purchase-process__content h3 {
+		margin: 0;
+		color: var(--color-black);
+		font-size: clamp(17px, 1.6vw, 21px);
+		font-weight: 600;
+		line-height: 1.15;
+		letter-spacing: -0.02em;
+	}
+
+	.purchase-process__content p {
+		margin: 10px 0 0;
+		color: rgba(20, 20, 20, 0.64);
+		font-size: 12.5px;
+		line-height: 1.6;
+	}
+
+	.purchase-process__links {
+		margin-top: clamp(40px, 5vw, 64px);
+		padding-top: 22px;
+		border-top: 1px solid rgba(20, 20, 20, 0.14);
+	}
+
+	.purchase-process__links ul {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 10px 26px;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.purchase-process__links a {
+		display: inline-flex;
+		min-height: 44px;
+		align-items: center;
+		gap: 8px;
+		color: var(--color-brown);
+		font-size: 10px;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-decoration: none;
+		text-transform: uppercase;
+	}
+
+	.purchase-process__links a span {
+		font-size: 14px;
+		transition: transform 180ms ease;
+	}
+
+	.purchase-process__links a:focus-visible {
+		outline: 2px solid var(--color-orange);
+		outline-offset: 4px;
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.purchase-process__links a:hover span {
+			transform: translateX(4px);
+		}
+	}
+
+	@media (max-width: 920px) {
+		.purchase-process__steps {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			row-gap: 40px;
+		}
+
+		.purchase-process__steps::before {
+			display: none;
+		}
+	}
+
+	@media (max-width: 640px) {
+		.purchase-process {
+			padding: 64px 18px;
+		}
+
+		.purchase-process__header {
+			margin-bottom: 34px;
+		}
+
+		.purchase-process__header h2 {
+			font-size: clamp(30px, 10vw, 42px);
+		}
+
+		.purchase-process__steps {
+			grid-template-columns: 1fr;
+			gap: 28px;
+		}
+
+		.purchase-process__content {
+			padding-top: 14px;
+		}
+
+		.purchase-process__links {
+			margin-top: 12px;
+		}
+
+		.purchase-process__links ul {
+			display: grid;
+			grid-template-columns: 1fr;
+			gap: 0;
+		}
+
+		.purchase-process__links li {
+			border-bottom: 1px solid rgba(20, 20, 20, 0.1);
+		}
+
+		.purchase-process__links a {
+			width: 100%;
+			justify-content: space-between;
+			padding-block: 4px;
+		}
+	}
+</style>

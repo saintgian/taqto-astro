@@ -1,0 +1,403 @@
+---
+interface BusinessImage {
+	src: string;
+	alt: string;
+	width: number;
+	height: number;
+}
+
+interface BusinessLink {
+	label: string;
+	href: string;
+	description: string;
+}
+
+interface Props {
+	image?: BusinessImage;
+	mainHref: string;
+	corporateGiftsHref: string;
+	wholesaleHref: string;
+	theme?: "dark" | "light";
+}
+
+const {
+	image,
+	mainHref,
+	corporateGiftsHref,
+	wholesaleHref,
+	theme = "dark",
+} = Astro.props;
+
+const businessLinks: BusinessLink[] = [
+	{
+		label: "Regalos corporativos",
+		href: corporateGiftsHref,
+		description:
+			"Piezas personalizadas para clientes, equipos y aliados.",
+	},
+	{
+		label: "Ventas al por mayor",
+		href: wholesaleHref,
+		description:
+			"Pedidos en volumen para negocios, tiendas y espacios profesionales.",
+	},
+];
+---
+
+<section
+	class:list={[
+		"business-gateway",
+		theme === "light"
+			? "business-gateway--light"
+			: "business-gateway--dark",
+	]}
+	aria-labelledby="business-gateway-title"
+>
+	<div class="business-gateway__container">
+		<div class="business-gateway__media">
+			{
+				image ? (
+					<img
+						src={image.src}
+						alt={image.alt}
+						width={image.width}
+						height={image.height}
+						loading="lazy"
+						decoding="async"
+					/>
+				) : (
+					<div class="business-gateway__placeholder">
+						<span>Foto próximamente</span>
+					</div>
+				)
+			}
+		</div>
+
+		<div class="business-gateway__content">
+			<p class="business-gateway__eyebrow">
+				TAQTO para empresas
+			</p>
+
+			<h2 id="business-gateway-title">
+				Piezas que representan tu marca
+			</h2>
+
+			<p class="business-gateway__description">
+				Soluciones de madera personalizadas
+				para regalos corporativos y negocios
+				que necesitan pedidos en volumen.
+			</p>
+
+			<ul
+				class="business-gateway__links"
+				aria-label="Soluciones para empresas"
+			>
+				{
+					businessLinks.map((link) => (
+						<li>
+							<a href={link.href}>
+								<span class="business-gateway__link-copy">
+									<strong>{link.label}</strong>
+									<small>{link.description}</small>
+								</span>
+
+								<span
+									class="business-gateway__link-arrow"
+									aria-hidden="true"
+								>
+									→
+								</span>
+							</a>
+						</li>
+					))
+				}
+			</ul>
+
+			<a class="business-gateway__cta" href={mainHref}>
+				Conoce las soluciones para empresas
+				<span aria-hidden="true">→</span>
+			</a>
+		</div>
+	</div>
+</section>
+
+<style>
+	.business-gateway {
+		padding:
+			clamp(60px, 8vw, 120px)
+			var(--page-padding);
+	}
+
+	.business-gateway--dark {
+		--business-background: var(--color-black);
+		--business-foreground: var(--color-beige);
+		--business-muted: rgba(255, 246, 237, 0.66);
+		--business-line: rgba(255, 246, 237, 0.16);
+		--business-link-hover: rgba(255, 246, 237, 0.07);
+		--business-button-background: var(--color-beige);
+		--business-button-foreground: var(--color-black);
+	}
+
+	.business-gateway--light {
+		--business-background: var(--color-beige);
+		--business-foreground: var(--color-black);
+		--business-muted: rgba(20, 20, 20, 0.64);
+		--business-line: rgba(20, 20, 20, 0.14);
+		--business-link-hover: rgba(20, 20, 20, 0.045);
+		--business-button-background: var(--color-brown);
+		--business-button-foreground: var(--color-beige);
+	}
+
+	.business-gateway {
+		background: var(--business-background);
+		color: var(--business-foreground);
+	}
+
+	.business-gateway__container {
+		display: grid;
+		width: min(100%, var(--page-width));
+		grid-template-columns:
+			minmax(0, 1.08fr)
+			minmax(320px, 0.92fr);
+		align-items: stretch;
+		gap: clamp(36px, 6vw, 96px);
+		margin-inline: auto;
+	}
+
+	.business-gateway__media {
+		position: relative;
+		min-height: clamp(420px, 50vw, 640px);
+		overflow: hidden;
+		border-radius: 24px;
+		background: var(--color-beige);
+	}
+
+	.business-gateway__media img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: center;
+	}
+
+	.business-gateway__placeholder {
+		display: grid;
+		width: 100%;
+		height: 100%;
+		min-height: 320px;
+		place-items: center;
+		border: 1px dashed rgba(20, 20, 20, 0.22);
+		border-radius: 24px;
+		background: rgba(20, 20, 20, 0.03);
+	}
+
+	.business-gateway__placeholder span {
+		color: rgba(20, 20, 20, 0.4);
+		font-size: 11px;
+		font-weight: 600;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+	}
+
+	.business-gateway__content {
+		display: flex;
+		align-self: center;
+		flex-direction: column;
+		padding-block: clamp(8px, 2vw, 20px);
+	}
+
+	.business-gateway__eyebrow {
+		margin: 0 0 14px;
+		color: var(--color-orange);
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 0.17em;
+		text-transform: uppercase;
+	}
+
+	.business-gateway__content h2 {
+		max-width: 600px;
+		margin: 0;
+		color: var(--business-foreground);
+		font-size: clamp(30px, 4.2vw, 54px);
+		font-weight: 600;
+		line-height: 1.02;
+		letter-spacing: -0.03em;
+	}
+
+	.business-gateway__description {
+		max-width: 520px;
+		margin: 18px 0 0;
+		color: var(--business-muted);
+		font-size: 14.5px;
+		line-height: 1.6;
+	}
+
+	.business-gateway__links {
+		margin: clamp(28px, 4vw, 44px) 0 0;
+		padding: 0;
+		border-top: 1px solid var(--business-line);
+		list-style: none;
+	}
+
+	.business-gateway__links li {
+		border-bottom: 1px solid var(--business-line);
+	}
+
+	.business-gateway__links a {
+		display: flex;
+		min-height: 92px;
+		align-items: center;
+		justify-content: space-between;
+		gap: 20px;
+		padding: 18px 4px;
+		color: var(--business-foreground);
+		text-decoration: none;
+		transition:
+			background-color 180ms ease,
+			padding-inline 180ms ease;
+	}
+
+	.business-gateway__link-copy {
+		display: grid;
+		gap: 7px;
+	}
+
+	.business-gateway__link-copy strong {
+		font-size: clamp(16px, 1.6vw, 21px);
+		font-weight: 600;
+		letter-spacing: -0.02em;
+	}
+
+	.business-gateway__link-copy small {
+		max-width: 420px;
+		color: var(--business-muted);
+		font-size: 11.5px;
+		font-weight: 400;
+		line-height: 1.5;
+	}
+
+	.business-gateway__link-arrow {
+		display: grid;
+		width: 40px;
+		height: 40px;
+		flex: 0 0 auto;
+		place-items: center;
+		border: 1px solid var(--business-line);
+		border-radius: 50%;
+		font-size: 15px;
+		transition:
+			transform 180ms ease,
+			border-color 180ms ease;
+	}
+
+	.business-gateway__cta {
+		display: inline-flex;
+		width: fit-content;
+		min-height: 48px;
+		align-items: center;
+		justify-content: center;
+		gap: 12px;
+		margin-top: clamp(28px, 4vw, 40px);
+		padding: 0 20px;
+		border: 1px solid transparent;
+		border-radius: 999px;
+		background: var(--business-button-background);
+		color: var(--business-button-foreground);
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-decoration: none;
+		text-transform: uppercase;
+		transition:
+			background-color 180ms ease,
+			border-color 180ms ease,
+			color 180ms ease;
+	}
+
+	.business-gateway__cta span {
+		font-size: 15px;
+		transition: transform 180ms ease;
+	}
+
+	.business-gateway__links a:focus-visible,
+	.business-gateway__cta:focus-visible {
+		outline: 2px solid var(--color-orange);
+		outline-offset: 4px;
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.business-gateway__links a:hover {
+			padding-inline: 12px;
+			background: var(--business-link-hover);
+		}
+
+		.business-gateway__links a:hover .business-gateway__link-arrow {
+			border-color: var(--color-orange);
+			transform: translateX(4px);
+		}
+
+		.business-gateway__cta:hover span {
+			transform: translateX(4px);
+		}
+
+		.business-gateway--dark .business-gateway__cta:hover {
+			border-color: var(--color-orange);
+			background: var(--color-orange);
+			color: var(--color-black);
+		}
+
+		.business-gateway--light .business-gateway__cta:hover {
+			border-color: var(--color-black);
+			background: var(--color-black);
+		}
+	}
+
+	@media (max-width: 980px) {
+		.business-gateway__container {
+			grid-template-columns: 1fr;
+			gap: 36px;
+		}
+
+		.business-gateway__media {
+			min-height: 0;
+			aspect-ratio: 16 / 10;
+		}
+
+		.business-gateway__content {
+			max-width: 680px;
+			padding-block: 0;
+		}
+	}
+
+	@media (max-width: 680px) {
+		.business-gateway {
+			padding: 64px 18px;
+		}
+
+		.business-gateway__container {
+			gap: 30px;
+		}
+
+		.business-gateway__media,
+		.business-gateway__placeholder {
+			aspect-ratio: 4 / 5;
+			border-radius: 18px;
+		}
+
+		.business-gateway__content h2 {
+			font-size: clamp(30px, 10vw, 44px);
+		}
+
+		.business-gateway__links a {
+			min-height: 86px;
+			padding-block: 16px;
+		}
+
+		.business-gateway__cta {
+			width: 100%;
+			min-height: 50px;
+			text-align: center;
+		}
+	}
+</style>

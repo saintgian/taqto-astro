@@ -1,0 +1,402 @@
+---
+type CustomerProofMode = "testimonials" | "projects";
+
+interface CustomerProofImage {
+	src: string;
+	alt: string;
+	width: number;
+	height: number;
+}
+
+interface CustomerTestimonial {
+	type: "testimonial";
+	image: CustomerProofImage;
+	customerName: string;
+	productName: string;
+	quote: string;
+	href?: string;
+}
+
+interface CustomerProject {
+	type: "project";
+	image: CustomerProofImage;
+	title: string;
+	category?: string;
+	description?: string;
+	href?: string;
+}
+
+type CustomerProofItem = CustomerTestimonial | CustomerProject;
+
+interface Props {
+	mode?: CustomerProofMode;
+	items: CustomerProofItem[];
+}
+
+const { mode = "testimonials", items = [] } = Astro.props;
+
+const visibleItems = items
+	.filter((item) => {
+		const imageIsValid =
+			Boolean(item.image?.src?.trim()) &&
+			Boolean(item.image?.alt?.trim()) &&
+			Number.isFinite(item.image?.width) &&
+			Number.isFinite(item.image?.height);
+
+		if (!imageIsValid) {
+			return false;
+		}
+
+		if (item.type === "testimonial") {
+			return (
+				Boolean(item.customerName?.trim()) &&
+				Boolean(item.productName?.trim()) &&
+				Boolean(item.quote?.trim())
+			);
+		}
+
+		return Boolean(item.title?.trim());
+	})
+	.slice(0, 3);
+
+const resolvedItems =
+	mode === "projects"
+		? visibleItems.filter(
+				(item): item is CustomerProject => item.type === "project",
+			)
+		: visibleItems.filter(
+				(item): item is CustomerTestimonial =>
+					item.type === "testimonial",
+			);
+---
+
+{
+	resolvedItems.length > 0 && (
+		<section
+			class="customer-proof"
+			aria-labelledby="customer-proof-title"
+		>
+			<div class="customer-proof__container">
+				<header class="customer-proof__header">
+					<p class="customer-proof__eyebrow">
+						Clientes y proyectos reales
+					</p>
+
+					<h2 id="customer-proof-title">
+						Piezas que ya encontraron su lugar
+					</h2>
+
+					<p class="customer-proof__intro">
+						Una selección de piezas personalizadas,
+						regalos y pedidos que ya forman parte
+						de espacios y momentos reales.
+					</p>
+				</header>
+
+				<ul
+					class="customer-proof__grid"
+					aria-label={
+						mode === "projects"
+							? "Pedidos y proyectos realizados"
+							: "Experiencias de clientes"
+					}
+				>
+					{
+						resolvedItems.map((item) => (
+							<li class="customer-proof__item">
+								<article class="customer-proof__card">
+									{
+										item.href ? (
+											<a
+												class="customer-proof__media"
+												href={item.href}
+												aria-label={
+													item.type === "testimonial"
+														? `Ver ${item.productName}`
+														: `Ver ${item.title}`
+												}
+											>
+												<img
+													src={item.image.src}
+													alt={item.image.alt}
+													width={item.image.width}
+													height={item.image.height}
+													loading="lazy"
+													decoding="async"
+												/>
+											</a>
+										) : (
+											<div class="customer-proof__media">
+												<img
+													src={item.image.src}
+													alt={item.image.alt}
+													width={item.image.width}
+													height={item.image.height}
+													loading="lazy"
+													decoding="async"
+												/>
+											</div>
+										)
+									}
+
+									<div class="customer-proof__content">
+										{
+											item.type === "testimonial" ? (
+												<>
+													<p class="customer-proof__product">
+														{item.productName}
+													</p>
+
+													<blockquote>
+														<p>“{item.quote}”</p>
+													</blockquote>
+
+													<p class="customer-proof__customer">
+														{item.customerName}
+													</p>
+												</>
+											) : (
+												<>
+													{
+														item.category && (
+															<p class="customer-proof__product">
+																{item.category}
+															</p>
+														)
+													}
+
+													<h3>
+														{
+															item.href ? (
+																<a href={item.href}>
+																	{item.title}
+																</a>
+															) : (
+																item.title
+															)
+														}
+													</h3>
+
+													{
+														item.description && (
+															<p class="customer-proof__description">
+																{item.description}
+															</p>
+														)
+													}
+												</>
+											)
+										}
+									</div>
+								</article>
+							</li>
+						))
+					}
+				</ul>
+			</div>
+		</section>
+	)
+}
+
+<style>
+	.customer-proof {
+		padding:
+			clamp(64px, 8vw, 130px)
+			var(--page-padding);
+		background: #ffffff;
+		color: var(--color-black);
+	}
+
+	.customer-proof__container {
+		width: min(100%, var(--page-width));
+		margin-inline: auto;
+	}
+
+	.customer-proof__header {
+		max-width: 780px;
+		margin-bottom: clamp(34px, 5vw, 60px);
+	}
+
+	.customer-proof__eyebrow {
+		margin: 0 0 14px;
+		color: var(--color-orange);
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+	}
+
+	.customer-proof__header h2 {
+		margin: 0;
+		color: var(--color-black);
+		font-size: clamp(30px, 4.2vw, 54px);
+		font-weight: 600;
+		line-height: 1.02;
+		letter-spacing: -0.03em;
+	}
+
+	.customer-proof__intro {
+		max-width: 600px;
+		margin: 14px 0 0;
+		color: rgba(20, 20, 20, 0.64);
+		font-size: 14.5px;
+		line-height: 1.6;
+	}
+
+	.customer-proof__grid {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: clamp(20px, 2.5vw, 34px);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.customer-proof__item {
+		min-width: 0;
+	}
+
+	.customer-proof__card {
+		display: flex;
+		height: 100%;
+		flex-direction: column;
+	}
+
+	.customer-proof__media {
+		position: relative;
+		display: block;
+		aspect-ratio: 4 / 5;
+		overflow: hidden;
+		border-radius: 18px;
+		background: var(--color-beige);
+		color: inherit;
+		text-decoration: none;
+	}
+
+	.customer-proof__media img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: center;
+	}
+
+	.customer-proof__content {
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+		padding: 16px 2px 0;
+	}
+
+	.customer-proof__product {
+		margin: 0 0 9px;
+		color: var(--color-orange);
+		font-size: 10px;
+		font-weight: 700;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+	}
+
+	.customer-proof blockquote {
+		margin: 0;
+		padding: 0;
+		border: 0;
+	}
+
+	.customer-proof blockquote p {
+		margin: 0;
+		color: var(--color-black);
+		font-size: clamp(16px, 1.5vw, 20px);
+		font-weight: 500;
+		line-height: 1.45;
+		letter-spacing: -0.015em;
+	}
+
+	.customer-proof__customer {
+		margin: 16px 0 0;
+		color: rgba(20, 20, 20, 0.6);
+		font-size: 12px;
+		font-weight: 600;
+	}
+
+	.customer-proof__content h3 {
+		margin: 0;
+		font-size: clamp(18px, 1.8vw, 25px);
+		font-weight: 600;
+		line-height: 1.12;
+		letter-spacing: -0.02em;
+	}
+
+	.customer-proof__content h3 a {
+		color: var(--color-black);
+		text-decoration: none;
+		transition: color 180ms ease;
+	}
+
+	.customer-proof__description {
+		margin: 10px 0 0;
+		color: rgba(20, 20, 20, 0.62);
+		font-size: 13px;
+		line-height: 1.55;
+	}
+
+	.customer-proof__media:focus-visible,
+	.customer-proof__content h3 a:focus-visible {
+		outline: 2px solid var(--color-orange);
+		outline-offset: 4px;
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.customer-proof__content h3 a:hover {
+			color: var(--color-brown);
+		}
+	}
+
+	@media (max-width: 920px) {
+		.customer-proof__grid {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+
+		.customer-proof__item:last-child:nth-child(odd) {
+			grid-column: 1 / -1;
+			max-width: calc(50% - 17px);
+		}
+	}
+
+	@media (max-width: 680px) {
+		.customer-proof {
+			padding: 64px 0;
+		}
+
+		.customer-proof__header {
+			padding-inline: 18px;
+			margin-bottom: 30px;
+		}
+
+		.customer-proof__header h2 {
+			font-size: clamp(30px, 10vw, 42px);
+		}
+
+		.customer-proof__grid {
+			grid-template-columns: none;
+			grid-auto-flow: column;
+			grid-auto-columns: minmax(260px, 84vw);
+			gap: 16px;
+			overflow-x: auto;
+			padding: 0 18px 14px;
+			scroll-padding-inline: 18px;
+			scroll-snap-type: inline mandatory;
+		}
+
+		.customer-proof__item,
+		.customer-proof__item:last-child:nth-child(odd) {
+			grid-column: auto;
+			max-width: none;
+			scroll-snap-align: start;
+		}
+
+		.customer-proof__media {
+			border-radius: 16px;
+		}
+	}
+</style>

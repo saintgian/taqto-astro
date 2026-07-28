@@ -6,6 +6,7 @@ import {
 	EMPRESAS_CATEGORY_SLUG,
 	EMPRESAS_SUBCATEGORIES,
 } from "../lib/constants";
+import ProductSearch from "./ProductSearch.astro";
 
 interface NavSubcategory {
 	_id: string;
@@ -55,7 +56,6 @@ const currentPath =
 const homeHref = withBase();
 const storeHref = withBase("categorias/");
 const contactHref = withBase("contactanos/");
-const searchHref = withBase("buscar/");
 const cartHref = withBase("carrito/");
 
 const headerLogo =
@@ -157,10 +157,13 @@ const getCategoryIcon = (slug: string) =>
 					<span></span>
 				</button>
 
-				<a
+				<button
+					type="button"
 					class="icon-button mobile-search-button"
-					href={searchHref}
 					aria-label="Buscar productos"
+					aria-expanded="false"
+					aria-controls="product-search-panel"
+					data-search-trigger
 				>
 					<svg
 						viewBox="0 0 24 24"
@@ -172,7 +175,7 @@ const getCategoryIcon = (slug: string) =>
 						<circle cx="11" cy="11" r="6.5"></circle>
 						<path d="m16 16 4 4"></path>
 					</svg>
-				</a>
+				</button>
 			</div>
 
 			<a
@@ -338,10 +341,13 @@ const getCategoryIcon = (slug: string) =>
 			</nav>
 
 			<div class="header-actions">
-				<a
+				<button
+					type="button"
 					class="icon-button desktop-search-button"
-					href={searchHref}
 					aria-label="Buscar productos"
+					aria-expanded="false"
+					aria-controls="product-search-panel"
+					data-search-trigger
 				>
 					<svg
 						viewBox="0 0 24 24"
@@ -353,7 +359,7 @@ const getCategoryIcon = (slug: string) =>
 						<circle cx="11" cy="11" r="6.5"></circle>
 						<path d="m16 16 4 4"></path>
 					</svg>
-				</a>
+				</button>
 
 				<a
 					class="icon-button whatsapp-button"
@@ -465,6 +471,8 @@ const getCategoryIcon = (slug: string) =>
 		</aside>
 	</div>
 </header>
+
+<ProductSearch />
 
 <script>
 	import {
@@ -1298,9 +1306,13 @@ const getCategoryIcon = (slug: string) =>
 		height: 43px;
 		display: grid;
 		place-items: center;
+		border: 0;
 		border-radius: 50%;
+		background: transparent;
 		color: rgba(255, 246, 237, 0.86);
 		text-decoration: none;
+		font: inherit;
+		cursor: pointer;
 		transition:
 			background-color 170ms ease,
 			color 170ms ease,
