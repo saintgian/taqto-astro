@@ -453,6 +453,19 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 
 	import { supabase } from "../lib/supabase";
 
+	const escapeHtml = (value: string) =>
+		value.replace(
+			/[&<>"']/g,
+			(char) =>
+				({
+					"&": "&amp;",
+					"<": "&lt;",
+					">": "&gt;",
+					'"': "&quot;",
+					"'": "&#39;",
+				})[char] || char,
+		);
+
 	const steps = Array.from(
 		document.querySelectorAll<HTMLElement>(
 			"[data-step]",
@@ -571,6 +584,11 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 							? `<p class="cart-item__variant">${variantLabel}</p>`
 							: ""
 					}
+					${
+						item.engravingText
+							? `<p class="cart-item__engraving">Grabado: “${escapeHtml(item.engravingText)}”</p>`
+							: ""
+					}
 					<p class="cart-item__price">${formatPEN(item.unitPrice)} c/u</p>
 				</div>
 
@@ -682,6 +700,11 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 						<span>
 							${item.title}${variant ? ` — ${variant}` : ""}
 							× ${item.quantity}
+							${
+								item.engravingText
+									? `<br /><small>Grabado: “${escapeHtml(item.engravingText)}”</small>`
+									: ""
+							}
 						</span>
 						<strong>${formatPEN(item.unitPrice * item.quantity)}</strong>
 					</div>
@@ -1050,6 +1073,7 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 			sizeName: item.sizeTitle || null,
 			sizeSlug: item.sizeSlug || null,
 			dimensionsLabel: item.dimensionsLabel || null,
+			engravingText: item.engravingText || null,
 			quantity: item.quantity,
 			unitPrice: item.unitPrice,
 		}));
@@ -1332,6 +1356,13 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 		margin: 3px 0 0;
 		color: rgba(255, 246, 237, 0.55);
 		font-size: 13px;
+	}
+
+	.cart-item__engraving {
+		margin: 3px 0 0;
+		color: rgba(255, 246, 237, 0.55);
+		font-size: 12px;
+		font-style: italic;
 	}
 
 	.cart-item__price {
@@ -1653,6 +1684,14 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 	.order-summary__product strong {
 		color: #fff6ed;
 		white-space: nowrap;
+	}
+
+	.order-summary__product small {
+		display: block;
+		margin-top: 2px;
+		color: rgba(255, 246, 237, 0.55);
+		font-size: 12px;
+		font-style: italic;
 	}
 
 	.order-summary__totals {

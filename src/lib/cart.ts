@@ -10,6 +10,7 @@ export interface CartItem {
 	sizeTitle?: string;
 	sizeSlug?: string;
 	dimensionsLabel?: string;
+	engravingText?: string;
 	unitPrice: number;
 	quantity: number;
 }

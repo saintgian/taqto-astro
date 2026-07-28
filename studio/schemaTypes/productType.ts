@@ -113,13 +113,65 @@ export const productType = defineType({
     }),
 
     defineField({
+  name: 'dimensions',
+  title: 'Medidas del producto',
+  type: 'string',
+  group: 'general',
+  description:
+    'Dato informativo independiente de los tamaños o variantes. Ejemplo: 50 × 28 × 2.5 cm.',
+  validation: (rule) =>
+    rule.max(80).warning(
+      'Las medidas deberían escribirse de forma breve.',
+    ),
+}),
+
+    defineField({
       name: 'shortDescription',
       title: 'Descripción corta',
-      type: 'text',
-      rows: 3,
+      type: 'array',
       group: 'general',
+      description:
+        'Usa un párrafo breve y hasta cinco viñetas con los beneficios principales del producto.',
+
+      of: [
+        defineArrayMember({
+          type: 'block',
+
+          styles: [
+            {
+              title: 'Texto normal',
+              value: 'normal',
+            },
+          ],
+
+          lists: [
+            {
+              title: 'Viñetas',
+              value: 'bullet',
+            },
+          ],
+
+          marks: {
+            decorators: [
+              {
+                title: 'Negrita',
+                value: 'strong',
+              },
+              {
+                title: 'Cursiva',
+                value: 'em',
+              },
+            ],
+
+            annotations: [],
+          },
+        }),
+      ],
+
       validation: (rule) =>
-        rule.required().min(20).max(240),
+        rule.required().max(8).warning(
+          'Para mantener una ficha clara, utiliza un párrafo y pocas viñetas.',
+        ),
     }),
 
     defineField({

@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import Header from "../../components/Header.astro";
+import ProductCard from "../../components/ProductCard.astro";
 import { PortableText } from "astro-portabletext";
 import {
 	sanityClient,
@@ -44,7 +45,8 @@ interface Product {
 	title: string;
 	slug: string;
 	sku?: string;
-	shortDescription?: string;
+	dimensions?: string;
+	shortDescription?: any[];
 	description?: any[];
 	productMode?: string;
 	gallery?: ProductImage[];
@@ -89,19 +91,32 @@ export async function getStaticPaths() {
 			productDetailQuery,
 		);
 
-	return products.map((product) => ({
-		params: {
-			slug: product.slug,
-		},
+	return products.map((product) => {
+		const crossSell = products
+			.filter(
+				(candidate) =>
+					candidate.slug !== product.slug &&
+					candidate.category?.slug ===
+						product.category?.slug,
+			)
+			.slice(0, 4);
 
-		props: {
-			product,
-		},
-	}));
+		return {
+			params: {
+				slug: product.slug,
+			},
+
+			props: {
+				product,
+				crossSell,
+			},
+		};
+	});
 }
 
-const { product } = Astro.props as {
+const { product, crossSell } = Astro.props as {
 	product: Product;
+	crossSell: Product[];
 };
 
 const base = import.meta.env.BASE_URL;
@@ -211,8 +226,8 @@ const mainImage = product.gallery?.[0];
 
 const mainImageUrl = mainImage
 	? urlForImage(mainImage)
-			.width(1200)
-			.height(1500)
+			.width(1600)
+			.height(2000)
 			.fit("crop")
 			.auto("format")
 			.url()
@@ -222,13 +237,49 @@ const mainImageAlt =
 	mainImage?.alt ||
 	`${product.title} de TAQTO`;
 
+const plainTextFromBlocks = (
+	blocks?: any[],
+): string =>
+	(blocks || [])
+		.filter((block) => block._type === "block")
+		.map((block) =>
+			(block.children || [])
+				.map((child: any) => child.text || "")
+				.join(""),
+		)
+		.join(" ")
+		.trim();
+
+const descriptionBlocks = Array.isArray(product.description)
+	? product.description
+	: [];
+
+const descriptionIntroBlocks = descriptionBlocks.filter(
+	(block) => !block?.listItem,
+);
+
+const descriptionStoryItems = descriptionBlocks
+	.filter(
+		(block) =>
+			block?._type === "block" &&
+			Boolean(block.listItem),
+	)
+	.map((block, index) => ({
+		block: {
+			...block,
+			listItem: undefined,
+			level: undefined,
+		},
+		number: String(index + 1).padStart(2, "0"),
+	}));
+
 const pageTitle =
 	product.metaTitle ||
 	`${product.title} | TAQTO`;
 
 const pageDescription =
 	product.metaDescription ||
-	product.shortDescription ||
+	plainTextFromBlocks(product.shortDescription) ||
 	`Conoce ${product.title} de TAQTO.`;
 
 const engravingLabels: Record<string, string> = {
@@ -327,26 +378,6 @@ const safeVariantJson = JSON.stringify({
 
 		<section class="product-hero">
 			<div class="product-gallery">
-				<div class="product-main-image">
-					{
-						mainImageUrl ? (
-							<img
-								id="product-main-image"
-								src={mainImageUrl}
-								alt={mainImageAlt}
-								width="1200"
-								height="1500"
-								loading="eager"
-								decoding="async"
-							/>
-						) : (
-							<div class="product-image-placeholder">
-								<span>TAQTO</span>
-							</div>
-						)
-					}
-				</div>
-
 				{
 					product.gallery &&
 					product.gallery.length > 1 && (
@@ -358,16 +389,16 @@ const safeVariantJson = JSON.stringify({
 								(image, index) => {
 									const thumbnailUrl =
 										urlForImage(image)
-											.width(240)
-											.height(300)
+											.width(160)
+											.height(200)
 											.fit("crop")
 											.auto("format")
 											.url();
 
 									const largeUrl =
 										urlForImage(image)
-											.width(1200)
-											.height(1500)
+											.width(1600)
+											.height(2000)
 											.fit("crop")
 											.auto("format")
 											.url();
@@ -395,8 +426,8 @@ const safeVariantJson = JSON.stringify({
 											<img
 												src={thumbnailUrl}
 												alt=""
-												width="240"
-												height="300"
+												width="160"
+												height="200"
 												loading="lazy"
 											/>
 										</button>
@@ -406,6 +437,26 @@ const safeVariantJson = JSON.stringify({
 						</div>
 					)
 				}
+
+				<div class="product-main-image">
+					{
+						mainImageUrl ? (
+							<img
+								id="product-main-image"
+								src={mainImageUrl}
+								alt={mainImageAlt}
+								width="1600"
+								height="2000"
+								loading="eager"
+								decoding="async"
+							/>
+						) : (
+							<div class="product-image-placeholder">
+								<span>TAQTO</span>
+							</div>
+						)
+					}
+				</div>
 			</div>
 
 			<div class="product-information">
@@ -414,10 +465,6 @@ const safeVariantJson = JSON.stringify({
 				</p>
 
 				<h1>{product.title}</h1>
-
-				<p class="product-short-description">
-					{product.shortDescription}
-				</p>
 
 				<div class="product-price-wrapper">
 					<p
@@ -442,6 +489,22 @@ const safeVariantJson = JSON.stringify({
 					</p>
 				</div>
 
+				<div class="product-short-description">
+					{
+						Array.isArray(
+							product.shortDescription,
+						) &&
+							product.shortDescription.length >
+								0 && (
+								<PortableText
+									value={
+										product.shortDescription
+									}
+								/>
+							)
+					}
+				</div>
+
 				<div class="product-status">
 					<span
 						class:list={[
@@ -464,10 +527,12 @@ const safeVariantJson = JSON.stringify({
 				</div>
 
 				<div class="product-meta">
-					<span>SKU</span>
-					<strong id="product-sku">
-						{initialSku || "Sin SKU"}
-					</strong>
+					<div class="product-meta__row">
+						<span>SKU</span>
+						<strong id="product-sku">
+							{initialSku || "Sin SKU"}
+						</strong>
+					</div>
 				</div>
 
 				{
@@ -556,30 +621,89 @@ const safeVariantJson = JSON.stringify({
 					aria-live="polite"
 				></p>
 
-				<div class="product-personalization">
-					<div class="product-personalization__icon">
-						<svg
-							viewBox="0 0 24 24"
-							aria-hidden="true"
-						>
-							<path d="M12 3 5 7v5c0 4.4 2.8 7.7 7 9 4.2-1.3 7-4.6 7-9V7l-7-4Z"></path>
-							<path d="m9 12 2 2 4-5"></path>
-						</svg>
-					</div>
+				{
+					product.engravingIncluded && (
+						<div class="product-personalization">
+							<div class="product-personalization__header">
+								<div class="product-personalization__icon">
+									<svg
+										viewBox="0 0 24 24"
+										aria-hidden="true"
+									>
+										<path d="M12 3 5 7v5c0 4.4 2.8 7.7 7 9 4.2-1.3 7-4.6 7-9V7l-7-4Z"></path>
+										<path d="m9 12 2 2 4-5"></path>
+									</svg>
+								</div>
 
-					<div>
-						<strong>
-							Grabado láser personalizado gratuito
-						</strong>
+								<div>
+									<strong>
+										Personalización (grabado
+										láser)
+									</strong>
 
-						<p>
-							{
-								product.personalizationNotes ||
-									"Personaliza tu pieza sin costo adicional."
-							}
-						</p>
-					</div>
-				</div>
+									<p>
+										{
+											product.personalizationNotes ||
+												"Personaliza tu pieza sin costo adicional."
+										}
+									</p>
+								</div>
+							</div>
+
+							<div class="product-engraving">
+								<label for="product-engraving-text">
+									<span>
+										Texto para grabar
+										(opcional)
+									</span>
+
+									{product.engravingMaxCharacters && (
+										<span
+											class="product-engraving__counter"
+											id="product-engraving-counter"
+										>
+											0/
+											{
+												product.engravingMaxCharacters
+											}
+										</span>
+									)}
+								</label>
+
+								<input
+									type="text"
+									id="product-engraving-text"
+									name="engravingText"
+									class="product-engraving__input"
+									placeholder="Ej: Familia García"
+									maxlength={
+										product.engravingMaxCharacters ||
+										undefined
+									}
+								/>
+
+								{
+									product.engravingTypes &&
+										product.engravingTypes
+											.length > 0 && (
+											<p class="product-engraving__hint">
+												Disponible en:{" "}
+												{product.engravingTypes
+													.map(
+														(type) =>
+															engravingLabels[
+																type
+															] || type,
+													)
+													.join(", ")}
+												.
+											</p>
+										)
+								}
+							</div>
+						</div>
+					)
+				}
 
 				<div class="product-quantity-row">
 					<div
@@ -654,105 +778,188 @@ const safeVariantJson = JSON.stringify({
 					Metropolitana. Envíos a provincias por
 					agencia.
 				</p>
-			</div>
-		</section>
 
-		<section class="product-details">
-			<div class="product-detail-column">
-				<p class="section-eyebrow">
-					Detalles de la pieza
-				</p>
+				<div class="product-accordions">
+					{
+						(product.materials &&
+							product.materials.length > 0) ||
+						product.dimensions ? (
+							<details
+								class="product-accordion"
+								open
+							>
+								<summary>
+									Especificaciones técnicas
+									<span
+										class="product-accordion__chevron"
+										aria-hidden="true"
+									>
+										⌄
+									</span>
+								</summary>
 
-				<h2>Diseño, material y precisión.</h2>
-			</div>
+								<div class="product-accordion__content">
+									<dl class="product-specs">
+										{product.materials &&
+											product.materials
+												.length > 0 && (
+												<div class="product-specs__row">
+													<dt>
+														Material
+													</dt>
+													<dd>
+														{product.materials.join(
+															", ",
+														)}
+													</dd>
+												</div>
+											)}
 
-			<div class="product-description">
-				{
-					product.description &&
-						product.description.length > 0 && (
-							<PortableText
-								value={product.description}
-							/>
+										{product.dimensions && (
+											<div class="product-specs__row">
+												<dt>
+													Dimensiones
+												</dt>
+												<dd>
+													{
+														product.dimensions
+													}
+												</dd>
+											</div>
+										)}
+									</dl>
+								</div>
+							</details>
+						) : null
+					}
+
+					{
+						product.careInstructions && (
+							<details class="product-accordion">
+								<summary>
+									Cuidados
+									<span
+										class="product-accordion__chevron"
+										aria-hidden="true"
+									>
+										⌄
+									</span>
+								</summary>
+
+								<div class="product-accordion__content">
+									<p>
+										{
+											product.careInstructions
+										}
+									</p>
+								</div>
+							</details>
 						)
-				}
-
-				{
-					product.materials &&
-						product.materials.length > 0 && (
-							<div class="product-materials">
-								<h3>Materiales</h3>
-
-								<ul>
-									{product.materials.map(
-										(material) => (
-											<li>{material}</li>
-										),
-									)}
-								</ul>
-							</div>
-						)
-				}
-
-				{product.careInstructions && (
-					<div class="product-care">
-						<h3>Cuidados</h3>
-						<p>{product.careInstructions}</p>
-					</div>
-				)}
+					}
+				</div>
 			</div>
 		</section>
 
 		{
-			product.engravingIncluded && (
-				<section class="engraving-section">
-					<div>
-						<p class="section-eyebrow">
-							Personalización incluida
-						</p>
+			product.description &&
+				product.description.length > 0 && (
+					<section class="product-longdesc">
+						<details
+							class="product-longdesc__details"
+							open
+						>
+							<summary>
+								<span class="product-longdesc__title">
+									Descripción
+								</span>
 
-						<h2>
-							Una pieza hecha para llevar tu
-							historia.
-						</h2>
+								<span
+									class="product-longdesc__toggle"
+									aria-hidden="true"
+								>
+									<span class="product-longdesc__toggle-open">Ver más</span>
+									<span class="product-longdesc__toggle-close">Retraer</span>
+									<span class="product-accordion__chevron">
+										⌄
+									</span>
+								</span>
+							</summary>
+
+							<div class="product-longdesc__content">
+								{
+									descriptionStoryItems.length > 0 ? (
+										<>
+											{descriptionIntroBlocks.length > 0 && (
+												<div class="product-longdesc__intro">
+													<PortableText
+														value={descriptionIntroBlocks}
+													/>
+												</div>
+											)}
+
+											<div class="product-longdesc__story">
+												{descriptionStoryItems.map(
+													(item) => (
+														<article class="product-longdesc__story-item">
+															<div class="product-longdesc__copy">
+																<span class="product-longdesc__index">
+																	{item.number}
+																</span>
+
+																<div class="product-longdesc__story-text">
+																	<PortableText
+																		value={[item.block]}
+																	/>
+																</div>
+															</div>
+														</article>
+													),
+												)}
+											</div>
+										</>
+									) : (
+										<div class="product-longdesc__body">
+											<PortableText
+												value={product.description}
+											/>
+										</div>
+									)
+								}
+
+								{product.materials &&
+									product.materials.length > 0 && (
+										<div class="product-materials product-longdesc__materials">
+											<ul>
+												{product.materials.map(
+													(material) => (
+														<li>{material}</li>
+													),
+												)}
+											</ul>
+										</div>
+									)}
+							</div>
+						</details>
+					</section>
+				)
+		}
+
+		{
+			crossSell.length > 0 && (
+				<section class="product-crosssell">
+					<div class="product-crosssell__heading">
+						<h2>Completa tu kit</h2>
+
+						<a href={categoryHref}>
+							Ver toda la categoría
+							<span aria-hidden="true">→</span>
+						</a>
 					</div>
 
-					<div class="engraving-information">
-						<p>
-							El grabado láser personalizado está
-							incluido sin costo adicional.
-						</p>
-
-						{
-							product.engravingTypes &&
-								product.engravingTypes.length >
-									0 && (
-									<ul>
-										{product.engravingTypes.map(
-											(type) => (
-												<li>
-													{engravingLabels[
-														type
-													] || type}
-												</li>
-											),
-										)}
-									</ul>
-								)
-						}
-
-						{
-							product.engravingMaxCharacters && (
-								<p>
-									Hasta{" "}
-									<strong>
-										{
-											product.engravingMaxCharacters
-										}
-									</strong>{" "}
-									caracteres.
-								</p>
-							)
-						}
+					<div class="product-crosssell__grid">
+						{crossSell.map((related) => (
+							<ProductCard product={related} />
+						))}
 					</div>
 				</section>
 			)
@@ -861,6 +1068,33 @@ const safeVariantJson = JSON.stringify({
 			document.querySelector<HTMLButtonElement>(
 				"[data-quantity-increase]",
 			);
+
+		const engravingInput =
+			document.querySelector<HTMLInputElement>(
+				"#product-engraving-text",
+			);
+
+		const engravingCounter =
+			document.querySelector<HTMLElement>(
+				"#product-engraving-counter",
+			);
+
+		const updateEngravingCounter = () => {
+			if (!engravingInput || !engravingCounter) return;
+
+			const max = engravingInput.maxLength;
+			const length = engravingInput.value.length;
+
+			engravingCounter.textContent =
+				max > 0 ? `${length}/${max}` : String(length);
+		};
+
+		engravingInput?.addEventListener(
+			"input",
+			updateEngravingCounter,
+		);
+
+		updateEngravingCounter();
 
 		let selectedWood =
 			woodButtons.find((button) =>
@@ -1149,6 +1383,9 @@ const safeVariantJson = JSON.stringify({
 						selection.sizeSlug || undefined,
 					dimensionsLabel:
 						selection.dimensions || undefined,
+					engravingText:
+						engravingInput?.value.trim() ||
+						undefined,
 					unitPrice,
 					quantity: getQuantity(),
 				});
@@ -1252,28 +1489,39 @@ const safeVariantJson = JSON.stringify({
 		margin-inline: auto;
 		display: grid;
 		grid-template-columns:
-			minmax(0, 1.12fr)
-			minmax(360px, 0.88fr);
+			minmax(0, 1.15fr)
+			minmax(320px, 0.85fr);
 		align-items: start;
-		gap: clamp(45px, 6vw, 100px);
+		gap: clamp(28px, 3.5vw, 56px);
 	}
 
 	.product-gallery {
 		min-width: 0;
+		display: flex;
+		align-items: stretch;
+		gap: 14px;
+		height: auto;
 	}
 
 	.product-main-image {
+		flex: 1;
+		min-width: 0;
+		height: auto;
 		aspect-ratio: 4 / 5;
 		overflow: hidden;
-		border-radius: 24px;
-		background: #eee6dd;
+		border: 0;
+		border-radius: 18px;
+		background: transparent;
 	}
 
 	.product-main-image img {
 		display: block;
 		width: 100%;
 		height: 100%;
+		padding: 0;
+		background: transparent;
 		object-fit: cover;
+		object-position: center;
 	}
 
 	.product-image-placeholder {
@@ -1288,49 +1536,61 @@ const safeVariantJson = JSON.stringify({
 	}
 
 	.product-thumbnails {
-		margin-top: 13px;
-		display: grid;
-		grid-template-columns:
-			repeat(5, minmax(0, 1fr));
+		flex-shrink: 0;
+		width: 88px;
+		display: flex;
+		flex-direction: column;
 		gap: 10px;
+		overflow-y: auto;
+		max-height: 100%;
+		scrollbar-width: none;
+		-ms-overflow-style: none;
+	}
+
+	.product-thumbnails::-webkit-scrollbar {
+		display: none;
 	}
 
 	.product-thumbnail {
+		flex-shrink: 0;
+		width: 100%;
 		aspect-ratio: 4 / 5;
 		padding: 0;
 		overflow: hidden;
-		border: 1px solid transparent;
-		border-radius: 13px;
+		border: 0;
+		border-radius: 10px;
 		background: transparent;
 		cursor: pointer;
-		opacity: 0.6;
+		opacity: 0.58;
 		transition:
 			opacity 180ms ease,
-			border-color 180ms ease;
+			transform 180ms ease;
 	}
 
 	.product-thumbnail.is-active,
 	.product-thumbnail:hover {
-		border-color: #141414;
 		opacity: 1;
+		transform: scale(1.025);
 	}
 
 	.product-thumbnail img {
 		display: block;
 		width: 100%;
 		height: 100%;
+		padding: 0;
+		background: transparent;
 		object-fit: cover;
+		object-position: center;
 	}
 
 	.product-information {
 		position: sticky;
 		top: 155px;
-		padding-top: 10px;
 	}
 
 	.product-category,
 	.section-eyebrow {
-		margin: 0 0 13px;
+		margin: 0 0 8px;
 		color: #ff4d2a;
 		font-size: 11px;
 		font-weight: 700;
@@ -1340,38 +1600,59 @@ const safeVariantJson = JSON.stringify({
 
 	.product-information h1 {
 		margin: 0;
-		font-size: clamp(44px, 5vw, 76px);
+		font-size: clamp(22px, 1.8vw, 30px);
 		font-weight: 600;
-		line-height: 0.92;
-		letter-spacing: -0.055em;
-	}
-
-	.product-short-description {
-		margin: 24px 0 0;
-		color: rgba(20, 20, 20, 0.67);
-		font-size: 17px;
-		line-height: 1.65;
+		line-height: 1.15;
+		letter-spacing: -0.02em;
 	}
 
 	.product-price-wrapper {
-		margin-top: 27px;
+		margin-top: 10px;
 		display: flex;
 		align-items: baseline;
 		flex-wrap: wrap;
 		gap: 12px;
 	}
 
+	.product-short-description {
+		margin: 10px 0 0;
+		color: rgba(20, 20, 20, 0.72);
+		font-size: 15px;
+		line-height: 1.65;
+	}
+
+	.product-short-description :global(p) {
+		margin: 0 0 6px;
+	}
+
+	.product-short-description :global(p:last-child) {
+		margin-bottom: 0;
+	}
+
+	.product-short-description :global(ul) {
+		margin: 6px 0 0;
+		padding-left: 18px;
+	}
+
+	.product-short-description :global(li) {
+		margin-bottom: 3px;
+	}
+
+	.product-short-description :global(li:last-child) {
+		margin-bottom: 0;
+	}
+
 	.product-price {
 		margin: 0;
-		font-size: 27px;
+		font-size: 21px;
 		font-weight: 700;
-		letter-spacing: -0.03em;
+		letter-spacing: -0.02em;
 	}
 
 	.product-regular-price {
 		margin: 0;
 		color: rgba(20, 20, 20, 0.42);
-		font-size: 15px;
+		font-size: 14px;
 		text-decoration: line-through;
 	}
 
@@ -1380,7 +1661,7 @@ const safeVariantJson = JSON.stringify({
 	}
 
 	.product-status {
-		margin-top: 13px;
+		margin-top: 8px;
 		display: flex;
 		align-items: center;
 		gap: 8px;
@@ -1400,15 +1681,21 @@ const safeVariantJson = JSON.stringify({
 	}
 
 	.product-meta {
-		margin-top: 21px;
-		padding-block: 15px;
+		margin-top: 10px;
+		padding-block: 8px;
 		display: flex;
-		justify-content: space-between;
-		gap: 20px;
+		flex-direction: column;
+		gap: 6px;
 		border-top: 1px solid rgba(20, 20, 20, 0.1);
 		border-bottom: 1px solid rgba(20, 20, 20, 0.1);
 		font-size: 11px;
 		text-transform: uppercase;
+	}
+
+	.product-meta__row {
+		display: flex;
+		justify-content: space-between;
+		gap: 20px;
 	}
 
 	.product-meta span {
@@ -1417,26 +1704,26 @@ const safeVariantJson = JSON.stringify({
 	}
 
 	.product-option-group {
-		margin: 28px 0 0;
+		margin: 16px 0 0;
 		padding: 0;
 		border: 0;
 	}
 
 	.product-option-group legend {
-		margin-bottom: 13px;
-		font-size: 13px;
+		margin-bottom: 10px;
+		font-size: 12px;
 		font-weight: 700;
 	}
 
 	.product-option-list {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 9px;
+		gap: 8px;
 	}
 
 	.product-option {
-		min-height: 45px;
-		padding: 9px 16px;
+		min-height: 38px;
+		padding: 7px 14px;
 		display: flex;
 		align-items: flex-start;
 		justify-content: center;
@@ -1476,27 +1763,33 @@ const safeVariantJson = JSON.stringify({
 	}
 
 	.product-variation-message {
-		min-height: 18px;
-		margin: 12px 0 0;
+		min-height: 16px;
+		margin: 8px 0 0;
 		color: #a94737;
 		font-size: 11px;
 		font-weight: 600;
 	}
 
 	.product-personalization {
-		margin-top: 20px;
-		padding: 16px;
-		display: grid;
-		grid-template-columns: 42px 1fr;
-		gap: 13px;
+		margin-top: 10px;
+		padding: 12px;
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
 		border: 1px solid rgba(91, 49, 42, 0.15);
-		border-radius: 15px;
+		border-radius: 13px;
 		background: rgba(91, 49, 42, 0.055);
 	}
 
+	.product-personalization__header {
+		display: grid;
+		grid-template-columns: 32px 1fr;
+		gap: 10px;
+	}
+
 	.product-personalization__icon {
-		width: 42px;
-		height: 42px;
+		width: 32px;
+		height: 32px;
 		display: grid;
 		place-items: center;
 		border-radius: 12px;
@@ -1505,8 +1798,8 @@ const safeVariantJson = JSON.stringify({
 	}
 
 	.product-personalization__icon svg {
-		width: 21px;
-		height: 21px;
+		width: 18px;
+		height: 18px;
 		fill: none;
 		stroke: currentColor;
 		stroke-width: 1.6;
@@ -1520,14 +1813,66 @@ const safeVariantJson = JSON.stringify({
 	}
 
 	.product-personalization p {
-		margin: 5px 0 0;
+		margin: 3px 0 0;
 		color: rgba(20, 20, 20, 0.6);
+		font-size: 11px;
+		line-height: 1.4;
+	}
+
+	.product-engraving {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+	}
+
+	.product-engraving label {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 10px;
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 0.04em;
+	}
+
+	.product-engraving__counter {
+		color: rgba(20, 20, 20, 0.42);
+		font-weight: 500;
+		font-variant-numeric: tabular-nums;
+	}
+
+	.product-engraving__input {
+		width: 100%;
+		padding: 8px 2px;
+		border: 0;
+		border-bottom: 1px solid rgba(20, 20, 20, 0.3);
+		border-radius: 0;
+		background: transparent;
+		color: #141414;
+		font: inherit;
+		font-size: 14px;
+		line-height: 1.4;
+		transition: border-color 180ms ease;
+	}
+
+	.product-engraving__input::placeholder {
+		color: rgba(20, 20, 20, 0.35);
+	}
+
+	.product-engraving__input:focus {
+		outline: none;
+		border-color: #ff4d2a;
+	}
+
+	.product-engraving__hint {
+		margin: 0;
+		color: rgba(20, 20, 20, 0.5);
 		font-size: 11px;
 		line-height: 1.5;
 	}
 
 	.product-quantity-row {
-		margin-top: 22px;
+		margin-top: 10px;
 		display: flex;
 		align-items: stretch;
 		gap: 10px;
@@ -1538,12 +1883,12 @@ const safeVariantJson = JSON.stringify({
 		display: flex;
 		align-items: stretch;
 		border: 1px solid rgba(20, 20, 20, 0.16);
-		border-radius: 15px;
+		border-radius: 13px;
 		overflow: hidden;
 	}
 
 	.product-quantity__button {
-		width: 42px;
+		width: 38px;
 		border: 0;
 		background: transparent;
 		color: #141414;
@@ -1557,7 +1902,7 @@ const safeVariantJson = JSON.stringify({
 	}
 
 	.product-quantity__input {
-		width: 48px;
+		width: 44px;
 		border: 0;
 		border-inline: 1px solid rgba(20, 20, 20, 0.16);
 		background: transparent;
@@ -1576,10 +1921,10 @@ const safeVariantJson = JSON.stringify({
 
 	.product-add-to-cart {
 		flex: 1;
-		min-height: 58px;
+		min-height: 50px;
 		padding-inline: 20px;
 		border: 0;
-		border-radius: 15px;
+		border-radius: 13px;
 		background: #ff4d2a;
 		color: #fff6ed;
 		font-size: 11px;
@@ -1604,8 +1949,8 @@ const safeVariantJson = JSON.stringify({
 	}
 
 	.product-contact-button {
-		margin-top: 18px;
-		min-height: 58px;
+		margin-top: 8px;
+		min-height: 46px;
 		padding-inline: 20px;
 		display: flex;
 		align-items: center;
@@ -1635,70 +1980,116 @@ const safeVariantJson = JSON.stringify({
 	}
 
 	.product-delivery-note {
-		margin: 13px 0 0;
+		margin: 6px 0 0;
 		color: rgba(20, 20, 20, 0.48);
-		font-size: 12px;
-		line-height: 1.5;
+		font-size: 11px;
+		line-height: 1.4;
 		text-align: center;
 	}
 
-	.product-details,
-	.engraving-section {
-		width: min(100%, 1450px);
-		margin: 0 auto;
-		padding-top: clamp(32px, 4vw, 48px);
-		display: grid;
-		grid-template-columns: 0.8fr 1.2fr;
-		gap: clamp(50px, 8vw, 135px);
+	.product-accordions {
+		margin-top: 10px;
 		border-top: 1px solid rgba(20, 20, 20, 0.12);
 	}
 
-	.product-details {
-		margin-top: clamp(48px, 6vw, 80px);
+	.product-accordion {
+		border-bottom: 1px solid rgba(20, 20, 20, 0.12);
 	}
 
-	.engraving-section {
-		margin-top: clamp(32px, 4vw, 56px);
-	}
-
-	.product-details h2,
-	.engraving-section h2 {
-		max-width: 600px;
-		margin: 0;
-		font-size: clamp(36px, 5vw, 66px);
-		font-weight: 600;
-		line-height: 0.98;
-		letter-spacing: -0.05em;
-	}
-
-	.product-description {
-		color: rgba(20, 20, 20, 0.72);
-		font-size: 15px;
-		line-height: 1.75;
-	}
-
-	.product-description :global(p) {
-		margin: 0 0 18px;
-	}
-
-	.product-description :global(h2),
-	.product-description :global(h3) {
-		margin: 32px 0 12px;
+	.product-accordion summary {
+		padding: 10px 0;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
 		color: #141414;
+		font-size: 12px;
+		font-weight: 700;
+		letter-spacing: 0.02em;
+		text-transform: uppercase;
+		cursor: pointer;
+		list-style: none;
 	}
 
-	.product-materials,
-	.product-care {
-		margin-top: 32px;
-		padding-top: 25px;
-		border-top: 1px solid rgba(20, 20, 20, 0.1);
+	.product-accordion summary::-webkit-details-marker {
+		display: none;
 	}
 
-	.product-materials h3,
-	.product-care h3 {
+	.product-accordion__chevron {
+		font-size: 16px;
+		transition: transform 220ms ease;
+	}
+
+	.product-accordion[open]
+		.product-accordion__chevron {
+		transform: rotate(180deg);
+	}
+
+	.product-accordion__content {
+		padding: 0 0 12px;
+		color: rgba(20, 20, 20, 0.72);
+		font-size: 13px;
+		line-height: 1.6;
+	}
+
+	.product-specs {
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.product-specs__row {
+		display: flex;
+		justify-content: space-between;
+		gap: 16px;
+		padding: 7px 0;
+		border-bottom: 1px solid rgba(20, 20, 20, 0.08);
+	}
+
+	.product-specs__row:last-child {
+		border-bottom: 0;
+		padding-bottom: 0;
+	}
+
+	.product-specs dt {
+		color: rgba(20, 20, 20, 0.48);
+		font-size: 11px;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+	}
+
+	.product-specs dd {
+		margin: 0;
+		color: #141414;
+		font-size: 12.5px;
+		font-weight: 600;
+		text-align: right;
+	}
+
+	.product-accordion__content :global(p) {
+		margin: 0 0 16px;
+	}
+
+	.product-accordion__content :global(p:last-child) {
+		margin-bottom: 0;
+	}
+
+	.product-accordion__content :global(h2),
+	.product-accordion__content :global(h3) {
+		margin: 24px 0 10px;
+		color: #141414;
+		font-size: 15px;
+	}
+
+	.product-materials {
+		margin-top: 20px;
+	}
+
+	.product-materials h3 {
 		margin: 0 0 14px;
 		color: #141414;
-		font-size: 13px;
+		font-size: 12px;
+		letter-spacing: 0.04em;
 		text-transform: uppercase;
 	}
 
@@ -1718,40 +2109,188 @@ const safeVariantJson = JSON.stringify({
 		font-size: 11px;
 	}
 
-	.product-care p {
+	.product-longdesc {
+		width: min(100%, 1450px);
+		margin: clamp(56px, 7vw, 104px) auto 0;
+		padding-top: clamp(30px, 4vw, 48px);
+		border-top: 1px solid rgba(20, 20, 20, 0.12);
+	}
+
+	.product-longdesc__details summary {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 20px;
+		cursor: pointer;
+		list-style: none;
+		text-align: left;
+	}
+
+	.product-longdesc__details
+		summary::-webkit-details-marker {
+		display: none;
+	}
+
+	.product-longdesc__title {
+		color: #141414;
+		font-size: clamp(30px, 4vw, 52px);
+		font-weight: 600;
+		line-height: 1;
+		letter-spacing: -0.045em;
+	}
+
+	.product-longdesc__toggle {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		color: rgba(20, 20, 20, 0.5);
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		white-space: nowrap;
+	}
+
+	.product-longdesc__toggle-close {
+		display: none;
+	}
+
+	.product-longdesc__details[open]
+		.product-longdesc__toggle-open {
+		display: none;
+	}
+
+	.product-longdesc__details[open]
+		.product-longdesc__toggle-close {
+		display: inline;
+	}
+
+	.product-longdesc__details[open]
+		.product-accordion__chevron {
+		transform: rotate(180deg);
+	}
+
+	.product-longdesc__content {
+		margin-top: clamp(34px, 5vw, 68px);
+		color: rgba(20, 20, 20, 0.72);
+		font-size: 15px;
+		line-height: 1.65;
+		text-align: left;
+	}
+
+	.product-longdesc__intro,
+	.product-longdesc__body {
+		width: 100%;
 		margin: 0;
 	}
 
-	.engraving-section {
-		padding-bottom: clamp(25px, 4vw, 60px);
+	.product-longdesc__intro {
+		margin-bottom: clamp(32px, 4vw, 48px);
 	}
 
-	.engraving-information {
-		color: rgba(20, 20, 20, 0.68);
-		font-size: 15px;
-		line-height: 1.7;
-	}
-
-	.engraving-information > p {
-		margin: 0 0 18px;
-	}
-
-	.engraving-information ul {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 9px;
+	.product-longdesc__intro :global(p),
+	.product-longdesc__body :global(p) {
 		margin: 0 0 20px;
-		padding: 0;
-		list-style: none;
 	}
 
-	.engraving-information li {
-		padding: 9px 12px;
-		border-radius: 999px;
-		background: #141414;
-		color: #fff6ed;
-		font-size: 12px;
+	.product-longdesc__intro :global(p:last-child),
+	.product-longdesc__body :global(p:last-child) {
+		margin-bottom: 0;
+	}
+
+	.product-longdesc__story {
+		width: 100%;
+		display: flex;
+		flex-direction: column;
+		gap: clamp(32px, 4vw, 52px);
+	}
+
+	.product-longdesc__story-item {
+		width: 100%;
+	}
+
+	.product-longdesc__copy {
+		display: grid;
+		grid-template-columns: 46px minmax(0, 1fr);
+		align-items: start;
+		gap: 18px;
+		width: 100%;
+	}
+
+	.product-longdesc__index {
+		padding-top: 5px;
+		color: #ff4d2a;
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 0.12em;
+	}
+
+	.product-longdesc__story-text {
+		color: rgba(20, 20, 20, 0.72);
+		font-size: 15px;
+		line-height: 1.65;
+		width: 100%;
+	}
+
+	.product-longdesc__story-text :global(p) {
+		margin: 0;
+	}
+
+	.product-longdesc__materials {
+		margin-top: clamp(40px, 6vw, 72px);
+		display: flex;
+		justify-content: flex-start;
+	}
+
+	.product-longdesc__materials ul {
+		justify-content: flex-start;
+	}
+
+	.product-crosssell {
+		width: min(100%, 1450px);
+		margin: clamp(60px, 8vw, 110px) auto 0;
+		padding-top: clamp(32px, 4vw, 48px);
+		border-top: 1px solid rgba(20, 20, 20, 0.12);
+	}
+
+	.product-crosssell__heading {
+		margin-bottom: clamp(24px, 3vw, 36px);
+		display: flex;
+		align-items: flex-end;
+		justify-content: space-between;
+		gap: 16px;
+	}
+
+	.product-crosssell__heading h2 {
+		margin: 0;
+		font-size: clamp(28px, 3.2vw, 42px);
 		font-weight: 600;
+		line-height: 1;
+		letter-spacing: -0.04em;
+	}
+
+	.product-crosssell__heading a {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		color: #ff4d2a;
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-decoration: none;
+		text-transform: uppercase;
+		white-space: nowrap;
+		transition: color 180ms ease;
+	}
+
+	.product-crosssell__heading a:hover {
+		color: #5b312a;
+	}
+
+	.product-crosssell__grid {
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: clamp(20px, 3vw, 32px);
 	}
 
 	@media (max-width: 980px) {
@@ -1759,14 +2298,41 @@ const safeVariantJson = JSON.stringify({
 			grid-template-columns: 1fr;
 		}
 
-		.product-information {
-			position: static;
+		.product-gallery {
+			flex-direction: column-reverse;
+			height: auto;
+			min-height: 0;
+			max-height: none;
 		}
 
-		.product-details,
-		.engraving-section {
-			grid-template-columns: 1fr;
-			gap: 35px;
+		.product-main-image {
+			height: auto;
+			aspect-ratio: 4 / 5;
+		}
+
+		.product-thumbnails {
+			width: 100%;
+			flex-direction: row;
+			overflow-x: auto;
+			overflow-y: visible;
+		}
+
+		.product-thumbnail {
+			width: 76px;
+		}
+
+		.product-information {
+			position: static;
+			margin-top: 24px;
+		}
+
+		.product-crosssell__grid {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+
+		.product-longdesc__copy {
+			grid-template-columns: 36px minmax(0, 1fr);
+			gap: 12px;
 		}
 	}
 
@@ -1781,15 +2347,6 @@ const safeVariantJson = JSON.stringify({
 			border-radius: 18px;
 		}
 
-		.product-information h1 {
-			font-size: clamp(42px, 13vw, 60px);
-		}
-
-		.product-thumbnails {
-			grid-template-columns:
-				repeat(4, minmax(0, 1fr));
-		}
-
 		.product-option-list {
 			display: grid;
 			grid-template-columns:
@@ -1800,12 +2357,45 @@ const safeVariantJson = JSON.stringify({
 			width: 100%;
 		}
 
-		.product-details {
-			margin-top: 56px;
+		.product-longdesc {
+			margin-top: 40px;
+			padding-top: 26px;
 		}
 
-		.engraving-section {
-			margin-top: 36px;
+		.product-longdesc__details summary {
+			align-items: flex-start;
+		}
+
+		.product-longdesc__content {
+			margin-top: 30px;
+		}
+
+		.product-longdesc__story {
+			gap: 32px;
+		}
+
+		.product-longdesc__copy {
+			grid-template-columns: 28px minmax(0, 1fr);
+			gap: 10px;
+		}
+
+		.product-longdesc__story-text {
+			font-size: 15px;
+			line-height: 1.65;
+		}
+
+		.product-crosssell {
+			margin-top: 48px;
+		}
+
+		.product-crosssell__grid {
+			grid-template-columns: 1fr;
+		}
+
+		.product-crosssell__heading {
+			align-items: flex-start;
+			flex-direction: column;
+			gap: 10px;
 		}
 	}
 </style>

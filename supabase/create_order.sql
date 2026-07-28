@@ -6,6 +6,11 @@
 -- la funcion que faltaba: la unica forma en que el checkout (con la
 -- publishable key, sin permisos directos sobre las tablas) puede
 -- registrar un pedido completo con sus productos.
+--
+-- IMPORTANTE: esta version agrega el texto de grabado personalizado
+-- que el cliente escribe en la ficha de producto. Antes de correr
+-- este script, agrega la columna en Supabase (SQL Editor):
+--   alter table public.order_items add column if not exists engraving_text text;
 
 create or replace function public.create_order(
 	p_payment_method public.payment_method,
@@ -88,6 +93,7 @@ begin
 			size_name,
 			size_slug,
 			dimensions_label,
+			engraving_text,
 			quantity,
 			unit_price,
 			line_total
@@ -102,6 +108,7 @@ begin
 			v_item->>'sizeName',
 			v_item->>'sizeSlug',
 			v_item->>'dimensionsLabel',
+			v_item->>'engravingText',
 			(v_item->>'quantity')::integer,
 			(v_item->>'unitPrice')::numeric,
 			-- Se calcula aqui, no se confia en el valor que manda el
