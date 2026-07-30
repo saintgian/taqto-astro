@@ -63,10 +63,6 @@ const steps = [
 
 		<div class="personalization__content">
 			<header class="personalization__header">
-				<p class="personalization__eyebrow">
-					Personalización TAQTO
-				</p>
-
 				<h2 id="personalization-title">
 					Una pieza hecha para ti
 				</h2>
@@ -107,11 +103,22 @@ const steps = [
 
 <style>
 	.personalization {
-		padding:
-			clamp(60px, 8vw, 120px)
-			var(--page-padding);
-		background: var(--color-beige);
+		padding-block: clamp(26px, 8vw, 36px);
+		padding-inline: var(--page-padding);
+		background: var(--surface);
 		color: var(--color-black);
+	}
+
+	@media (min-width: 768px) {
+		.personalization {
+			padding-block: clamp(34px, 5vw, 44px);
+		}
+	}
+
+	@media (min-width: 1024px) {
+		.personalization {
+			padding-block: clamp(44px, 3.2vw, 56px);
+		}
 	}
 
 	.personalization__container {
@@ -126,8 +133,8 @@ const steps = [
 	.personalization__media {
 		min-height: clamp(420px, 50vw, 620px);
 		overflow: hidden;
-		border-radius: 24px;
-		background: #eadfd3;
+		border-radius: var(--radius-lg);
+		background: rgba(20, 20, 20, 0.04);
 	}
 
 	.personalization__media img {
@@ -168,28 +175,19 @@ const steps = [
 		max-width: 560px;
 	}
 
-	.personalization__eyebrow {
-		margin: 0 0 14px;
-		color: var(--color-orange);
-		font-size: 11px;
-		font-weight: 700;
-		letter-spacing: 0.16em;
-		text-transform: uppercase;
-	}
-
 	.personalization__header h2 {
 		margin: 0;
-		font-size: clamp(30px, 4vw, 48px);
+		font-size: clamp(1.8125rem, 1.5rem + 1.5vw, 2.875rem);
 		font-weight: 600;
-		line-height: 1.05;
+		line-height: 1.1;
 		letter-spacing: -0.02em;
 	}
 
 	.personalization__intro {
 		max-width: 480px;
 		margin: 16px 0 0;
-		color: rgba(20, 20, 20, 0.66);
-		font-size: 14.5px;
+		color: rgba(20, 20, 20, 0.7);
+		font-size: 17px;
 		line-height: 1.6;
 	}
 
@@ -233,7 +231,7 @@ const steps = [
 		place-items: center;
 		border: 1px solid rgba(20, 20, 20, 0.16);
 		border-radius: 50%;
-		background: var(--color-beige);
+		background: var(--surface);
 		color: var(--color-brown);
 		font-size: 16px;
 		font-weight: 600;
@@ -242,7 +240,7 @@ const steps = [
 
 	.personalization__step-copy h3 {
 		margin: 0;
-		font-size: 19px;
+		font-size: 20px;
 		font-weight: 600;
 		letter-spacing: -0.02em;
 	}
@@ -250,9 +248,9 @@ const steps = [
 	.personalization__step-copy p {
 		max-width: 440px;
 		margin: 8px 0 0;
-		color: rgba(20, 20, 20, 0.62);
-		font-size: 13.5px;
-		line-height: 1.55;
+		color: rgba(20, 20, 20, 0.68);
+		font-size: 16px;
+		line-height: 1.6;
 	}
 
 	.personalization__cta {
@@ -318,7 +316,7 @@ const steps = [
 
 	@media (max-width: 600px) {
 		.personalization {
-			padding: 64px 18px;
+			padding-inline: 18px;
 		}
 
 		.personalization__container {
@@ -331,10 +329,6 @@ const steps = [
 
 		.personalization__placeholder {
 			border-radius: 18px;
-		}
-
-		.personalization__header h2 {
-			font-size: clamp(30px, 10vw, 42px);
 		}
 
 		.personalization__steps {

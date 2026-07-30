@@ -4,7 +4,6 @@ import { navigationCategoriesQuery } from "../lib/categoryQueries";
 import {
 	WHATSAPP_NUMBER,
 	EMPRESAS_CATEGORY_SLUG,
-	EMPRESAS_SUBCATEGORIES,
 } from "../lib/constants";
 
 interface Props {
@@ -26,17 +25,10 @@ const getUrl = (path: string) =>
 const footerLogo =
 	`${base}/brand/imagotipo/imagotipo-colorprincipal02.svg`;
 
-interface FooterSubcategory {
-	_id: string;
-	title: string;
-	slug: string;
-}
-
 interface FooterCategory {
 	_id: string;
 	title: string;
 	slug: string;
-	subcategories?: FooterSubcategory[];
 }
 
 const navCategories =
@@ -44,73 +36,38 @@ const navCategories =
 		navigationCategoriesQuery,
 	);
 
-const empresasCategory = navCategories.find(
-	(category) => category.slug === EMPRESAS_CATEGORY_SLUG,
-);
-
-/* 1. COMPRAR */
-const shoppingLinks = navCategories
-	.filter(
-		(category) => category.slug !== EMPRESAS_CATEGORY_SLUG,
-	)
-	.map((category) => ({
-		label: category.title,
-		href: getUrl(`/categorias/${category.slug}/`),
-	}));
-
-/* 2. EMPRESAS */
-// "Empresas" no tiene subcategorias de producto en Sanity: sus dos
-// paginas (regalos corporativos y venta al por mayor) son contenido
-// estatico. Se completan aqui para que el pie de pagina las enlace.
-const empresasSubcategories =
-	empresasCategory?.subcategories &&
-	empresasCategory.subcategories.length > 0
-		? empresasCategory.subcategories
-		: EMPRESAS_SUBCATEGORIES;
-
-const businessLinks = empresasSubcategories.map(
-	(subcategory) => ({
-		label: subcategory.title,
-		href: getUrl(
-			`/categorias/empresas/${subcategory.slug}/`,
-		),
-	}),
-);
-
-/* 3. INFORMACIÓN */
-const informationLinks = [
-	{
-		label: "Nosotros",
-		href: getUrl("/nosotros/"),
-	},
-	{
-		label: "Madera peruana",
-		href: getUrl("/madera-peruana/"),
-	},
-	{
-		label: "Contáctanos",
-		href: getUrl("/contactanos/"),
-	},
-	{
-		label: "Blog",
-		href: getUrl("/blog/"),
-	},
+/* Comprar: tienda + categorias reales de Sanity (sin "empresas", que
+ * tiene su propio grupo). */
+const compraLinks = [
+	{ label: "Tienda", href: getUrl("/tienda/") },
+	...navCategories
+		.filter(
+			(category) => category.slug !== EMPRESAS_CATEGORY_SLUG,
+		)
+		.map((category) => ({
+			label: category.title,
+			href: getUrl(`/categorias/${category.slug}/`),
+		})),
 ];
 
-/* 4. AYUDA */
-const helpLinks = [
+const taqtoLinks = [
+	{ label: "Nosotros", href: getUrl("/nosotros/") },
 	{
-		label: "Cuidados",
-		href: getUrl("/cuidados/"),
+		label: "Empresas",
+		href: getUrl(`/categorias/${EMPRESAS_CATEGORY_SLUG}/`),
 	},
 	{
-		label: "Política de envíos",
-		href: getUrl("/envios/"),
+		label: "Regalos corporativos",
+		href: getUrl(
+			`/categorias/${EMPRESAS_CATEGORY_SLUG}/regalos-corporativos/`,
+		),
 	},
-	{
-		label: "Política de privacidad",
-		href: getUrl("/privacidad/"),
-	},
+	{ label: "Contáctanos", href: getUrl("/contactanos/") },
+];
+
+const ayudaLinks = [
+	{ label: "Envíos", href: getUrl("/envios/") },
+	{ label: "Cuidados", href: getUrl("/cuidados/") },
 	{
 		label: "Preguntas frecuentes",
 		href: getUrl("/preguntas-frecuentes/"),
@@ -121,11 +78,10 @@ const helpLinks = [
 	},
 ];
 
-const legalLinks = [
-	{
-		label: "Política de privacidad",
-		href: getUrl("/privacidad/"),
-	},
+const navGroups = [
+	{ title: "Comprar", links: compraLinks },
+	{ title: "TAQTO", links: taqtoLinks },
+	{ title: "Ayuda", links: ayudaLinks },
 ];
 
 const formattedWhatsappMsg =
@@ -156,71 +112,94 @@ const currentYear = new Date().getFullYear();
 ---
 
 <footer class="site-footer">
-	<div class="footer-shell">
-		<div
-			class="footer-glow"
-			aria-hidden="true"
-		></div>
+	<div class="footer-inner">
+		<div class="footer-top">
+			<nav
+				class="footer-nav"
+				aria-label="Navegación del pie de página"
+			>
+				{
+					navGroups.map((group) => (
+						<div class="footer-nav-group">
+							<h3>{group.title}</h3>
 
-		<section class="footer-heading">
-			<div class="footer-heading__text">
-				<p class="footer-eyebrow">
-					Neo-Artesanía Peruana de Precisión
-				</p>
+							<ul>
+								{group.links.map((link) => (
+									<li>
+										<a href={link.href}>
+											{link.label}
+										</a>
+									</li>
+								))}
+							</ul>
+						</div>
+					))
+				}
+			</nav>
 
-				<h2>
-					Diseño hecho para permanecer.
-				</h2>
+			<div
+				class="footer-nav-mobile"
+				aria-label="Navegación del pie de página"
+			>
+				{
+					navGroups.map((group) => (
+						<details class="footer-accordion">
+							<summary>
+								{group.title}
 
-				<p class="footer-heading__description">
-					Piezas de madera y cuero creadas para
-					regalar, compartir y acompañar tu día a día.
-				</p>
+								<svg
+									class="footer-accordion__chevron"
+									viewBox="0 0 16 16"
+									aria-hidden="true"
+								>
+									<path d="M4 6l4 4 4-4"></path>
+								</svg>
+							</summary>
+
+							<ul>
+								{group.links.map((link) => (
+									<li>
+										<a href={link.href}>
+											{link.label}
+										</a>
+									</li>
+								))}
+							</ul>
+						</details>
+					))
+				}
 			</div>
 
-			<a
-				class="footer-contact"
-				href={getUrl("/contactanos/")}
-			>
-				<span>Conversemos</span>
-
-				<svg
-					viewBox="0 0 24 24"
-					aria-hidden="true"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="1.8"
-				>
-					<path d="M5 12h14"></path>
-					<path d="m14 7 5 5-5 5"></path>
-				</svg>
-			</a>
-		</section>
-
-		<div class="footer-divider"></div>
-
-		<section class="footer-content">
 			<div class="footer-brand">
 				<a
-					class="footer-logo"
+					class="footer-brand__logo"
 					href={getUrl("/")}
 					aria-label="TAQTO, volver al inicio"
 				>
 					<img
 						src={footerLogo}
 						alt="TAQTO — Diseño con alma de madera"
-						width="185"
-						height="139"
+						width="694"
+						height="553"
 						loading="lazy"
 						decoding="async"
 					/>
 				</a>
 
-				<p class="footer-brand__description">
-					Piezas peruanas de madera y cuero creadas
-					con precisión, oficio y una mirada
-					contemporánea.
-				</p>
+				<a
+					class="whatsapp-cta"
+					href={whatsappUrl}
+					target="_blank"
+					rel="noopener noreferrer"
+				>
+					<img
+						src={getUrl("/icons/icon-whastapp.svg")}
+						alt=""
+						width="20"
+						height="20"
+					/>
+					<span>Escríbenos por WhatsApp</span>
+				</a>
 
 				<div
 					class="footer-socials"
@@ -287,483 +266,205 @@ const currentYear = new Date().getFullYear();
 						))
 					}
 				</div>
+			</div>
+		</div>
 
-				<a
-					class="whatsapp-button"
-					href={whatsappUrl}
-					target="_blank"
-					rel="noopener noreferrer"
-				>
-					<span class="whatsapp-button__icon">
-						<img
-							src={getUrl("/icons/icon-whastapp.svg")}
-							alt=""
-							width="24"
-							height="24"
-						/>
-					</span>
+		<div class="footer-divider"></div>
 
-					<span class="whatsapp-button__text">
-						<small>
-							Atención personalizada
-						</small>
-
-						<strong>
-							Escríbenos por WhatsApp
-						</strong>
-					</span>
-
+		<div class="footer-legal">
+			<div class="footer-legal__group">
+				<p class="footer-made">
+					Hecho con
 					<svg
-						class="whatsapp-button__arrow"
+						class="footer-made__heart"
 						viewBox="0 0 24 24"
 						aria-hidden="true"
 					>
-						<path d="M5 12h14"></path>
-						<path d="m14 7 5 5-5 5"></path>
+						<path d="M12 20.5s-7.5-4.6-10-9.3C.5 8 2 4.5 5.3 4c2-.3 3.9.6 5 2.2 1.1-1.6 3-2.5 5-2.2C18.5 4.5 20 8 19.5 11.2c-2.5 4.7-10 9.3-10 9.3Z"></path>
 					</svg>
+					en Lima, Perú
+				</p>
+
+				<p class="footer-legal__copyright">
+					© {currentYear} TAQTO. Todos los derechos
+					reservados.
+				</p>
+
+				<a
+					class="footer-legal__privacy"
+					href={getUrl("/privacidad/")}
+				>
+					Política de privacidad
 				</a>
 			</div>
 
-			<nav
-				class="footer-navigation"
-				aria-label="Navegación del pie de página"
-			>
-				<details class="footer-column" open>
-					<summary>
-						<h3>Comprar</h3>
-
-						<svg
-							class="footer-column__chevron"
-							viewBox="0 0 24 24"
-							aria-hidden="true"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="1.8"
-						>
-							<path d="m7 9 5 5 5-5"></path>
-						</svg>
-					</summary>
-
-					<ul>
-						{
-							shoppingLinks.map((item) => (
-								<li>
-									<a href={item.href}>
-										{item.label}
-									</a>
-								</li>
-							))
-						}
-					</ul>
-				</details>
-
-				<details class="footer-column" open>
-					<summary>
-						<h3>Empresas</h3>
-
-						<svg
-							class="footer-column__chevron"
-							viewBox="0 0 24 24"
-							aria-hidden="true"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="1.8"
-						>
-							<path d="m7 9 5 5 5-5"></path>
-						</svg>
-					</summary>
-
-					<ul>
-						{
-							businessLinks.map((item) => (
-								<li>
-									<a href={item.href}>
-										{item.label}
-									</a>
-								</li>
-							))
-						}
-					</ul>
-				</details>
-
-				<details class="footer-column" open>
-					<summary>
-						<h3>Información</h3>
-
-						<svg
-							class="footer-column__chevron"
-							viewBox="0 0 24 24"
-							aria-hidden="true"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="1.8"
-						>
-							<path d="m7 9 5 5 5-5"></path>
-						</svg>
-					</summary>
-
-					<ul>
-						{
-							informationLinks.map((item) => (
-								<li>
-									<a href={item.href}>
-										{item.label}
-									</a>
-								</li>
-							))
-						}
-					</ul>
-				</details>
-
-				<details class="footer-column" open>
-					<summary>
-						<h3>Ayuda</h3>
-
-						<svg
-							class="footer-column__chevron"
-							viewBox="0 0 24 24"
-							aria-hidden="true"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="1.8"
-						>
-							<path d="m7 9 5 5 5-5"></path>
-						</svg>
-					</summary>
-
-					<ul>
-						{
-							helpLinks.map((item) => (
-								<li>
-									<a href={item.href}>
-										{item.label}
-									</a>
-								</li>
-							))
-						}
-					</ul>
-				</details>
-			</nav>
-		</section>
-
-		<div
-			class="footer-divider footer-divider--small"
-		></div>
-
-		<section class="footer-business">
-			<div>
-				<span>Empresas</span>
-
-				<p>
-					Regalos corporativos y pedidos al por mayor
-					con atención consultiva y mockup previo.
-				</p>
-			</div>
-
-			<p class="footer-business__rule">
-				El sello TAQTO siempre permanece junto al
-				logotipo del cliente.
-			</p>
-		</section>
-
-		<div
-			class="footer-divider footer-divider--small"
-		></div>
-
-		<section class="footer-bottom">
-			<p>
-				© {currentYear} TAQTO. Todos los derechos
-				reservados.
-			</p>
-
-			<ul>
-				{
-					legalLinks.map((item) => (
-						<li>
-							<a href={item.href}>
-								{item.label}
-							</a>
-						</li>
-					))
-				}
-			</ul>
-
-			<a
-				class="footer-back-top"
-				href="#top"
-			>
+			<a class="footer-back-top" href="#top">
 				<span>Volver arriba</span>
-
 				<svg
-					viewBox="0 0 24 24"
+					class="footer-back-top__arrow"
+					viewBox="0 0 16 16"
 					aria-hidden="true"
 				>
-					<path d="m7 14 5-5 5 5"></path>
+					<path d="M8 13V3M3.5 7.5 8 3l4.5 4.5"></path>
 				</svg>
 			</a>
-		</section>
+		</div>
 	</div>
 </footer>
 
-<script>
-	/*
-	 * Los 4 grupos del footer llevan `open` por defecto en el HTML:
-	 * sin este script (o con JS deshabilitado) todo permanece
-	 * expandido y accesible, tanto en escritorio como en móvil. En
-	 * móvil, este script solo ajusta el estado inicial para dejar un
-	 * grupo abierto y el resto cerrados; el propio navegador maneja
-	 * el resto de la interacción de acordeón mediante <details>.
-	 */
-	const applyFooterAccordionDefaults = () => {
-		if (window.innerWidth > 680) return;
-
-		document
-			.querySelectorAll<HTMLDetailsElement>(".footer-column")
-			.forEach((details, index) => {
-				details.open = index === 0;
-			});
-	};
-
-	applyFooterAccordionDefaults();
-
-	document.addEventListener(
-		"astro:page-load",
-		applyFooterAccordionDefaults,
-	);
-</script>
-
 <style>
 	.site-footer {
-		padding:
-			clamp(50px, 7vw, 86px)
-			clamp(10px, 2vw, 28px)
-			14px;
-		background: var(--color-beige, #fff6ed);
-		color: #fff6ed;
+		background: var(--color-black);
+		color: var(--color-beige);
 	}
 
-	/* MISMO TONO Y EFECTO DEL HEADER */
-	.footer-shell {
-		position: relative;
-		width: min(100%, 1540px);
+	.site-footer :focus-visible {
+		box-shadow: var(--focus-ring-on-dark);
+		border-radius: var(--radius-full);
+	}
+
+	.footer-inner {
+		width: min(
+			calc(100% - (var(--page-padding) * 2)),
+			1560px
+		);
 		margin-inline: auto;
-		padding:
-			clamp(34px, 4vw, 56px)
-			clamp(24px, 4.5vw, 68px)
-			24px;
-		overflow: hidden;
-		border: 1px solid rgba(255, 255, 255, 0.13);
-		border-radius: 30px;
-		background:
-			linear-gradient(
-				135deg,
-				rgba(255, 255, 255, 0.04),
-				rgba(255, 255, 255, 0.008) 46%,
-				rgba(91, 49, 42, 0.025)
-			),
-			rgba(3, 3, 3, 0.985);
-		box-shadow:
-			inset 0 1px 0 rgba(255, 255, 255, 0.1),
-			0 24px 68px rgba(0, 0, 0, 0.48);
-		backdrop-filter: blur(28px) saturate(115%);
-		-webkit-backdrop-filter: blur(28px) saturate(115%);
+		padding-block: var(--space-xl) var(--space-lg);
 	}
 
-	.footer-shell::before {
-		content: "";
-		position: absolute;
-		top: 0;
-		right: 8%;
-		left: 8%;
-		height: 1px;
-		background: linear-gradient(
-			90deg,
-			transparent,
-			rgba(255, 255, 255, 0.35),
-			transparent
-		);
-		pointer-events: none;
-	}
-
-	.footer-glow {
-		position: absolute;
-		top: -190px;
-		right: -100px;
-		width: 430px;
-		height: 430px;
-		border-radius: 50%;
-		background: radial-gradient(
-			circle,
-			rgba(91, 49, 42, 0.14),
-			transparent 68%
-		);
-		pointer-events: none;
-	}
-
-	.footer-heading,
-	.footer-content,
-	.footer-business,
-	.footer-bottom,
-	.footer-divider {
-		position: relative;
-		z-index: 1;
-	}
-
-	.footer-heading {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		gap: 32px;
-	}
-
-	.footer-heading__text {
-		max-width: 720px;
-	}
-
-	.footer-eyebrow {
-		margin: 0 0 12px;
-		color: #ff4d2a;
-		font-size: 11px;
-		font-weight: 600;
-		letter-spacing: 0.16em;
-		text-transform: uppercase;
-	}
-
-	.footer-heading h2 {
-		margin: 0;
-		font-size: clamp(28px, 3.5vw, 44px);
-		font-weight: 500;
-		line-height: 1.05;
-		letter-spacing: -0.04em;
-		text-wrap: balance;
-	}
-
-	.footer-heading__description {
-		max-width: 580px;
-		margin: 14px 0 0;
-		color: rgba(255, 246, 237, 0.62);
-		font-size: 14px;
-		line-height: 1.55;
-	}
-
-	.footer-contact {
-		min-height: 52px;
-		padding: 0 24px;
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		gap: 16px;
-		flex-shrink: 0;
-		border-radius: 14px;
-		background: #fff6ed;
-		color: #141414;
-		font-size: 11px;
-		font-weight: 700;
-		letter-spacing: 0.08em;
-		text-decoration: none;
-		text-transform: uppercase;
-		white-space: nowrap;
-		transition:
-			background-color 180ms ease,
-			transform 180ms ease;
-	}
-
-	.footer-contact:hover {
-		background: #ff4d2a;
-		transform: translateY(-2px);
-	}
-
-	.footer-contact svg {
-		width: 18px;
-		height: 18px;
-	}
-
-	.footer-divider {
-		height: 1px;
-		margin-block: clamp(28px, 3.5vw, 40px);
-		background: rgba(255, 255, 255, 0.1);
-	}
-
-	.footer-divider--small {
-		margin-block: 27px;
-	}
-
-	.footer-content {
+	/* Nivel 1: navegación (izquierda) + marca (derecha), según croquis */
+	.footer-top {
 		display: grid;
-		grid-template-columns: 320px minmax(0, 1fr);
+		grid-template-columns: minmax(0, 2fr) minmax(280px, 0.8fr);
+		grid-template-areas: "nav brand";
 		align-items: start;
-		gap: clamp(40px, 5vw, 78px);
+		gap: clamp(32px, 5vw, 72px);
+	}
+
+	.footer-nav {
+		grid-area: nav;
+		min-width: 0;
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: clamp(24px, 4vw, 48px);
+	}
+
+	.footer-nav-mobile {
+		display: none;
+	}
+
+	.footer-nav-group h3 {
+		margin: 0 0 var(--space-sm);
+		color: var(--color-beige);
+		font-size: var(--text-sm);
+		font-weight: 600;
+		letter-spacing: 0.01em;
+	}
+
+	.footer-nav-group ul {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+	}
+
+	.footer-nav-group a {
+		color: var(--cream-70);
+		font-size: clamp(1rem, 0.98rem + 0.1vw, 1.0625rem);
+		line-height: var(--leading-normal);
+		text-decoration: none;
+		transition: color 180ms ease;
+	}
+
+	.footer-nav-group a:hover {
+		color: var(--color-beige);
+		text-decoration: underline;
+		text-underline-offset: 3px;
 	}
 
 	.footer-brand {
-		width: 100%;
+		grid-area: brand;
+		min-width: 0;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		text-align: center;
+		gap: var(--space-sm);
 	}
 
-	.footer-logo {
-		display: flex;
-		justify-content: center;
-		width: 100%;
-		color: inherit;
-		text-decoration: none;
-	}
-
-	.footer-logo img {
+	.footer-brand__logo {
 		display: block;
-		width: 165px;
+		margin-bottom: var(--space-3xs);
+	}
+
+	.footer-brand__logo img {
+		display: block;
+		width: clamp(240px, 15vw, 290px);
+		max-width: 100%;
 		height: auto;
 		object-fit: contain;
 	}
 
-	.footer-brand__description {
-		max-width: 300px;
-		margin: 16px 0;
-		color: rgba(255, 246, 237, 0.62);
-		font-size: 13px;
-		line-height: 1.6;
-		text-align: center;
-	}
-
-	.footer-socials {
-		width: 100%;
-		display: flex;
+	.whatsapp-cta {
+		min-height: 44px;
+		padding: 0 var(--space-sm);
+		display: inline-flex;
 		align-items: center;
-		justify-content: center;
-		gap: 10px;
-		margin-bottom: 18px;
-	}
-
-	.social-button {
-		width: 40px;
-		height: 40px;
-		flex: 0 0 40px;
-		display: grid;
-		place-items: center;
-		overflow: hidden;
-		border: 1px solid rgba(255, 255, 255, 0.12);
-		border-radius: 50%;
-		background: rgba(255, 255, 255, 0.025);
-		color: rgba(255, 246, 237, 0.78);
+		gap: var(--space-2xs);
+		border: 1px solid var(--line-on-dark-strong);
+		border-radius: 10px;
+		background: transparent;
+		color: var(--color-beige);
+		font-size: var(--text-xs);
+		font-weight: 600;
+		letter-spacing: 0.01em;
 		text-decoration: none;
 		transition:
 			background-color 180ms ease,
-			color 180ms ease,
-			transform 180ms ease;
+			border-color 180ms ease;
+	}
+
+	.whatsapp-cta:hover {
+		background: var(--fill-on-dark-1);
+		border-color: var(--cream-70);
+	}
+
+	.whatsapp-cta img {
+		width: 18px;
+		height: 18px;
+	}
+
+	.footer-socials {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+	}
+
+	.social-button {
+		width: 44px;
+		height: 44px;
+		display: grid;
+		place-items: center;
+		border: 1px solid var(--line-on-dark);
+		border-radius: var(--radius-full);
+		color: var(--cream-70);
+		text-decoration: none;
+		transition:
+			background-color 180ms ease,
+			color 180ms ease;
 	}
 
 	.social-button:hover {
-		background: rgba(255, 255, 255, 0.09);
-		color: #fff6ed;
-		transform: translateY(-2px);
+		background: var(--fill-on-dark-1);
+		color: var(--color-beige);
 	}
 
 	.social-button svg {
 		display: block;
-		width: 18px;
-		height: 18px;
+		width: 17px;
+		height: 17px;
 	}
 
 	.social-button .icon-stroke {
@@ -784,377 +485,193 @@ const currentYear = new Date().getFullYear();
 		stroke: none;
 	}
 
-	.whatsapp-button {
-		width: 100%;
-		max-width: 320px;
-		min-height: 58px;
-		padding: 10px 14px;
-		display: grid;
-		grid-template-columns:
-			38px
-			minmax(0, 1fr)
-			18px;
-		align-items: center;
-		gap: 12px;
-		overflow: hidden;
-		border: 1px solid rgba(37, 211, 102, 0.22);
-		border-radius: 14px;
-		background: rgba(37, 211, 102, 0.07);
-		color: #fff6ed;
-		text-align: left;
-		text-decoration: none;
-		transition:
-			background-color 180ms ease,
-			border-color 180ms ease,
-			transform 180ms ease;
+	.footer-divider {
+		height: 1px;
+		margin-block: clamp(28px, 4vw, 40px);
+		background: var(--line-on-dark);
 	}
 
-	.whatsapp-button:hover {
-		border-color: rgba(37, 211, 102, 0.52);
-		background: rgba(37, 211, 102, 0.13);
-		transform: translateY(-2px);
-	}
-
-	.whatsapp-button__icon {
-		width: 38px;
-		height: 38px;
-		display: grid;
-		place-items: center;
-	}
-
-	.whatsapp-button__icon img {
-		display: block;
-		width: 30px;
-		height: 30px;
-	}
-
-	.whatsapp-button__text {
-		min-width: 0;
+	/* Nivel 2: franja legal */
+	.footer-legal {
 		display: flex;
-		flex-direction: column;
-		gap: 2px;
-	}
-
-	.whatsapp-button__text small {
-		color: rgba(255, 246, 237, 0.5);
-		font-size: 12px;
-		font-weight: 500;
-		letter-spacing: 0.08em;
-		text-transform: uppercase;
-	}
-
-	.whatsapp-button__text strong {
-		overflow: hidden;
-		font-size: 12px;
-		font-weight: 600;
-		white-space: nowrap;
-		text-overflow: ellipsis;
-	}
-
-	.whatsapp-button__arrow {
-		display: block;
-		width: 18px;
-		height: 18px;
-		fill: none;
-		stroke: rgba(255, 246, 237, 0.6);
-		stroke-width: 1.8;
-		stroke-linecap: round;
-		stroke-linejoin: round;
-		transition: transform 180ms ease;
-	}
-
-	.whatsapp-button:hover
-		.whatsapp-button__arrow {
-		transform: translateX(3px);
-	}
-
-	/* CUATRO COLUMNAS COMO LA REFERENCIA */
-	.footer-navigation {
-		width: 100%;
-		display: grid;
-		grid-template-columns:
-			repeat(4, minmax(0, 1fr));
-		align-items: start;
-		gap: clamp(18px, 2.8vw, 42px);
-		padding-top: 4px;
-	}
-
-	.footer-column summary {
-		display: flex;
+		flex-wrap: wrap;
 		align-items: center;
 		justify-content: space-between;
-		gap: 12px;
-		margin: 0 0 20px;
-		cursor: default;
-		pointer-events: none;
-		list-style: none;
+		gap: 12px 24px;
+		color: var(--cream-50);
+		font-size: var(--text-xs);
 	}
 
-	.footer-column summary::-webkit-details-marker,
-	.footer-column summary::marker {
-		display: none;
-	}
-
-	.footer-column h3 {
-		margin: 0;
-		color: rgba(255, 246, 237, 0.48);
-		font-size: 11px;
-		font-weight: 600;
-		letter-spacing: 0.13em;
-		text-transform: uppercase;
-	}
-
-	.footer-column__chevron {
-		display: none;
-		flex-shrink: 0;
-		width: 16px;
-		height: 16px;
-		color: rgba(255, 246, 237, 0.4);
-		transition: transform 200ms ease;
-	}
-
-	.footer-column ul {
-		margin: 0;
-		padding: 0;
-		list-style: none;
-	}
-
-	.footer-column li + li {
-		margin-top: 14px;
-	}
-
-	.footer-column a {
-		display: inline-flex;
-		color: rgba(255, 246, 237, 0.78);
-		font-size: 13.5px;
-		font-weight: 500;
-		line-height: 1.45;
-		text-decoration: none;
-		transition:
-			color 180ms ease,
-			transform 180ms ease;
-	}
-
-	.footer-column a:hover {
-		color: #fff6ed;
-		transform: translateX(4px);
-	}
-
-	.footer-business {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		align-items: center;
-		gap: clamp(45px, 8vw, 130px);
-	}
-
-	.footer-business span {
-		display: block;
-		margin-bottom: 8px;
-		color: #ff4d2a;
-		font-size: 11px;
-		font-weight: 600;
-		letter-spacing: 0.15em;
-		text-transform: uppercase;
-	}
-
-	.footer-business p {
-		margin: 0;
-		color: rgba(255, 246, 237, 0.64);
-		font-size: 12.5px;
-		line-height: 1.6;
-	}
-
-	.footer-business__rule {
-		padding-left: 20px;
-		border-left: 2px solid #5b312a;
-		color: rgba(255, 246, 237, 0.78) !important;
-	}
-
-	.footer-bottom {
-		display: grid;
-		grid-template-columns: 1fr auto auto;
-		align-items: center;
-		gap: 28px;
-		color: rgba(255, 246, 237, 0.48);
-		font-size: 11px;
-		font-weight: 500;
-		letter-spacing: 0.07em;
-		text-transform: uppercase;
-	}
-
-	.footer-bottom p {
-		margin: 0;
-	}
-
-	.footer-bottom ul {
+	.footer-legal__group {
 		display: flex;
-		gap: 22px;
-		margin: 0;
-		padding: 0;
-		list-style: none;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 8px 24px;
 	}
 
-	.footer-bottom a {
+	.footer-made {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		margin: 0;
+	}
+
+	.footer-made__heart {
+		width: 13px;
+		height: 13px;
+		fill: var(--color-orange);
+	}
+
+	.footer-legal__copyright {
+		margin: 0;
+	}
+
+	.footer-legal__privacy {
 		color: inherit;
 		text-decoration: none;
 		transition: color 180ms ease;
 	}
 
-	.footer-bottom a:hover {
-		color: #fff6ed;
+	.footer-legal__privacy:hover {
+		color: var(--color-beige);
 	}
 
 	.footer-back-top {
+		min-height: 44px;
 		display: inline-flex;
 		align-items: center;
-		gap: 8px;
+		gap: 6px;
+		color: inherit;
+		text-decoration: none;
+		transition: color 180ms ease;
 	}
 
-	.footer-back-top svg {
-		display: block;
-		width: 15px;
-		height: 15px;
+	.footer-back-top:hover {
+		color: var(--color-beige);
+	}
+
+	.footer-back-top__arrow {
+		width: 13px;
+		height: 13px;
 		fill: none;
 		stroke: currentColor;
-		stroke-width: 1.8;
+		stroke-width: 1.6;
 		stroke-linecap: round;
 		stroke-linejoin: round;
 	}
 
-	/* TABLET */
-	@media (max-width: 1180px) {
-		.footer-content {
-			grid-template-columns: 280px minmax(0, 1fr);
-			gap: 42px;
-		}
-
-		.footer-navigation {
-			grid-template-columns:
-				repeat(2, minmax(0, 1fr));
-			gap: 40px 36px;
-		}
+	/* Acordeones móviles (Comprar / TAQTO / Ayuda) */
+	.footer-accordion {
+		border-bottom: 1px solid var(--line-on-dark);
 	}
 
-	@media (max-width: 980px) {
-		.footer-heading {
-			flex-direction: column;
-			align-items: flex-start;
-			gap: 24px;
-		}
+	.footer-accordion summary {
+		list-style: none;
+		min-height: 44px;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-sm);
+		padding-block: var(--space-xs);
+		color: var(--color-beige);
+		font-size: var(--text-sm);
+		font-weight: 600;
+		cursor: pointer;
+	}
 
-		.footer-content {
+	.footer-accordion summary::-webkit-details-marker {
+		display: none;
+	}
+
+	.footer-accordion__chevron {
+		flex-shrink: 0;
+		width: 14px;
+		height: 14px;
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 1.6;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+		transition: transform 180ms ease;
+	}
+
+	.footer-accordion[open] .footer-accordion__chevron {
+		transform: rotate(180deg);
+	}
+
+	.footer-accordion ul {
+		margin: 0;
+		padding: 0 0 var(--space-sm);
+		list-style: none;
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+	}
+
+	.footer-accordion a {
+		display: block;
+		min-height: 44px;
+		display: flex;
+		align-items: center;
+		color: var(--cream-70);
+		font-size: clamp(1rem, 0.98rem + 0.1vw, 1.0625rem);
+		text-decoration: none;
+	}
+
+	.footer-accordion a:hover {
+		color: var(--color-beige);
+	}
+
+	/* TABLET: apila marca (primero) y navegación (después) */
+	@media (max-width: 900px) {
+		.footer-top {
 			grid-template-columns: 1fr;
-			gap: 48px;
-		}
-
-		.footer-brand {
-			max-width: 100%;
-		}
-
-		.footer-navigation {
-			grid-template-columns:
-				repeat(2, minmax(0, 1fr));
-		}
-
-		.footer-bottom {
-			grid-template-columns: 1fr auto;
-		}
-
-		.footer-bottom ul {
-			grid-column: 1 / -1;
-			grid-row: 1;
+			grid-template-areas: "brand" "nav";
+			gap: clamp(40px, 6vw, 56px);
 		}
 	}
 
-	/* MÓVIL */
+	/* MÓVIL: logo, CTA, redes, navegación en acordeón, legal */
 	@media (max-width: 680px) {
-		.site-footer {
-			padding: 46px 8px 8px;
+		.footer-inner {
+			padding-block: 48px 28px;
 		}
 
-		.footer-shell {
-			padding: 34px 20px 22px;
-			border-radius: 23px;
+		.footer-brand__logo img {
+			width: clamp(170px, 45vw, 200px);
 		}
 
-		.footer-heading h2 {
-			font-size: clamp(26px, 8vw, 36px);
-		}
-
-		.footer-contact {
+		.whatsapp-cta {
 			width: 100%;
+			max-width: 320px;
+			justify-content: center;
 		}
 
-		.footer-navigation {
-			grid-template-columns: 1fr;
-			gap: 0;
+		.footer-nav {
+			display: none;
 		}
 
-		.footer-column {
-			border-top: 1px solid rgba(255, 255, 255, 0.1);
-		}
-
-		.footer-column:last-of-type {
-			border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-		}
-
-		.footer-column summary {
-			min-height: 56px;
-			margin: 0;
-			padding: 16px 2px;
-			cursor: pointer;
-			pointer-events: auto;
-			-webkit-tap-highlight-color: transparent;
-		}
-
-		.footer-column__chevron {
+		.footer-nav-mobile {
 			display: block;
 		}
 
-		.footer-column[open] > summary .footer-column__chevron {
-			transform: rotate(180deg);
+		.footer-legal {
+			justify-content: center;
+			text-align: center;
 		}
 
-		.footer-column > ul {
-			padding: 2px 2px 22px;
-		}
-
-		.footer-column h3 {
-			font-size: 12px;
-		}
-
-		.footer-column a {
-			font-size: 13px;
-		}
-
-		.footer-business {
-			grid-template-columns: 1fr;
-			gap: 22px;
-		}
-
-		.footer-bottom {
-			display: flex;
-			flex-direction: column;
-			align-items: flex-start;
-			gap: 18px;
-		}
-
-		.footer-bottom ul {
-			flex-direction: column;
-			gap: 11px;
+		.footer-legal__group {
+			justify-content: center;
 		}
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.footer-contact,
+		.whatsapp-cta,
 		.social-button,
-		.whatsapp-button,
-		.whatsapp-button__arrow,
-		.footer-column a {
-			transition: none;
-		}
-
-		.footer-column__chevron {
+		.footer-nav-group a,
+		.footer-legal__privacy,
+		.footer-back-top,
+		.footer-accordion__chevron {
 			transition: none;
 		}
 	}

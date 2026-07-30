@@ -19,10 +19,6 @@ const products = await sanityClient.fetch<Product[]>(
 	products.length > 0 && (
 		<section class="featured-products">
 			<div class="featured-products__heading">
-				<p class="featured-products__eyebrow">
-					Selección TAQTO
-				</p>
-
 				<h2>Productos destacados</h2>
 			</div>
 
@@ -37,42 +33,43 @@ const products = await sanityClient.fetch<Product[]>(
 
 <style>
 	.featured-products {
-		padding:
-			clamp(50px, 7vw, 90px)
-			var(--page-padding)
-			clamp(70px, 9vw, 130px);
-		background: var(--color-beige);
+		padding-block: clamp(28px, 8.5vw, 36px);
+		padding-inline: var(--page-padding);
+		background: var(--surface);
 	}
 
 	.featured-products__heading {
-		width: min(100%, var(--page-width));
-		margin: 0 auto clamp(32px, 4vw, 52px);
+		width: min(100%, 1560px);
+		margin: 0 auto clamp(20px, 2.5vw, 32px);
 		text-align: center;
-	}
-
-	.featured-products__eyebrow {
-		margin: 0 0 12px;
-		color: var(--color-orange);
-		font-size: 12px;
-		font-weight: 700;
-		letter-spacing: 0.15em;
-		text-transform: uppercase;
 	}
 
 	.featured-products__heading h2 {
 		margin: 0;
-		font-size: clamp(28px, 3.6vw, 44px);
+		font-size: clamp(1.8125rem, 1.5rem + 1.5vw, 2.875rem);
 		font-weight: 600;
 		letter-spacing: -0.02em;
 		color: var(--color-black);
 	}
 
 	.featured-products__grid {
-		width: min(100%, var(--page-width));
+		width: min(100%, 1560px);
 		margin: 0 auto;
 		display: grid;
 		grid-template-columns: repeat(4, minmax(0, 1fr));
 		gap: 26px;
+	}
+
+	@media (min-width: 768px) {
+		.featured-products {
+			padding-block: clamp(36px, 5.2vw, 44px);
+		}
+	}
+
+	@media (min-width: 1024px) {
+		.featured-products {
+			padding-block: clamp(48px, 3.4vw, 56px);
+		}
 	}
 
 	@media (max-width: 1100px) {

@@ -187,10 +187,6 @@ const firstWood = visibleWoods[0];
 		>
 			<div class="wood-guide__container">
 				<header class="wood-guide__header">
-					<p class="wood-guide__eyebrow">
-						Materiales TAQTO
-					</p>
-
 					<div class="wood-guide__heading">
 						<h2 id={`${componentId}-title`}>
 							Conoce nuestras maderas
@@ -483,11 +479,22 @@ const firstWood = visibleWoods[0];
 
 <style>
 	.wood-guide {
-		padding:
-			clamp(64px, 8vw, 130px)
-			var(--page-padding);
-		background: #ffffff;
+		padding-block: clamp(26px, 8vw, 36px);
+		padding-inline: var(--page-padding);
+		background: var(--surface);
 		color: var(--color-black);
+	}
+
+	@media (min-width: 768px) {
+		.wood-guide {
+			padding-block: clamp(34px, 5vw, 44px);
+		}
+	}
+
+	@media (min-width: 1024px) {
+		.wood-guide {
+			padding-block: clamp(44px, 3.2vw, 56px);
+		}
 	}
 
 	.wood-guide__container {
@@ -502,34 +509,31 @@ const firstWood = visibleWoods[0];
 			minmax(0, 1fr);
 		align-items: end;
 		gap: clamp(24px, 5vw, 80px);
-		margin-bottom: clamp(32px, 4vw, 52px);
-	}
-
-	.wood-guide__eyebrow {
-		margin: 0 0 8px;
-		color: var(--color-orange);
-		font-size: 11px;
-		font-weight: 700;
-		letter-spacing: 0.16em;
-		text-transform: uppercase;
+		margin-bottom: clamp(28px, 4vw, 48px);
 	}
 
 	.wood-guide__heading h2 {
 		max-width: 780px;
 		margin: 0;
 		color: var(--color-black);
-		font-size: clamp(30px, 4.4vw, 56px);
+		font-size: clamp(1.8125rem, 1.5rem + 1.5vw, 2.875rem);
 		font-weight: 600;
-		line-height: 1.02;
-		letter-spacing: -0.03em;
+		line-height: 1.08;
+		letter-spacing: -0.02em;
 	}
 
 	.wood-guide__heading > p {
 		max-width: 480px;
 		margin: 14px 0 0;
-		color: rgba(20, 20, 20, 0.64);
-		font-size: 14.5px;
+		color: rgba(20, 20, 20, 0.68);
+		font-size: 16px;
 		line-height: 1.6;
+	}
+
+	@media (min-width: 768px) {
+		.wood-guide__heading > p {
+			font-size: 17px;
+		}
 	}
 
 	.wood-guide__selector {
@@ -603,7 +607,7 @@ const firstWood = visibleWoods[0];
 		min-width: 0;
 		overflow: hidden;
 		border-radius: 22px;
-		background: var(--color-beige);
+		background: rgba(20, 20, 20, 0.04);
 	}
 
 	.wood-guide__media img {
@@ -650,17 +654,23 @@ const firstWood = visibleWoods[0];
 	.wood-guide__content h3 {
 		margin: 10px 0 0;
 		color: var(--color-black);
-		font-size: clamp(30px, 3.8vw, 48px);
+		font-size: clamp(22px, 2.2vw, 28px);
 		font-weight: 600;
-		line-height: 1.02;
-		letter-spacing: -0.03em;
+		line-height: 1.15;
+		letter-spacing: -0.02em;
 	}
 
 	.wood-guide__description {
 		margin: 18px 0 0;
-		color: rgba(20, 20, 20, 0.68);
-		font-size: 14.5px;
+		color: rgba(20, 20, 20, 0.7);
+		font-size: 16px;
 		line-height: 1.6;
+	}
+
+	@media (min-width: 768px) {
+		.wood-guide__description {
+			font-size: 17px;
+		}
 	}
 
 	@media (max-width: 960px) {
@@ -685,15 +695,11 @@ const firstWood = visibleWoods[0];
 
 	@media (max-width: 680px) {
 		.wood-guide {
-			padding: 64px 18px;
+			padding-inline: 18px;
 		}
 
 		.wood-guide__header {
-			margin-bottom: 26px;
-		}
-
-		.wood-guide__heading h2 {
-			font-size: clamp(30px, 10vw, 42px);
+			margin-bottom: 22px;
 		}
 
 		.wood-guide__selector {
@@ -706,10 +712,6 @@ const firstWood = visibleWoods[0];
 
 		.wood-guide__media {
 			border-radius: 16px;
-		}
-
-		.wood-guide__content h3 {
-			font-size: 32px;
 		}
 	}
 </style>

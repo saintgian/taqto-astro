@@ -120,7 +120,9 @@ const fontFaceCss = `
 		--color-black: #141414;
 		--color-beige: #fff6ed;
 		--color-orange: #ff4d2a;
+		--color-orange-hover: #e5431f;
 		--color-brown: #5b312a;
+		--color-brown-hover: #472520;
 		--color-white: #ffffff;
 
 		--font-primary: "Poppins", Arial, Helvetica, sans-serif;
@@ -137,6 +139,85 @@ const fontFaceCss = `
 		--container-editorial: 1360px;
 		--container-lectura: 760px;
 		--container-gutter: clamp(16px, 4vw, 64px);
+
+		/*
+		 * Superficie dominante: blanco. El crema queda como superficie
+		 * secundaria para diferenciar puntualmente (no es el fondo base).
+		 */
+		--surface: var(--color-white);
+		--surface-warm: var(--color-beige);
+
+		/*
+		 * Neutros derivados de --color-black para texto y bordes sobre
+		 * fondo claro. No es una paleta nueva: son tintas de la tinta
+		 * oficial.
+		 */
+		--ink-70: rgba(20, 20, 20, 0.72);
+		--ink-55: rgba(20, 20, 20, 0.55);
+		--ink-35: rgba(20, 20, 20, 0.35);
+		--ink-15: rgba(20, 20, 20, 0.14);
+		--ink-08: rgba(20, 20, 20, 0.07);
+
+		/*
+		 * Crema tintado para texto sobre fondo negro (header, footer,
+		 * minicarrito). Consolida las variantes de opacidad usadas antes.
+		 */
+		--cream-90: rgba(255, 246, 237, 0.9);
+		--cream-80: rgba(255, 246, 237, 0.8);
+		--cream-70: rgba(255, 246, 237, 0.7);
+		--cream-60: rgba(255, 246, 237, 0.6);
+		--cream-50: rgba(255, 246, 237, 0.5);
+		--cream-40: rgba(255, 246, 237, 0.4);
+
+		/* Bordes y rellenos sobre fondo negro */
+		--line-on-dark: rgba(255, 255, 255, 0.12);
+		--line-on-dark-strong: rgba(255, 255, 255, 0.2);
+		--fill-on-dark-1: rgba(255, 255, 255, 0.05);
+		--fill-on-dark-2: rgba(255, 255, 255, 0.09);
+
+		/*
+		 * Escala tipografica fluida (clamp), reutilizable en todo el sitio.
+		 * xs/sm: texto auxiliar (nunca por debajo de 14px).
+		 * base/md: cuerpo y contenido editorial (17-20px).
+		 * lg: H3 (24-30px). 2xl: H2 (30-48px). 3xl: H1/display (38-64px).
+		 */
+		--text-xs: clamp(0.875rem, 0.85rem + 0.1vw, 0.9375rem);
+		--text-sm: clamp(0.9375rem, 0.9rem + 0.15vw, 1rem);
+		--text-base: clamp(1.0625rem, 1.03rem + 0.15vw, 1.125rem);
+		--text-md: clamp(1.125rem, 1.08rem + 0.2vw, 1.25rem);
+		--text-lg: clamp(1.5rem, 1.35rem + 0.7vw, 1.875rem);
+		--text-2xl: clamp(1.875rem, 1.6rem + 1.3vw, 3rem);
+		--text-3xl: clamp(2.375rem, 1.85rem + 2.4vw, 4rem);
+
+		--leading-tight: 1.15;
+		--leading-snug: 1.35;
+		--leading-normal: 1.6;
+		--leading-relaxed: 1.7;
+
+		/* Espaciado con base 4/8px, con pasos fluidos donde conviene */
+		--space-3xs: 4px;
+		--space-2xs: 8px;
+		--space-xs: 12px;
+		--space-sm: 16px;
+		--space-md: clamp(20px, 2.4vw, 28px);
+		--space-lg: clamp(28px, 3.6vw, 40px);
+		--space-xl: clamp(36px, 5vw, 64px);
+		--space-2xl: clamp(52px, 7vw, 96px);
+
+		--radius-sm: 10px;
+		--radius-md: 16px;
+		--radius-lg: 24px;
+		--radius-full: 999px;
+
+		/* Sombras de elevacion sobrias (sin resplandor de color) */
+		--shadow-sm: 0 1px 2px rgba(20, 20, 20, 0.06);
+		--shadow-md: 0 10px 28px rgba(20, 20, 20, 0.1);
+		--shadow-lg: 0 22px 48px rgba(20, 20, 20, 0.16);
+		--shadow-dark-md: 0 14px 34px rgba(0, 0, 0, 0.3);
+		--shadow-dark-lg: 0 26px 60px rgba(0, 0, 0, 0.4);
+
+		--focus-ring: 0 0 0 3px rgba(255, 77, 42, 0.5);
+		--focus-ring-on-dark: 0 0 0 3px rgba(255, 246, 237, 0.6);
 	}
 
 	*,
@@ -147,17 +228,19 @@ const fontFaceCss = `
 
 	html {
 		scroll-behavior: smooth;
-		background: var(--color-beige);
+		background: var(--surface);
 		font-family: var(--font-primary);
 	}
 
 	body {
 		margin: 0;
 		min-width: 320px;
-		background: var(--color-beige);
+		background: var(--surface);
 		color: var(--color-black);
 		font-family: var(--font-primary);
 		font-weight: 400;
+		font-size: var(--text-base);
+		line-height: var(--leading-normal);
 		text-rendering: optimizeLegibility;
 		-webkit-font-smoothing: antialiased;
 		-moz-osx-font-smoothing: grayscale;
@@ -213,6 +296,113 @@ const fontFaceCss = `
 
 	a {
 		color: inherit;
+	}
+
+	a:not([class]) {
+		text-decoration-thickness: 1px;
+		text-underline-offset: 0.15em;
+	}
+
+	button {
+		cursor: pointer;
+	}
+
+	button:disabled,
+	[aria-disabled="true"] {
+		cursor: not-allowed;
+		opacity: 0.5;
+	}
+
+	label {
+		font-size: var(--text-sm);
+		font-weight: 500;
+		color: var(--ink-70);
+	}
+
+	a:focus-visible,
+	button:focus-visible,
+	input:focus-visible,
+	textarea:focus-visible,
+	select:focus-visible,
+	summary:focus-visible,
+	[tabindex]:focus-visible {
+		outline: none;
+		box-shadow: var(--focus-ring);
+		border-radius: var(--radius-sm);
+	}
+
+	/* Botones reutilizables del sistema global (no un framework aparte) */
+	.btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: var(--space-2xs);
+		min-height: 44px;
+		padding-inline: var(--space-sm);
+		border: 1px solid transparent;
+		border-radius: var(--radius-sm);
+		color: inherit;
+		font-size: var(--text-sm);
+		font-weight: 600;
+		letter-spacing: 0.02em;
+		text-decoration: none;
+		transition:
+			background-color 180ms ease,
+			border-color 180ms ease,
+			color 180ms ease,
+			transform 180ms ease;
+	}
+
+	.btn:active {
+		transform: translateY(1px);
+	}
+
+	.btn:disabled,
+	.btn[aria-disabled="true"] {
+		transform: none;
+	}
+
+	.btn--primary {
+		background: var(--color-brown);
+		color: var(--color-beige);
+	}
+
+	.btn--primary:hover {
+		background: var(--color-brown-hover);
+	}
+
+	.btn--accent {
+		background: var(--color-orange);
+		color: var(--color-black);
+	}
+
+	.btn--accent:hover {
+		background: var(--color-orange-hover);
+	}
+
+	.btn--outline {
+		border-color: var(--ink-15);
+		background: transparent;
+		color: var(--color-black);
+	}
+
+	.btn--outline:hover {
+		border-color: var(--ink-35);
+		background: var(--ink-08);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		html {
+			scroll-behavior: auto;
+		}
+
+		*,
+		*::before,
+		*::after {
+			animation-duration: 0.001ms !important;
+			animation-iteration-count: 1 !important;
+			transition-duration: 0.001ms !important;
+		}
 	}
 
 	.container {

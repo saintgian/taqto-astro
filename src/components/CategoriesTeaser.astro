@@ -54,10 +54,6 @@ const featured = categories.slice(0, 3).map((category) => ({
 	featured.length > 0 && (
 		<section class="categories-teaser">
 			<div class="categories-teaser__heading">
-				<p class="categories-teaser__eyebrow">
-					Explora TAQTO
-				</p>
-
 				<h2>
 					Cada categoría, una forma distinta de
 					crear.
@@ -136,36 +132,37 @@ const featured = categories.slice(0, 3).map((category) => ({
 
 <style>
 	.categories-teaser {
-		padding:
-			clamp(50px, 7vw, 90px)
-			var(--page-padding)
-			clamp(20px, 3vw, 40px);
-		background: var(--color-beige);
+		padding-block: clamp(24px, 8vw, 34px);
+		padding-inline: var(--page-padding);
+		background: var(--surface);
 	}
 
 	.categories-teaser__heading {
 		width: min(100%, var(--page-width));
-		margin: 0 auto clamp(32px, 4vw, 52px);
+		margin: 0 auto clamp(28px, 3.6vw, 44px);
 		text-align: center;
-	}
-
-	.categories-teaser__eyebrow {
-		margin: 0 0 12px;
-		color: var(--color-orange);
-		font-size: 12px;
-		font-weight: 700;
-		letter-spacing: 0.15em;
-		text-transform: uppercase;
 	}
 
 	.categories-teaser__heading h2 {
 		max-width: 620px;
 		margin: 0 auto;
-		font-size: clamp(28px, 3.6vw, 44px);
+		font-size: clamp(1.8125rem, 1.5rem + 1.5vw, 2.875rem);
 		font-weight: 600;
 		line-height: 1.1;
 		letter-spacing: -0.02em;
 		color: var(--color-black);
+	}
+
+	@media (min-width: 768px) {
+		.categories-teaser {
+			padding-block: clamp(32px, 5vw, 42px);
+		}
+	}
+
+	@media (min-width: 1024px) {
+		.categories-teaser {
+			padding-block: clamp(40px, 3.2vw, 52px);
+		}
 	}
 
 	.categories-teaser__grid {
@@ -184,7 +181,7 @@ const featured = categories.slice(0, 3).map((category) => ({
 		justify-content: flex-end;
 		overflow: hidden;
 		border: 1px solid rgba(20, 20, 20, 0.1);
-		border-radius: 22px;
+		border-radius: var(--radius-lg);
 		background: rgba(20, 20, 20, 0.04);
 		color: var(--color-beige);
 		text-decoration: none;
@@ -195,7 +192,7 @@ const featured = categories.slice(0, 3).map((category) => ({
 
 	.categories-teaser__card:hover {
 		transform: translateY(-4px);
-		box-shadow: 0 20px 46px rgba(20, 20, 20, 0.18);
+		box-shadow: var(--shadow-md);
 	}
 
 	.categories-teaser__card--placeholder {
@@ -265,8 +262,8 @@ const featured = categories.slice(0, 3).map((category) => ({
 		max-width: 320px;
 		margin: 8px 0 0;
 		color: inherit;
-		opacity: 0.82;
-		font-size: 13.5px;
+		opacity: 0.88;
+		font-size: 14px;
 		line-height: 1.55;
 	}
 

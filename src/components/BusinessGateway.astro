@@ -74,10 +74,6 @@ const businessLinks: BusinessLink[] = [
 		</div>
 
 		<div class="business-gateway__content">
-			<p class="business-gateway__eyebrow">
-				TAQTO para empresas
-			</p>
-
 			<h2 id="business-gateway-title">
 				Piezas que representan tu marca
 			</h2>
@@ -123,9 +119,20 @@ const businessLinks: BusinessLink[] = [
 
 <style>
 	.business-gateway {
-		padding:
-			clamp(60px, 8vw, 120px)
-			var(--page-padding);
+		padding-block: clamp(28px, 8.5vw, 36px);
+		padding-inline: var(--page-padding);
+	}
+
+	@media (min-width: 768px) {
+		.business-gateway {
+			padding-block: clamp(36px, 5.2vw, 44px);
+		}
+	}
+
+	@media (min-width: 1024px) {
+		.business-gateway {
+			padding-block: clamp(48px, 3.4vw, 56px);
+		}
 	}
 
 	.business-gateway--dark {
@@ -139,7 +146,7 @@ const businessLinks: BusinessLink[] = [
 	}
 
 	.business-gateway--light {
-		--business-background: var(--color-beige);
+		--business-background: var(--surface);
 		--business-foreground: var(--color-black);
 		--business-muted: rgba(20, 20, 20, 0.64);
 		--business-line: rgba(20, 20, 20, 0.14);
@@ -169,7 +176,7 @@ const businessLinks: BusinessLink[] = [
 		min-height: clamp(420px, 50vw, 640px);
 		overflow: hidden;
 		border-radius: 24px;
-		background: var(--color-beige);
+		background: rgba(20, 20, 20, 0.04);
 	}
 
 	.business-gateway__media img {
@@ -219,18 +226,24 @@ const businessLinks: BusinessLink[] = [
 		max-width: 600px;
 		margin: 0;
 		color: var(--business-foreground);
-		font-size: clamp(30px, 4.2vw, 54px);
+		font-size: clamp(1.8125rem, 1.5rem + 1.5vw, 2.875rem);
 		font-weight: 600;
-		line-height: 1.02;
-		letter-spacing: -0.03em;
+		line-height: 1.1;
+		letter-spacing: -0.02em;
 	}
 
 	.business-gateway__description {
 		max-width: 520px;
 		margin: 18px 0 0;
 		color: var(--business-muted);
-		font-size: 14.5px;
+		font-size: 16px;
 		line-height: 1.6;
+	}
+
+	@media (min-width: 768px) {
+		.business-gateway__description {
+			font-size: 17px;
+		}
 	}
 
 	.business-gateway__links {
@@ -272,7 +285,7 @@ const businessLinks: BusinessLink[] = [
 	.business-gateway__link-copy small {
 		max-width: 420px;
 		color: var(--business-muted);
-		font-size: 11.5px;
+		font-size: 14px;
 		font-weight: 400;
 		line-height: 1.5;
 	}
@@ -372,7 +385,7 @@ const businessLinks: BusinessLink[] = [
 
 	@media (max-width: 680px) {
 		.business-gateway {
-			padding: 64px 18px;
+			padding-inline: 18px;
 		}
 
 		.business-gateway__container {
@@ -383,10 +396,6 @@ const businessLinks: BusinessLink[] = [
 		.business-gateway__placeholder {
 			aspect-ratio: 4 / 5;
 			border-radius: 18px;
-		}
-
-		.business-gateway__content h2 {
-			font-size: clamp(30px, 10vw, 44px);
 		}
 
 		.business-gateway__links a {

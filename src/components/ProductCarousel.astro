@@ -21,10 +21,6 @@ const track = [...products, ...products];
 	products.length > 0 && (
 		<section class="carousel">
 			<div class="carousel__heading">
-				<p class="carousel__eyebrow">
-					Catálogo TAQTO
-				</p>
-
 				<h2>¿Aún no te decides?</h2>
 			</div>
 
@@ -88,33 +84,33 @@ const track = [...products, ...products];
 
 <style>
 	.carousel {
-		padding:
-			clamp(20px, 3vw, 40px)
-			0
-			clamp(60px, 8vw, 110px);
-		background: var(--color-beige);
+		padding-block: clamp(26px, 8vw, 36px);
+		background: var(--surface);
 		overflow: hidden;
+	}
+
+	@media (min-width: 768px) {
+		.carousel {
+			padding-block: clamp(34px, 5vw, 44px);
+		}
+	}
+
+	@media (min-width: 1024px) {
+		.carousel {
+			padding-block: clamp(44px, 3.2vw, 56px);
+		}
 	}
 
 	.carousel__heading {
 		width: min(100%, var(--page-width));
-		margin: 0 auto clamp(28px, 3.5vw, 44px);
+		margin: 0 auto clamp(24px, 3vw, 36px);
 		padding-inline: var(--page-padding);
 		text-align: center;
 	}
 
-	.carousel__eyebrow {
-		margin: 0 0 12px;
-		color: var(--color-orange);
-		font-size: 12px;
-		font-weight: 700;
-		letter-spacing: 0.15em;
-		text-transform: uppercase;
-	}
-
 	.carousel__heading h2 {
 		margin: 0;
-		font-size: clamp(28px, 3.6vw, 44px);
+		font-size: clamp(1.8125rem, 1.5rem + 1.5vw, 2.875rem);
 		font-weight: 600;
 		letter-spacing: -0.02em;
 		color: var(--color-black);
@@ -137,11 +133,11 @@ const track = [...products, ...products];
 		width: max-content;
 		gap: 26px;
 		padding-inline: var(--page-padding);
-		animation: carousel-scroll 70s linear infinite;
+		animation: carousel-scroll 140s linear infinite;
 	}
 
 	.carousel__viewport.is-few .carousel__track {
-		animation-duration: 44s;
+		animation-duration: 85s;
 	}
 
 	.carousel__viewport:hover .carousel__track,
