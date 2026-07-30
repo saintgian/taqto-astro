@@ -1,4 +1,7 @@
 ---
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
+
 interface LifestyleItem {
 	label: string;
 	title: string;
@@ -13,14 +16,85 @@ interface LifestyleItem {
 }
 
 interface Props {
-	items: LifestyleItem[];
+	items?: LifestyleItem[];
 }
+
+const base = import.meta.env.BASE_URL.endsWith("/")
+	? import.meta.env.BASE_URL
+	: `${import.meta.env.BASE_URL}/`;
+
+function getHomeImage(
+	fileName: string,
+	alt: string,
+	width = 1600,
+	height = 1000,
+): LifestyleItem["image"] | undefined {
+	const absolutePath = resolve(
+		process.cwd(),
+		"public",
+		"images",
+		"home",
+		fileName,
+	);
+
+	if (!existsSync(absolutePath)) {
+		return undefined;
+	}
+
+	return {
+		src: `${base}images/home/${fileName}`,
+		alt,
+		width,
+		height,
+	};
+}
+
+const defaultItems: LifestyleItem[] = [
+	{
+		label: "Parrilla",
+		title: "Momentos alrededor del fuego",
+		description:
+			"Piezas diseñadas para servir, compartir y acompañar cada encuentro.",
+		href: `${base}categorias/parrilla/`,
+		image: getHomeImage(
+			"lifestyle-parrilla.webp",
+			"Tabla parrillera TAQTO utilizada en una parrilla contemporánea",
+		),
+	},
+	{
+		label: "Cocina y mesa",
+		title: "Diseño para compartir",
+		description:
+			"Tablas funcionales para preparar, presentar y disfrutar cada comida.",
+		href: `${base}categorias/cocina-y-mesa/`,
+		image: getHomeImage(
+			"lifestyle-cocina-mesa.webp",
+			"Tabla de madera TAQTO utilizada en una cocina y mesa contemporánea",
+		),
+	},
+	{
+		label: "Oficina",
+		title: "Orden con materiales honestos",
+		description:
+			"Accesorios de madera que aportan organización y calidez al espacio de trabajo.",
+		href: `${base}categorias/oficina/`,
+		image: getHomeImage(
+			"lifestyle-oficina.webp",
+			"Organizador de madera TAQTO en un escritorio minimalista",
+		),
+	},
+];
 
 const { items = [] } = Astro.props;
 
-const visibleItems = items.slice(0, 3);
----
+const sourceItems = items.length > 0 ? items : defaultItems;
 
+const visibleItems = sourceItems.slice(0, 3).map((item, index) => ({
+	...defaultItems[index],
+	...item,
+	image: item.image ?? defaultItems[index]?.image,
+}));
+---
 {
 	visibleItems.length > 0 && (
 		<section

@@ -1,0 +1,1496 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Header from "../../components/Header.astro";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import ProductCard from "../../components/ProductCard.astro";
+
+import { sanityClient } from "../../lib/sanity";
+import { catalogQuery } from "../../lib/catalogQuery";
+import { getProductPriceRange, formatPEN } from "../../lib/productPricing";
+
+interface WoodRef {
+	title?: string;
+	slug?: string;
+}
+
+interface SizeRef {
+	title?: string;
+	slug?: string;
+	dimensionsLabel?: string;
+}
+
+interface VariantSource {
+	price?: number;
+	salePrice?: number;
+	active?: boolean;
+	wood?: WoodRef;
+	size?: SizeRef;
+}
+
+interface Product {
+	_id: string;
+	_createdAt: string;
+	title: string;
+	slug: string;
+	productMode?: string;
+	featured?: boolean;
+	saleStart?: string;
+	saleEnd?: string;
+	engravingIncluded?: boolean;
+	category?: { title: string; slug: string };
+	subcategory?: { title: string; slug: string };
+	uniqueProduct?: VariantSource;
+	variants?: VariantSource[];
+	[key: string]: unknown;
+}
+
+const base = import.meta.env.BASE_URL;
+
+const products = await sanityClient.fetch<Product[]>(catalogQuery);
+
+function collectWoodsAndSizes(product: Product) {
+	const woods = new Set<string>();
+	const sizes = new Set<string>();
+
+	if (product.productMode === "unique") {
+		if (product.uniqueProduct?.wood?.title) {
+			woods.add(product.uniqueProduct.wood.title);
+		}
+
+		if (product.uniqueProduct?.size?.title) {
+			sizes.add(product.uniqueProduct.size.title);
+		}
+	} else {
+		(product.variants || [])
+			.filter((variant) => variant.active !== false)
+			.forEach((variant) => {
+				if (variant.wood?.title) woods.add(variant.wood.title);
+				if (variant.size?.title) sizes.add(variant.size.title);
+			});
+	}
+
+	return {
+		woods: Array.from(woods),
+		sizes: Array.from(sizes),
+	};
+}
+
+// Indice compacto usado por el filtro en cliente. El mismo orden que el
+// grid renderizado abajo, para poder emparejar por posicion sin repetir
+// descripciones ni imagenes en el JSON.
+const catalogEntries = products.map((product) => {
+	const priceRange = getProductPriceRange(product);
+	const { woods, sizes } = collectWoodsAndSizes(product);
+
+	return {
+		id: product._id,
+		category: product.category?.slug || "",
+		categoryTitle: product.category?.title || "",
+		woods,
+		sizes,
+		priceMin: priceRange.minimum,
+		personalizable: Boolean(product.engravingIncluded),
+		featured: Boolean(product.featured),
+		createdAt: product._createdAt,
+	};
+});
+
+const totalCount = catalogEntries.length;
+
+// --- Categoria ---
+const categoryOptions = Array.from(
+	new Map(
+		catalogEntries
+			.filter((entry) => entry.category)
+			.map((entry) => [entry.category, entry.categoryTitle]),
+	).entries(),
+)
+	.map(([slug, title]) => ({ slug, title }))
+	.sort((a, b) => a.title.localeCompare(b.title, "es"));
+
+// --- Madera ---
+const woodOptions = Array.from(
+	new Set(catalogEntries.flatMap((entry) => entry.woods)),
+).sort((a, b) => a.localeCompare(b, "es"));
+
+// --- Tamaño ---
+const sizeOptions = Array.from(
+	new Set(catalogEntries.flatMap((entry) => entry.sizes)),
+).sort((a, b) => a.localeCompare(b, "es"));
+
+// --- Personalización ---
+// Solo tiene sentido como filtro si el catalogo mezcla productos con y
+// sin grabado incluido; si todos comparten el mismo valor, el filtro no
+// aportaria nada.
+const personalizableCount = catalogEntries.filter(
+	(entry) => entry.personalizable,
+).length;
+
+const showPersonalizationFilter =
+	personalizableCount > 0 && personalizableCount < totalCount;
+
+// --- Precio ---
+// Rangos calculados a partir de los precios reales del catalogo (tercios),
+// en vez de valores arbitrarios o un slider fragil.
+const sortedPrices = catalogEntries
+	.map((entry) => entry.priceMin)
+	.filter((price) => price > 0)
+	.sort((a, b) => a - b);
+
+function quantile(values: number[], q: number): number {
+	if (values.length === 0) return 0;
+	const position = (values.length - 1) * q;
+	const lower = Math.floor(position);
+	const upper = Math.ceil(position);
+	if (lower === upper) return values[lower];
+	return (
+		values[lower] + (values[upper] - values[lower]) * (position - lower)
+	);
+}
+
+const roundToTen = (value: number) => Math.max(10, Math.round(value / 10) * 10);
+
+const distinctPrices = Array.from(new Set(sortedPrices));
+
+interface PriceBucket {
+	id: string;
+	label: string;
+	min?: number;
+	max?: number;
+}
+
+let priceBuckets: PriceBucket[] = [];
+
+if (distinctPrices.length >= 3) {
+	const q1 = roundToTen(quantile(sortedPrices, 0.33));
+	const q2 = roundToTen(quantile(sortedPrices, 0.66));
+
+	if (q1 < q2) {
+		priceBuckets = [
+			{ id: "p1", label: `Hasta ${formatPEN(q1)}`, max: q1 },
+			{
+				id: "p2",
+				label: `${formatPEN(q1)} – ${formatPEN(q2)}`,
+				min: q1,
+				max: q2,
+			},
+			{ id: "p3", label: `Desde ${formatPEN(q2)}`, min: q2 },
+		];
+	}
+} else if (distinctPrices.length === 2) {
+	const mid = roundToTen((distinctPrices[0] + distinctPrices[1]) / 2);
+
+	priceBuckets = [
+		{ id: "p1", label: `Hasta ${formatPEN(mid)}`, max: mid },
+		{ id: "p2", label: `Desde ${formatPEN(mid)}`, min: mid },
+	];
+}
+
+const filterData = {
+	entries: catalogEntries.map((entry) => ({
+		id: entry.id,
+		category: entry.category,
+		woods: entry.woods,
+		sizes: entry.sizes,
+		priceMin: entry.priceMin,
+		personalizable: entry.personalizable,
+		featured: entry.featured,
+		createdAt: entry.createdAt,
+	})),
+	priceBuckets,
+};
+
+const pageTitle = "Tienda | TAQTO";
+const pageDescription =
+	"Explora todo el catálogo TAQTO: piezas de madera y cuero para parrilla, cocina, oficina y regalo, con grabado láser personalizado gratuito.";
+---
+
+<BaseLayout title={pageTitle} description={pageDescription}>
+	<Header />
+
+	<main class="store-page">
+		<Breadcrumbs
+			items={[
+				{ label: "Inicio", href: base },
+				{ label: "Tienda" },
+			]}
+		/>
+
+		<div class="store-header">
+			<div>
+				<p class="section-label">Catálogo completo</p>
+				<h1>Todas las piezas TAQTO</h1>
+			</div>
+
+			<p class="store-header__note">
+				Grabado láser personalizado siempre gratuito.
+			</p>
+		</div>
+
+		<button
+			type="button"
+			class="filters-trigger"
+			data-filters-open
+			aria-haspopup="dialog"
+			aria-controls="catalog-filters"
+			aria-expanded="false"
+		>
+			<svg
+				viewBox="0 0 24 24"
+				aria-hidden="true"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="1.8"
+			>
+				<path d="M4 7h16" />
+				<path d="M7 12h10" />
+				<path d="M10 17h4" />
+			</svg>
+
+			<span>Filtros</span>
+
+			<span
+				class="filters-trigger__badge"
+				data-active-filter-count
+				hidden
+			>0</span>
+		</button>
+
+		<div class="store-layout">
+			<div
+				class="filters-backdrop"
+				data-filters-backdrop
+			></div>
+
+			<aside
+				class="catalog-filters"
+				id="catalog-filters"
+				data-catalog-filters
+				aria-label="Filtrar piezas"
+			>
+				<div class="catalog-filters__scroll">
+					<div class="catalog-filters__header">
+						<div>
+							<p class="catalog-filters__eyebrow">
+								Filtrar piezas
+							</p>
+
+							<p class="catalog-filters__count">
+								<span data-filter-result-count>
+									{totalCount}
+								</span>
+								{" "}resultados
+							</p>
+						</div>
+
+						<button
+							type="button"
+							class="catalog-filters__close"
+							data-filters-close
+							aria-label="Cerrar filtros"
+						>
+							<svg
+								viewBox="0 0 24 24"
+								aria-hidden="true"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="1.8"
+							>
+								<path d="M6 6l12 12M18 6 6 18" />
+							</svg>
+						</button>
+					</div>
+
+					<div
+						class="catalog-filters__active"
+						data-filter-chips
+						hidden
+					></div>
+
+					<button
+						type="button"
+						class="catalog-filters__clear"
+						data-filter-clear
+					>
+						Limpiar filtros
+					</button>
+
+					{
+						priceBuckets.length > 0 && (
+							<div class="catalog-filters__section">
+								<p class="catalog-filters__section-title">
+									<span>01</span> Precio
+								</p>
+
+								<div class="catalog-filters__options">
+									{priceBuckets.map((bucket) => (
+										<label class="catalog-filters__option">
+											<input
+												type="checkbox"
+												name="precio"
+												value={bucket.id}
+												data-filter-input="price"
+											/>
+											<span>{bucket.label}</span>
+										</label>
+									))}
+								</div>
+							</div>
+						)
+					}
+
+					{
+						categoryOptions.length > 0 && (
+							<div class="catalog-filters__section">
+								<p class="catalog-filters__section-title">
+									<span>
+										{priceBuckets.length > 0 ? "02" : "01"}
+									</span>{" "}
+									Categoría
+								</p>
+
+								<div class="catalog-filters__options">
+									{categoryOptions.map((category) => (
+										<label class="catalog-filters__option">
+											<input
+												type="checkbox"
+												name="categoria"
+												value={category.slug}
+												data-filter-input="category"
+											/>
+											<span>{category.title}</span>
+										</label>
+									))}
+								</div>
+							</div>
+						)
+					}
+
+					{
+						woodOptions.length > 0 && (
+							<div class="catalog-filters__section">
+								<p class="catalog-filters__section-title">
+									<span>
+										{
+											[
+												priceBuckets.length > 0,
+												categoryOptions.length > 0,
+											].filter(Boolean).length + 1
+										}
+									</span>{" "}
+									Madera
+								</p>
+
+								<div class="catalog-filters__options">
+									{woodOptions.map((wood) => (
+										<label class="catalog-filters__option">
+											<input
+												type="checkbox"
+												name="madera"
+												value={wood}
+												data-filter-input="wood"
+											/>
+											<span>{wood}</span>
+										</label>
+									))}
+								</div>
+							</div>
+						)
+					}
+
+					{
+						sizeOptions.length > 0 && (
+							<div class="catalog-filters__section">
+								<p class="catalog-filters__section-title">
+									<span>
+										{
+											[
+												priceBuckets.length > 0,
+												categoryOptions.length > 0,
+												woodOptions.length > 0,
+											].filter(Boolean).length + 1
+										}
+									</span>{" "}
+									Tamaño
+								</p>
+
+								<div class="catalog-filters__options">
+									{sizeOptions.map((size) => (
+										<label class="catalog-filters__option">
+											<input
+												type="checkbox"
+												name="tamano"
+												value={size}
+												data-filter-input="size"
+											/>
+											<span>{size}</span>
+										</label>
+									))}
+								</div>
+							</div>
+						)
+					}
+
+					{
+						showPersonalizationFilter && (
+							<div class="catalog-filters__section">
+								<p class="catalog-filters__section-title">
+									<span>
+										{
+											[
+												priceBuckets.length > 0,
+												categoryOptions.length > 0,
+												woodOptions.length > 0,
+												sizeOptions.length > 0,
+											].filter(Boolean).length + 1
+										}
+									</span>{" "}
+									Personalización
+								</p>
+
+								<div class="catalog-filters__options">
+									<label class="catalog-filters__option">
+										<input
+											type="checkbox"
+											name="personalizado"
+											value="1"
+											data-filter-input="personalizable"
+										/>
+										<span>Con grabado incluido</span>
+									</label>
+								</div>
+							</div>
+						)
+					}
+				</div>
+
+				<div class="catalog-filters__footer">
+					<button
+						type="button"
+						class="catalog-filters__apply"
+						data-filters-apply
+					>
+						Ver <span data-filter-result-count-apply>
+							{totalCount}
+						</span> piezas
+					</button>
+				</div>
+			</aside>
+
+			<section class="store-results">
+				<div class="store-results__toolbar">
+					<p class="store-results__count">
+						<strong data-visible-count>{totalCount}</strong>
+						{" "}
+						{totalCount === 1 ? "pieza" : "piezas"}
+					</p>
+
+					<label class="store-results__sort">
+						<span>Ordenar por</span>
+
+						<select data-catalog-sort>
+							<option value="featured">Destacados</option>
+							<option value="price-asc">
+								Precio: menor a mayor
+							</option>
+							<option value="price-desc">
+								Precio: mayor a menor
+							</option>
+							<option value="newest">Más recientes</option>
+						</select>
+					</label>
+				</div>
+
+				<div
+					class="product-grid"
+					data-catalog-grid
+				>
+					{
+						products.map((product, index) => (
+							<div
+								class="catalog-grid__item"
+								data-catalog-item
+								data-catalog-index={index}
+							>
+								<ProductCard product={product} />
+							</div>
+						))
+					}
+				</div>
+
+				<div class="catalog-empty" data-catalog-empty hidden>
+					<h3>Sin resultados</h3>
+					<p>
+						Ningún producto coincide con los filtros
+						seleccionados.
+					</p>
+
+					<button type="button" data-filter-clear>
+						Limpiar filtros
+					</button>
+				</div>
+			</section>
+		</div>
+	</main>
+</BaseLayout>
+
+<script
+	type="application/json"
+	id="catalog-filter-data"
+	set:html={JSON.stringify(filterData)}
+/>
+
+<script>
+	interface CatalogEntry {
+		id: string;
+		category: string;
+		woods: string[];
+		sizes: string[];
+		priceMin: number;
+		personalizable: boolean;
+		featured: boolean;
+		createdAt: string;
+	}
+
+	interface PriceBucket {
+		id: string;
+		label: string;
+		min?: number;
+		max?: number;
+	}
+
+	interface FilterData {
+		entries: CatalogEntry[];
+		priceBuckets: PriceBucket[];
+	}
+
+	const dataNode = document.getElementById("catalog-filter-data");
+
+	if (dataNode?.textContent) {
+		const data: FilterData = JSON.parse(dataNode.textContent);
+
+		const grid = document.querySelector<HTMLElement>(
+			"[data-catalog-grid]",
+		);
+
+		const items = Array.from(
+			document.querySelectorAll<HTMLElement>("[data-catalog-item]"),
+		);
+
+		const emptyState = document.querySelector<HTMLElement>(
+			"[data-catalog-empty]",
+		);
+
+		const filtersPanel = document.querySelector<HTMLElement>(
+			"[data-catalog-filters]",
+		);
+
+		const filtersBackdrop = document.querySelector<HTMLElement>(
+			"[data-filters-backdrop]",
+		);
+
+		const filtersOpenButton = document.querySelector<HTMLButtonElement>(
+			"[data-filters-open]",
+		);
+
+		const activeFilterBadge = document.querySelector<HTMLElement>(
+			"[data-active-filter-count]",
+		);
+
+		const chipsContainer = document.querySelector<HTMLElement>(
+			"[data-filter-chips]",
+		);
+
+		const sortSelect = document.querySelector<HTMLSelectElement>(
+			"[data-catalog-sort]",
+		);
+
+		const filterInputs = Array.from(
+			document.querySelectorAll<HTMLInputElement>(
+				"[data-filter-input]",
+			),
+		);
+
+		const priceBucketById = new Map(
+			data.priceBuckets.map((bucket) => [bucket.id, bucket]),
+		);
+
+		const entryById = new Map(
+			data.entries.map((entry) => [entry.id, entry]),
+		);
+
+		if (grid && items.length === data.entries.length) {
+			type FilterState = {
+				price: Set<string>;
+				category: Set<string>;
+				wood: Set<string>;
+				size: Set<string>;
+				personalizable: boolean;
+				sort: string;
+			};
+
+			const params = new URLSearchParams(window.location.search);
+
+			const readList = (key: string) => {
+				const value = params.get(key);
+				return value
+					? new Set(value.split(",").filter(Boolean))
+					: new Set<string>();
+			};
+
+			const state: FilterState = {
+				price: readList("precio"),
+				category: readList("categoria"),
+				wood: readList("madera"),
+				size: readList("tamano"),
+				personalizable: params.get("personalizado") === "1",
+				sort: params.get("orden") || "featured",
+			};
+
+			filterInputs.forEach((input) => {
+				const type = input.dataset.filterInput;
+
+				if (type === "price") {
+					input.checked = state.price.has(input.value);
+				} else if (type === "category") {
+					input.checked = state.category.has(input.value);
+				} else if (type === "wood") {
+					input.checked = state.wood.has(input.value);
+				} else if (type === "size") {
+					input.checked = state.size.has(input.value);
+				} else if (type === "personalizable") {
+					input.checked = state.personalizable;
+				}
+			});
+
+			if (sortSelect) sortSelect.value = state.sort;
+
+			const matchesPrice = (entry: CatalogEntry) => {
+				if (state.price.size === 0) return true;
+
+				for (const bucketId of state.price) {
+					const bucket = priceBucketById.get(bucketId);
+					if (!bucket) continue;
+
+					const aboveMin =
+						bucket.min === undefined || entry.priceMin > bucket.min;
+					const belowMax =
+						bucket.max === undefined || entry.priceMin <= bucket.max;
+
+					if (aboveMin && belowMax) return true;
+				}
+
+				return false;
+			};
+
+			const matchesEntry = (entry: CatalogEntry) => {
+				if (
+					state.category.size > 0 &&
+					!state.category.has(entry.category)
+				) {
+					return false;
+				}
+
+				if (
+					state.wood.size > 0 &&
+					!entry.woods.some((wood) => state.wood.has(wood))
+				) {
+					return false;
+				}
+
+				if (
+					state.size.size > 0 &&
+					!entry.sizes.some((size) => state.size.has(size))
+				) {
+					return false;
+				}
+
+				if (state.personalizable && !entry.personalizable) {
+					return false;
+				}
+
+				if (!matchesPrice(entry)) return false;
+
+				return true;
+			};
+
+			const sortItems = () => {
+				const withEntries = items
+					.map((item) => {
+						const id = item.dataset.catalogIndex;
+						const entry = id ? data.entries[Number(id)] : undefined;
+						return { item, entry };
+					})
+					.filter(
+						(value): value is {
+							item: HTMLElement;
+							entry: CatalogEntry;
+						} => Boolean(value.entry),
+					);
+
+				const compare: Record<
+					string,
+					(a: CatalogEntry, b: CatalogEntry) => number
+				> = {
+					featured: (a, b) => Number(b.featured) - Number(a.featured),
+					"price-asc": (a, b) => a.priceMin - b.priceMin,
+					"price-desc": (a, b) => b.priceMin - a.priceMin,
+					newest: (a, b) =>
+						new Date(b.createdAt).getTime() -
+						new Date(a.createdAt).getTime(),
+				};
+
+				const comparator = compare[state.sort] || compare.featured;
+
+				withEntries.sort((a, b) => comparator(a.entry, b.entry));
+
+				withEntries.forEach(({ item }) => {
+					grid.appendChild(item);
+				});
+			};
+
+			const chipLabel = (
+				type: string,
+				value: string,
+			): string => {
+				if (type === "price") {
+					return priceBucketById.get(value)?.label || value;
+				}
+
+				if (type === "category") {
+					const input = filterInputs.find(
+						(candidate) =>
+							candidate.dataset.filterInput === "category" &&
+							candidate.value === value,
+					);
+
+					return (
+						input
+							?.closest(".catalog-filters__option")
+							?.querySelector("span")?.textContent || value
+					);
+				}
+
+				return value;
+			};
+
+			const renderChips = () => {
+				if (!chipsContainer) return;
+
+				const chips: { type: string; value: string }[] = [];
+
+				state.price.forEach((value) =>
+					chips.push({ type: "price", value }),
+				);
+				state.category.forEach((value) =>
+					chips.push({ type: "category", value }),
+				);
+				state.wood.forEach((value) =>
+					chips.push({ type: "wood", value }),
+				);
+				state.size.forEach((value) =>
+					chips.push({ type: "size", value }),
+				);
+
+				if (state.personalizable) {
+					chips.push({ type: "personalizable", value: "1" });
+				}
+
+				chipsContainer.innerHTML = "";
+				chipsContainer.hidden = chips.length === 0;
+
+				chips.forEach(({ type, value }) => {
+					const chip = document.createElement("button");
+					chip.type = "button";
+					chip.className = "catalog-chip";
+
+					chip.textContent =
+						type === "personalizable"
+							? "Con grabado incluido"
+							: chipLabel(type, value);
+
+					const remove = document.createElement("span");
+					remove.setAttribute("aria-hidden", "true");
+					remove.textContent = " ×";
+					chip.appendChild(remove);
+
+					chip.addEventListener("click", () => {
+						if (type === "price") state.price.delete(value);
+						else if (type === "category")
+							state.category.delete(value);
+						else if (type === "wood") state.wood.delete(value);
+						else if (type === "size") state.size.delete(value);
+						else if (type === "personalizable")
+							state.personalizable = false;
+
+						syncInputsFromState();
+						apply();
+					});
+
+					chipsContainer.appendChild(chip);
+				});
+			};
+
+			const syncInputsFromState = () => {
+				filterInputs.forEach((input) => {
+					const type = input.dataset.filterInput;
+
+					if (type === "price") {
+						input.checked = state.price.has(input.value);
+					} else if (type === "category") {
+						input.checked = state.category.has(input.value);
+					} else if (type === "wood") {
+						input.checked = state.wood.has(input.value);
+					} else if (type === "size") {
+						input.checked = state.size.has(input.value);
+					} else if (type === "personalizable") {
+						input.checked = state.personalizable;
+					}
+				});
+			};
+
+			const updateUrl = () => {
+				const next = new URLSearchParams();
+
+				if (state.price.size) {
+					next.set("precio", Array.from(state.price).join(","));
+				}
+				if (state.category.size) {
+					next.set(
+						"categoria",
+						Array.from(state.category).join(","),
+					);
+				}
+				if (state.wood.size) {
+					next.set("madera", Array.from(state.wood).join(","));
+				}
+				if (state.size.size) {
+					next.set("tamano", Array.from(state.size).join(","));
+				}
+				if (state.personalizable) {
+					next.set("personalizado", "1");
+				}
+				if (state.sort !== "featured") {
+					next.set("orden", state.sort);
+				}
+
+				const query = next.toString();
+				const newUrl =
+					window.location.pathname + (query ? `?${query}` : "");
+
+				window.history.replaceState(null, "", newUrl);
+			};
+
+			const activeFilterCount = () =>
+				state.price.size +
+				state.category.size +
+				state.wood.size +
+				state.size.size +
+				(state.personalizable ? 1 : 0);
+
+			const apply = () => {
+				let visibleCount = 0;
+
+				items.forEach((item) => {
+					const index = Number(item.dataset.catalogIndex);
+					const entry = data.entries[index];
+					const visible = entry ? matchesEntry(entry) : true;
+
+					item.hidden = !visible;
+					if (visible) visibleCount += 1;
+				});
+
+				sortItems();
+
+				document
+					.querySelectorAll<HTMLElement>(
+						"[data-filter-result-count], [data-filter-result-count-apply]",
+					)
+					.forEach((node) => {
+						node.textContent = String(visibleCount);
+					});
+
+				const visibleCountLabel = document.querySelector<HTMLElement>(
+					"[data-visible-count]",
+				);
+				if (visibleCountLabel) {
+					visibleCountLabel.textContent = String(visibleCount);
+				}
+
+				if (emptyState) emptyState.hidden = visibleCount !== 0;
+				if (grid) grid.hidden = visibleCount === 0;
+
+				const count = activeFilterCount();
+
+				if (activeFilterBadge) {
+					activeFilterBadge.textContent = String(count);
+					activeFilterBadge.hidden = count === 0;
+				}
+
+				renderChips();
+				updateUrl();
+			};
+
+			filterInputs.forEach((input) => {
+				input.addEventListener("change", () => {
+					const type = input.dataset.filterInput;
+
+					if (type === "price") {
+						input.checked
+							? state.price.add(input.value)
+							: state.price.delete(input.value);
+					} else if (type === "category") {
+						input.checked
+							? state.category.add(input.value)
+							: state.category.delete(input.value);
+					} else if (type === "wood") {
+						input.checked
+							? state.wood.add(input.value)
+							: state.wood.delete(input.value);
+					} else if (type === "size") {
+						input.checked
+							? state.size.add(input.value)
+							: state.size.delete(input.value);
+					} else if (type === "personalizable") {
+						state.personalizable = input.checked;
+					}
+
+					apply();
+				});
+			});
+
+			sortSelect?.addEventListener("change", () => {
+				state.sort = sortSelect.value;
+				apply();
+			});
+
+			document
+				.querySelectorAll<HTMLButtonElement>("[data-filter-clear]")
+				.forEach((button) => {
+					button.addEventListener("click", () => {
+						state.price.clear();
+						state.category.clear();
+						state.wood.clear();
+						state.size.clear();
+						state.personalizable = false;
+						state.sort = "featured";
+
+						syncInputsFromState();
+						if (sortSelect) sortSelect.value = "featured";
+
+						apply();
+					});
+				});
+
+			apply();
+		}
+
+		// --- Drawer móvil ---
+		if (filtersPanel && filtersOpenButton) {
+			const closeButtons = document.querySelectorAll<HTMLElement>(
+				"[data-filters-close], [data-filters-apply]",
+			);
+
+			const openDrawer = () => {
+				filtersPanel.classList.add("is-open");
+				filtersBackdrop?.classList.add("is-open");
+				filtersPanel.setAttribute("role", "dialog");
+				filtersPanel.setAttribute("aria-modal", "true");
+				filtersOpenButton.setAttribute("aria-expanded", "true");
+				document.body.classList.add("catalog-filters-open");
+
+				const firstControl =
+					filtersPanel.querySelector<HTMLElement>(
+						"input, button, select",
+					);
+				firstControl?.focus();
+			};
+
+			const closeDrawer = () => {
+				filtersPanel.classList.remove("is-open");
+				filtersBackdrop?.classList.remove("is-open");
+				filtersPanel.removeAttribute("role");
+				filtersPanel.removeAttribute("aria-modal");
+				filtersOpenButton.setAttribute("aria-expanded", "false");
+				document.body.classList.remove("catalog-filters-open");
+				filtersOpenButton.focus();
+			};
+
+			filtersOpenButton.addEventListener("click", openDrawer);
+			filtersBackdrop?.addEventListener("click", closeDrawer);
+
+			closeButtons.forEach((button) => {
+				button.addEventListener("click", closeDrawer);
+			});
+
+			document.addEventListener("keydown", (event) => {
+				if (
+					event.key === "Escape" &&
+					filtersPanel.classList.contains("is-open")
+				) {
+					closeDrawer();
+				}
+			});
+		}
+	}
+</script>
+
+<style>
+	.store-page {
+		min-height: 100vh;
+		padding-block:
+			clamp(24px, 3vw, 40px)
+			clamp(80px, 9vw, 140px);
+		background: #fff6ed;
+		color: #141414;
+	}
+
+	.store-page > :global(nav.breadcrumbs) {
+		max-width: var(--container-comercial, 1520px);
+		margin-inline: auto;
+		padding-inline: var(--container-gutter, clamp(16px, 4vw, 64px));
+	}
+
+	.section-label {
+		margin: 0 0 14px;
+		color: #ff4d2a;
+		font-size: 12px;
+		font-weight: 700;
+		letter-spacing: 0.15em;
+		text-transform: uppercase;
+	}
+
+	.store-header {
+		max-width: var(--container-comercial, 1520px);
+		margin: 24px auto 0;
+		padding-inline: var(--container-gutter, clamp(16px, 4vw, 64px));
+		display: flex;
+		align-items: end;
+		justify-content: space-between;
+		gap: 40px;
+	}
+
+	.store-header h1 {
+		margin: 0;
+		font-size: clamp(36px, 5vw, 62px);
+		font-weight: 600;
+		line-height: 0.98;
+		letter-spacing: -0.04em;
+	}
+
+	.store-header__note {
+		max-width: 260px;
+		margin: 0;
+		color: rgba(20, 20, 20, 0.52);
+		font-size: 11px;
+		line-height: 1.55;
+		text-align: right;
+	}
+
+	.filters-trigger {
+		display: none;
+	}
+
+	.store-layout {
+		max-width: var(--container-comercial, 1520px);
+		margin: clamp(28px, 3.5vw, 46px) auto 0;
+		padding-inline: var(--container-gutter, clamp(16px, 4vw, 64px));
+		display: grid;
+		grid-template-columns: minmax(260px, 300px) minmax(0, 1fr);
+		align-items: start;
+		gap: clamp(24px, 3vw, 48px);
+	}
+
+	.filters-backdrop {
+		display: none;
+	}
+
+	.catalog-filters {
+		position: sticky;
+		top: 110px;
+		display: flex;
+		flex-direction: column;
+		border: 1px solid rgba(20, 20, 20, 0.1);
+		border-radius: 22px;
+		background: #ffffff;
+	}
+
+	.catalog-filters__scroll {
+		padding: 24px;
+	}
+
+	.catalog-filters__header {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 12px;
+	}
+
+	.catalog-filters__eyebrow {
+		margin: 0 0 6px;
+		font-size: 17px;
+		font-weight: 600;
+		letter-spacing: -0.01em;
+	}
+
+	.catalog-filters__count {
+		margin: 0;
+		color: rgba(20, 20, 20, 0.52);
+		font-size: 12px;
+	}
+
+	.catalog-filters__close {
+		display: none;
+	}
+
+	.catalog-filters__active {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+		margin-top: 18px;
+	}
+
+	.catalog-chip {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		padding: 6px 10px;
+		border: 1px solid rgba(20, 20, 20, 0.14);
+		border-radius: 999px;
+		background: #fff6ed;
+		color: #141414;
+		font-size: 11px;
+		font-weight: 600;
+		cursor: pointer;
+	}
+
+	.catalog-chip:hover {
+		border-color: #141414;
+	}
+
+	.catalog-filters__clear {
+		margin-top: 14px;
+		border: 0;
+		background: transparent;
+		color: #5b312a;
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 0.04em;
+		text-decoration: underline;
+		cursor: pointer;
+		padding: 0;
+	}
+
+	.catalog-filters__section {
+		margin-top: 22px;
+		padding-top: 18px;
+		border-top: 1px solid rgba(20, 20, 20, 0.09);
+	}
+
+	.catalog-filters__section-title {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		margin: 0 0 12px;
+		font-size: 12px;
+		font-weight: 700;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+	}
+
+	.catalog-filters__section-title span {
+		color: #ff4d2a;
+		font-size: 10px;
+	}
+
+	.catalog-filters__options {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	.catalog-filters__option {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		min-height: 38px;
+		padding: 4px 6px;
+		border-radius: 8px;
+		font-size: 13.5px;
+		cursor: pointer;
+	}
+
+	.catalog-filters__option:hover {
+		background: rgba(20, 20, 20, 0.035);
+	}
+
+	.catalog-filters__option input {
+		width: 17px;
+		height: 17px;
+		accent-color: #5b312a;
+	}
+
+	.catalog-filters__option input:focus-visible {
+		outline: 2px solid #ff4d2a;
+		outline-offset: 2px;
+	}
+
+	.catalog-filters__footer {
+		display: none;
+	}
+
+	.store-results__toolbar {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 20px;
+		margin-bottom: 22px;
+	}
+
+	.store-results__count {
+		margin: 0;
+		font-size: 13px;
+		color: rgba(20, 20, 20, 0.6);
+	}
+
+	.store-results__count strong {
+		color: #141414;
+		font-size: 15px;
+	}
+
+	.store-results__sort {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		font-size: 12px;
+		font-weight: 600;
+		color: rgba(20, 20, 20, 0.6);
+	}
+
+	.store-results__sort select {
+		min-height: 40px;
+		padding: 0 12px;
+		border: 1px solid rgba(20, 20, 20, 0.16);
+		border-radius: 10px;
+		background: #ffffff;
+		color: #141414;
+		font-size: 13px;
+		font-weight: 600;
+	}
+
+	.store-results__sort select:focus-visible {
+		outline: 2px solid #ff4d2a;
+		outline-offset: 2px;
+	}
+
+	.product-grid {
+		display: grid;
+		grid-template-columns:
+			repeat(
+				auto-fill,
+				minmax(min(100%, 240px), 1fr)
+			);
+		gap: 36px 22px;
+	}
+
+	.catalog-empty {
+		padding: 70px 25px;
+		border: 1px solid rgba(20, 20, 20, 0.1);
+		border-radius: 22px;
+		text-align: center;
+	}
+
+	.catalog-empty h3 {
+		margin: 0;
+		font-size: 28px;
+	}
+
+	.catalog-empty p {
+		margin: 12px 0 20px;
+		color: rgba(20, 20, 20, 0.58);
+	}
+
+	.catalog-empty button {
+		min-height: 46px;
+		padding: 0 22px;
+		border: 0;
+		border-radius: 10px;
+		background: #5b312a;
+		color: #fff6ed;
+		font-size: 12px;
+		font-weight: 700;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		cursor: pointer;
+	}
+
+	@media (max-width: 1080px) {
+		.store-layout {
+			grid-template-columns: 240px minmax(0, 1fr);
+		}
+	}
+
+	@media (max-width: 900px) {
+		.store-header {
+			align-items: flex-start;
+			flex-direction: column;
+			gap: 14px;
+		}
+
+		.store-header__note {
+			text-align: left;
+		}
+
+		.filters-trigger {
+			position: relative;
+			margin-top: 20px;
+			min-height: 48px;
+			padding: 0 20px;
+			display: inline-flex;
+			align-items: center;
+			gap: 10px;
+			border: 1px solid rgba(20, 20, 20, 0.16);
+			border-radius: 999px;
+			background: #ffffff;
+			color: #141414;
+			font-size: 13px;
+			font-weight: 700;
+			letter-spacing: 0.03em;
+			cursor: pointer;
+		}
+
+		.filters-trigger svg {
+			width: 18px;
+			height: 18px;
+		}
+
+		.filters-trigger__badge {
+			min-width: 20px;
+			height: 20px;
+			padding-inline: 5px;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			border-radius: 999px;
+			background: #ff4d2a;
+			color: #fff6ed;
+			font-size: 11px;
+			font-weight: 700;
+		}
+
+		.store-layout {
+			grid-template-columns: 1fr;
+			margin-top: 20px;
+		}
+
+		.filters-backdrop {
+			position: fixed;
+			inset: 0;
+			z-index: 400;
+			display: block;
+			background: rgba(20, 16, 14, 0.4);
+			opacity: 0;
+			visibility: hidden;
+			transition:
+				opacity 220ms ease,
+				visibility 220ms ease;
+		}
+
+		.filters-backdrop.is-open {
+			opacity: 1;
+			visibility: visible;
+		}
+
+		.catalog-filters {
+			position: fixed;
+			z-index: 401;
+			inset: auto 0 0 0;
+			top: 8vh;
+			max-height: 92vh;
+			overflow: hidden;
+			border-radius: 22px 22px 0 0;
+			transform: translateY(100%);
+			transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+		}
+
+		.catalog-filters.is-open {
+			transform: translateY(0);
+		}
+
+		.catalog-filters__scroll {
+			flex: 1;
+			overflow-y: auto;
+		}
+
+		.catalog-filters__close {
+			display: grid;
+			width: 36px;
+			height: 36px;
+			flex: 0 0 36px;
+			place-items: center;
+			border: 0;
+			border-radius: 50%;
+			background: rgba(20, 20, 20, 0.06);
+			cursor: pointer;
+		}
+
+		.catalog-filters__close svg {
+			width: 16px;
+			height: 16px;
+		}
+
+		.catalog-filters__footer {
+			display: block;
+			padding: 14px 24px;
+			border-top: 1px solid rgba(20, 20, 20, 0.09);
+			background: #ffffff;
+		}
+
+		.catalog-filters__apply {
+			width: 100%;
+			min-height: 50px;
+			border: 0;
+			border-radius: 12px;
+			background: #5b312a;
+			color: #fff6ed;
+			font-size: 13px;
+			font-weight: 700;
+			letter-spacing: 0.04em;
+			text-transform: uppercase;
+			cursor: pointer;
+		}
+
+		.store-results__toolbar {
+			flex-wrap: wrap;
+		}
+	}
+
+	@media (max-width: 560px) {
+		.store-page {
+			padding-block: 20px 75px;
+		}
+
+		.product-grid {
+			grid-template-columns: 1fr 1fr;
+			gap: 28px 14px;
+		}
+
+		.catalog-filters {
+			left: 8px;
+			right: 8px;
+		}
+	}
+
+	@media (max-width: 400px) {
+		.product-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.catalog-filters,
+		.filters-backdrop {
+			transition: none;
+		}
+	}
+</style>

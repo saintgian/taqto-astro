@@ -20,7 +20,7 @@ interface CustomerTestimonial {
 interface CustomerProject {
 	type: "project";
 	image: CustomerProofImage;
-	title: string;
+	title?: string;
 	category?: string;
 	description?: string;
 	href?: string;
@@ -55,7 +55,7 @@ const visibleItems = items
 			);
 		}
 
-		return Boolean(item.title?.trim());
+		return true;
 	})
 	.slice(0, 3);
 
@@ -102,47 +102,55 @@ const resolvedItems =
 					}
 				>
 					{
-						resolvedItems.map((item) => (
-							<li class="customer-proof__item">
-								<article class="customer-proof__card">
-									{
-										item.href ? (
-											<a
-												class="customer-proof__media"
-												href={item.href}
-												aria-label={
-													item.type === "testimonial"
-														? `Ver ${item.productName}`
-														: `Ver ${item.title}`
-												}
-											>
-												<img
-													src={item.image.src}
-													alt={item.image.alt}
-													width={item.image.width}
-													height={item.image.height}
-													loading="lazy"
-													decoding="async"
-												/>
-											</a>
-										) : (
-											<div class="customer-proof__media">
-												<img
-													src={item.image.src}
-													alt={item.image.alt}
-													width={item.image.width}
-													height={item.image.height}
-													loading="lazy"
-													decoding="async"
-												/>
-											</div>
-										)
-									}
+						resolvedItems.map((item) => {
+							const hasProjectCaption =
+								item.type === "project" &&
+								Boolean(
+									item.title?.trim() ||
+										item.category?.trim() ||
+										item.description?.trim(),
+								);
 
-									<div class="customer-proof__content">
+							return (
+								<li class="customer-proof__item">
+									<article class="customer-proof__card">
+										{
+											item.href ? (
+												<a
+													class="customer-proof__media"
+													href={item.href}
+													aria-label={
+														item.type === "testimonial"
+															? `Ver ${item.productName}`
+															: item.title || item.image.alt
+													}
+												>
+													<img
+														src={item.image.src}
+														alt={item.image.alt}
+														width={item.image.width}
+														height={item.image.height}
+														loading="lazy"
+														decoding="async"
+													/>
+												</a>
+											) : (
+												<div class="customer-proof__media">
+													<img
+														src={item.image.src}
+														alt={item.image.alt}
+														width={item.image.width}
+														height={item.image.height}
+														loading="lazy"
+														decoding="async"
+													/>
+												</div>
+											)
+										}
+
 										{
 											item.type === "testimonial" ? (
-												<>
+												<div class="customer-proof__content">
 													<p class="customer-proof__product">
 														{item.productName}
 													</p>
@@ -154,43 +162,49 @@ const resolvedItems =
 													<p class="customer-proof__customer">
 														{item.customerName}
 													</p>
-												</>
+												</div>
 											) : (
-												<>
-													{
-														item.category && (
-															<p class="customer-proof__product">
-																{item.category}
-															</p>
-														)
-													}
-
-													<h3>
+												hasProjectCaption && (
+													<div class="customer-proof__content">
 														{
-															item.href ? (
-																<a href={item.href}>
-																	{item.title}
-																</a>
-															) : (
-																item.title
+															item.category && (
+																<p class="customer-proof__product">
+																	{item.category}
+																</p>
 															)
 														}
-													</h3>
 
-													{
-														item.description && (
-															<p class="customer-proof__description">
-																{item.description}
-															</p>
-														)
-													}
-												</>
+														{
+															item.title && (
+																<h3>
+																	{
+																		item.href ? (
+																			<a href={item.href}>
+																				{item.title}
+																			</a>
+																		) : (
+																			item.title
+																		)
+																	}
+																</h3>
+															)
+														}
+
+														{
+															item.description && (
+																<p class="customer-proof__description">
+																	{item.description}
+																</p>
+															)
+														}
+													</div>
+												)
 											)
 										}
-									</div>
-								</article>
-							</li>
-						))
+									</article>
+								</li>
+							);
+						})
 					}
 				</ul>
 			</div>
@@ -378,21 +392,15 @@ const resolvedItems =
 		}
 
 		.customer-proof__grid {
-			grid-template-columns: none;
-			grid-auto-flow: column;
-			grid-auto-columns: minmax(260px, 84vw);
-			gap: 16px;
-			overflow-x: auto;
-			padding: 0 18px 14px;
-			scroll-padding-inline: 18px;
-			scroll-snap-type: inline mandatory;
+			grid-template-columns: 1fr;
+			gap: 24px;
+			padding-inline: 18px;
 		}
 
 		.customer-proof__item,
 		.customer-proof__item:last-child:nth-child(odd) {
 			grid-column: auto;
 			max-width: none;
-			scroll-snap-align: start;
 		}
 
 		.customer-proof__media {

@@ -328,8 +328,21 @@ const currentYear = new Date().getFullYear();
 				class="footer-navigation"
 				aria-label="Navegación del pie de página"
 			>
-				<div class="footer-column">
-					<h3>Comprar</h3>
+				<details class="footer-column" open>
+					<summary>
+						<h3>Comprar</h3>
+
+						<svg
+							class="footer-column__chevron"
+							viewBox="0 0 24 24"
+							aria-hidden="true"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.8"
+						>
+							<path d="m7 9 5 5 5-5"></path>
+						</svg>
+					</summary>
 
 					<ul>
 						{
@@ -342,10 +355,23 @@ const currentYear = new Date().getFullYear();
 							))
 						}
 					</ul>
-				</div>
+				</details>
 
-				<div class="footer-column">
-					<h3>Empresas</h3>
+				<details class="footer-column" open>
+					<summary>
+						<h3>Empresas</h3>
+
+						<svg
+							class="footer-column__chevron"
+							viewBox="0 0 24 24"
+							aria-hidden="true"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.8"
+						>
+							<path d="m7 9 5 5 5-5"></path>
+						</svg>
+					</summary>
 
 					<ul>
 						{
@@ -358,10 +384,23 @@ const currentYear = new Date().getFullYear();
 							))
 						}
 					</ul>
-				</div>
+				</details>
 
-				<div class="footer-column">
-					<h3>Información</h3>
+				<details class="footer-column" open>
+					<summary>
+						<h3>Información</h3>
+
+						<svg
+							class="footer-column__chevron"
+							viewBox="0 0 24 24"
+							aria-hidden="true"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.8"
+						>
+							<path d="m7 9 5 5 5-5"></path>
+						</svg>
+					</summary>
 
 					<ul>
 						{
@@ -374,10 +413,23 @@ const currentYear = new Date().getFullYear();
 							))
 						}
 					</ul>
-				</div>
+				</details>
 
-				<div class="footer-column">
-					<h3>Ayuda</h3>
+				<details class="footer-column" open>
+					<summary>
+						<h3>Ayuda</h3>
+
+						<svg
+							class="footer-column__chevron"
+							viewBox="0 0 24 24"
+							aria-hidden="true"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.8"
+						>
+							<path d="m7 9 5 5 5-5"></path>
+						</svg>
+					</summary>
 
 					<ul>
 						{
@@ -390,7 +442,7 @@ const currentYear = new Date().getFullYear();
 							))
 						}
 					</ul>
-				</div>
+				</details>
 			</nav>
 		</section>
 
@@ -452,6 +504,33 @@ const currentYear = new Date().getFullYear();
 		</section>
 	</div>
 </footer>
+
+<script>
+	/*
+	 * Los 4 grupos del footer llevan `open` por defecto en el HTML:
+	 * sin este script (o con JS deshabilitado) todo permanece
+	 * expandido y accesible, tanto en escritorio como en móvil. En
+	 * móvil, este script solo ajusta el estado inicial para dejar un
+	 * grupo abierto y el resto cerrados; el propio navegador maneja
+	 * el resto de la interacción de acordeón mediante <details>.
+	 */
+	const applyFooterAccordionDefaults = () => {
+		if (window.innerWidth > 680) return;
+
+		document
+			.querySelectorAll<HTMLDetailsElement>(".footer-column")
+			.forEach((details, index) => {
+				details.open = index === 0;
+			});
+	};
+
+	applyFooterAccordionDefaults();
+
+	document.addEventListener(
+		"astro:page-load",
+		applyFooterAccordionDefaults,
+	);
+</script>
 
 <style>
 	.site-footer {
@@ -800,13 +879,38 @@ const currentYear = new Date().getFullYear();
 		padding-top: 4px;
 	}
 
-	.footer-column h3 {
+	.footer-column summary {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
 		margin: 0 0 20px;
+		cursor: default;
+		pointer-events: none;
+		list-style: none;
+	}
+
+	.footer-column summary::-webkit-details-marker,
+	.footer-column summary::marker {
+		display: none;
+	}
+
+	.footer-column h3 {
+		margin: 0;
 		color: rgba(255, 246, 237, 0.48);
 		font-size: 11px;
 		font-weight: 600;
 		letter-spacing: 0.13em;
 		text-transform: uppercase;
+	}
+
+	.footer-column__chevron {
+		display: none;
+		flex-shrink: 0;
+		width: 16px;
+		height: 16px;
+		color: rgba(255, 246, 237, 0.4);
+		transition: transform 200ms ease;
 	}
 
 	.footer-column ul {
@@ -982,9 +1086,37 @@ const currentYear = new Date().getFullYear();
 		}
 
 		.footer-navigation {
-			grid-template-columns:
-				repeat(2, minmax(0, 1fr));
-			gap: 36px 20px;
+			grid-template-columns: 1fr;
+			gap: 0;
+		}
+
+		.footer-column {
+			border-top: 1px solid rgba(255, 255, 255, 0.1);
+		}
+
+		.footer-column:last-of-type {
+			border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+		}
+
+		.footer-column summary {
+			min-height: 56px;
+			margin: 0;
+			padding: 16px 2px;
+			cursor: pointer;
+			pointer-events: auto;
+			-webkit-tap-highlight-color: transparent;
+		}
+
+		.footer-column__chevron {
+			display: block;
+		}
+
+		.footer-column[open] > summary .footer-column__chevron {
+			transform: rotate(180deg);
+		}
+
+		.footer-column > ul {
+			padding: 2px 2px 22px;
 		}
 
 		.footer-column h3 {
@@ -1013,19 +1145,16 @@ const currentYear = new Date().getFullYear();
 		}
 	}
 
-	@media (max-width: 420px) {
-		.footer-navigation {
-			grid-template-columns: 1fr;
-			gap: 34px;
-		}
-	}
-
 	@media (prefers-reduced-motion: reduce) {
 		.footer-contact,
 		.social-button,
 		.whatsapp-button,
 		.whatsapp-button__arrow,
 		.footer-column a {
+			transition: none;
+		}
+
+		.footer-column__chevron {
 			transition: none;
 		}
 	}

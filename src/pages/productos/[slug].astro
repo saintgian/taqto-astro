@@ -40,6 +40,21 @@ interface ProductImage {
 	asset?: unknown;
 }
 
+interface EditorialImage {
+	alt?: string;
+	caption?: string;
+	asset?: {
+		metadata?: {
+			dimensions?: {
+				width?: number;
+				height?: number;
+			};
+		};
+	};
+	crop?: unknown;
+	hotspot?: unknown;
+}
+
 interface Product {
 	_id: string;
 	title: string;
@@ -50,6 +65,7 @@ interface Product {
 	description?: any[];
 	productMode?: string;
 	gallery?: ProductImage[];
+	longDescriptionImage?: EditorialImage;
 	materials?: string[];
 	careInstructions?: string;
 	saleStart?: string;
@@ -236,6 +252,35 @@ const mainImageUrl = mainImage
 const mainImageAlt =
 	mainImage?.alt ||
 	`${product.title} de TAQTO`;
+
+const editorialImage = product.longDescriptionImage;
+
+const hasEditorialImage = Boolean(editorialImage?.asset);
+
+const editorialImageWidth = 1200;
+
+const editorialSourceDimensions =
+	editorialImage?.asset?.metadata?.dimensions;
+
+const editorialImageHeight =
+	editorialSourceDimensions?.width &&
+	editorialSourceDimensions?.height
+		? Math.round(
+				editorialImageWidth *
+					(editorialSourceDimensions.height /
+						editorialSourceDimensions.width),
+			)
+		: Math.round(editorialImageWidth * (5 / 4));
+
+const editorialImageAspectRatio = `${editorialImageWidth} / ${editorialImageHeight}`;
+
+const editorialImageUrl = hasEditorialImage
+	? urlForImage(editorialImage as EditorialImage)
+			.width(editorialImageWidth)
+			.fit("max")
+			.auto("format")
+			.url()
+	: "";
 
 const plainTextFromBlocks = (
 	blocks?: any[],
@@ -887,42 +932,111 @@ const safeVariantJson = JSON.stringify({
 
 							<div class="product-longdesc__content">
 								{
-									descriptionStoryItems.length > 0 ? (
-										<>
-											{descriptionIntroBlocks.length > 0 && (
-												<div class="product-longdesc__intro">
-													<PortableText
-														value={descriptionIntroBlocks}
-													/>
-												</div>
-											)}
+									hasEditorialImage ? (
+										<div class="product-longdesc__editorial">
+											<div class="product-longdesc__editorial-text">
+												{
+													descriptionIntroBlocks.length > 0 && (
+														<PortableText
+															value={
+																descriptionStoryItems.length > 0
+																	? descriptionIntroBlocks
+																	: product.description
+															}
+														/>
+													)
+												}
 
-											<div class="product-longdesc__story">
-												{descriptionStoryItems.map(
-													(item) => (
-														<article class="product-longdesc__story-item">
-															<div class="product-longdesc__copy">
-																<span class="product-longdesc__index">
-																	{item.number}
-																</span>
+												{
+													descriptionStoryItems.length > 0 && (
+														<div class="product-longdesc__story">
+															{descriptionStoryItems.map(
+																(item) => (
+																	<article class="product-longdesc__story-item">
+																		<div class="product-longdesc__copy">
+																			<span class="product-longdesc__index">
+																				{item.number}
+																			</span>
 
-																<div class="product-longdesc__story-text">
-																	<PortableText
-																		value={[item.block]}
-																	/>
-																</div>
-															</div>
-														</article>
-													),
-												)}
+																			<div class="product-longdesc__story-text">
+																				<PortableText
+																					value={[item.block]}
+																				/>
+																			</div>
+																		</div>
+																	</article>
+																),
+															)}
+														</div>
+													)
+												}
 											</div>
-										</>
-									) : (
-										<div class="product-longdesc__body">
-											<PortableText
-												value={product.description}
-											/>
+
+											<figure class="product-longdesc__editorial-figure">
+												<img
+													src={editorialImageUrl}
+													alt={editorialImage?.alt || ""}
+													width={editorialImageWidth}
+													height={editorialImageHeight}
+													style={`aspect-ratio: ${editorialImageAspectRatio};`}
+													loading="lazy"
+													decoding="async"
+												/>
+
+												{editorialImage?.caption && (
+													<figcaption>
+														{editorialImage.caption}
+													</figcaption>
+												)}
+											</figure>
 										</div>
+									) : (
+										<>
+											{
+												descriptionStoryItems.length > 0 &&
+												descriptionIntroBlocks.length > 0 && (
+													<div class="product-longdesc__intro">
+														<PortableText
+															value={descriptionIntroBlocks}
+														/>
+													</div>
+												)
+											}
+
+											{
+												descriptionStoryItems.length === 0 && (
+													<div class="product-longdesc__body">
+														<PortableText
+															value={product.description}
+														/>
+													</div>
+												)
+											}
+
+											{
+												descriptionStoryItems.length > 0 && (
+													<div class="product-longdesc__story">
+														{descriptionStoryItems.map(
+															(item) => (
+																<article class="product-longdesc__story-item">
+																	<div class="product-longdesc__copy">
+																		<span class="product-longdesc__index">
+																			{item.number}
+																		</span>
+
+																		<div class="product-longdesc__story-text">
+																			<PortableText
+																				value={[item.block]}
+																			/>
+																		</div>
+																	</div>
+																</article>
+															),
+														)}
+													</div>
+												)
+											}
+										</>
 									)
 								}
 
@@ -2201,6 +2315,57 @@ const safeVariantJson = JSON.stringify({
 		margin-bottom: 0;
 	}
 
+	.product-longdesc__editorial {
+		display: grid;
+		grid-template-columns: minmax(0, 45fr) minmax(0, 55fr);
+		align-items: start;
+		gap: clamp(28px, 4vw, 56px);
+		margin-bottom: clamp(32px, 4vw, 48px);
+	}
+
+	.product-longdesc__editorial-text {
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.product-longdesc__editorial-text :global(p) {
+		margin: 0 0 20px;
+	}
+
+	.product-longdesc__editorial-text > :global(p:last-child) {
+		margin-bottom: 0;
+	}
+
+	.product-longdesc__editorial-text .product-longdesc__story {
+		margin-top: clamp(28px, 3.5vw, 40px);
+	}
+
+	.product-longdesc__editorial-figure {
+		margin: 0;
+		min-width: 0;
+		width: 100%;
+		max-width: 604px;
+		justify-self: end;
+	}
+
+	.product-longdesc__editorial-figure img {
+		display: block;
+		width: 100%;
+		height: auto;
+		max-height: 70vh;
+		border-radius: 18px;
+		object-fit: contain;
+		object-position: center;
+	}
+
+	.product-longdesc__editorial-figure figcaption {
+		margin-top: 10px;
+		color: rgba(20, 20, 20, 0.5);
+		font-size: 12px;
+		line-height: 1.5;
+	}
+
 	.product-longdesc__story {
 		width: 100%;
 		display: flex;
@@ -2336,6 +2501,31 @@ const safeVariantJson = JSON.stringify({
 		.product-longdesc__copy {
 			grid-template-columns: 36px minmax(0, 1fr);
 			gap: 12px;
+		}
+
+		.product-longdesc__editorial {
+			grid-template-columns: minmax(0, 1fr) minmax(0, 340px);
+			gap: 24px;
+		}
+
+		.product-longdesc__editorial-figure {
+			max-width: 340px;
+		}
+	}
+
+	@media (max-width: 700px) {
+		.product-longdesc__editorial {
+			grid-template-columns: 1fr;
+			gap: 20px;
+		}
+
+		.product-longdesc__editorial-figure {
+			max-width: 100%;
+			justify-self: stretch;
+		}
+
+		.product-longdesc__editorial-figure img {
+			max-height: none;
 		}
 	}
 

@@ -33,6 +33,7 @@ const track = [...products, ...products];
 					"carousel__viewport",
 					{ "is-few": products.length < 4 },
 				]}
+				data-carousel-viewport
 			>
 				<div class="carousel__track">
 					{track.map((product) => (
@@ -45,6 +46,45 @@ const track = [...products, ...products];
 		</section>
 	)
 }
+
+<script>
+	const TOUCH_RESUME_DELAY = 2500;
+
+	const initCarouselTouch = () => {
+		document
+			.querySelectorAll<HTMLElement>("[data-carousel-viewport]")
+			.forEach((viewport) => {
+				if (viewport.dataset.touchInitialized === "true") return;
+				viewport.dataset.touchInitialized = "true";
+
+				let resumeTimer: ReturnType<typeof setTimeout> | undefined;
+
+				const pause = () => {
+					if (resumeTimer) clearTimeout(resumeTimer);
+					viewport.classList.add("is-touch-paused");
+				};
+
+				const scheduleResume = () => {
+					if (resumeTimer) clearTimeout(resumeTimer);
+
+					resumeTimer = setTimeout(() => {
+						viewport.classList.remove("is-touch-paused");
+					}, TOUCH_RESUME_DELAY);
+				};
+
+				viewport.addEventListener("touchstart", pause, {
+					passive: true,
+				});
+
+				viewport.addEventListener("touchend", scheduleResume, {
+					passive: true,
+				});
+			});
+	};
+
+	initCarouselTouch();
+	document.addEventListener("astro:page-load", initCarouselTouch);
+</script>
 
 <style>
 	.carousel {
@@ -97,14 +137,16 @@ const track = [...products, ...products];
 		width: max-content;
 		gap: 26px;
 		padding-inline: var(--page-padding);
-		animation: carousel-scroll 32s linear infinite;
+		animation: carousel-scroll 70s linear infinite;
 	}
 
 	.carousel__viewport.is-few .carousel__track {
-		animation-duration: 20s;
+		animation-duration: 44s;
 	}
 
-	.carousel__viewport:hover .carousel__track {
+	.carousel__viewport:hover .carousel__track,
+	.carousel__viewport:focus-within .carousel__track,
+	.carousel__viewport.is-touch-paused .carousel__track {
 		animation-play-state: paused;
 	}
 

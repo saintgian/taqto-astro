@@ -5,8 +5,12 @@ interface Props {
 	ctaHref: string;
 }
 
+const base = import.meta.env.BASE_URL.endsWith("/")
+	? import.meta.env.BASE_URL
+	: `${import.meta.env.BASE_URL}/`;
+
 const {
-	imageSrc,
+	imageSrc = `${base}images/home/personalizacion-grabado.webp`,
 	imageAlt = "Detalle de una pieza TAQTO personalizada mediante grabado láser",
 	ctaHref,
 } = Astro.props;

@@ -127,6 +127,16 @@ const fontFaceCss = `
 
 		--page-width: 1440px;
 		--page-padding: clamp(20px, 4vw, 64px);
+
+		/*
+		 * Sistema de contenedores fluidos. "comercial" para tienda,
+		 * productos y grids; "editorial" para historia, empresas y
+		 * secciones editoriales; "lectura" para texto largo.
+		 */
+		--container-comercial: 1520px;
+		--container-editorial: 1360px;
+		--container-lectura: 760px;
+		--container-gutter: clamp(16px, 4vw, 64px);
 	}
 
 	*,
@@ -211,5 +221,25 @@ const fontFaceCss = `
 			var(--page-width)
 		);
 		margin-inline: auto;
+	}
+
+	.container-comercial,
+	.container-editorial,
+	.container-lectura {
+		width: 100%;
+		margin-inline: auto;
+		padding-inline: var(--container-gutter);
+	}
+
+	.container-comercial {
+		max-width: var(--container-comercial);
+	}
+
+	.container-editorial {
+		max-width: var(--container-editorial);
+	}
+
+	.container-lectura {
+		max-width: var(--container-lectura);
 	}
 </style>

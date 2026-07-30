@@ -1,9 +1,10 @@
 ---
 interface Props {
 	title: string;
-	description: string;
+	description?: string;
 	href: string;
 	index?: number;
+	imageSrc?: string;
 }
 
 const {
@@ -11,54 +12,119 @@ const {
 	description,
 	href,
 	index = 1,
+	imageSrc,
 } = Astro.props;
 ---
 
-<a class="category-card" href={href}>
+<a
+	class:list={["category-card", { "category-card--has-image": Boolean(imageSrc) }]}
+	href={href}
+	style={imageSrc ? `--category-card-image: url('${imageSrc}');` : undefined}
+>
+	{
+		imageSrc ? (
+			<div class="category-card__image" aria-hidden="true" />
+		) : (
+			<div class="category-card__fallback" aria-hidden="true"></div>
+		)
+	}
+
 	<div class="category-card__top">
 		<span class="category-card__number">
 			{String(index).padStart(2, "0")}
 		</span>
 
-		<svg
-			viewBox="0 0 24 24"
-			aria-hidden="true"
-			fill="none"
-			stroke="currentColor"
-			stroke-width="1.6"
-		>
-			<path d="M5 19 19 5"></path>
-			<path d="M9 5h10v10"></path>
-		</svg>
+		<span class="category-card__arrow">
+			<svg
+				viewBox="0 0 24 24"
+				aria-hidden="true"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="1.6"
+			>
+				<path d="M5 19 19 5"></path>
+				<path d="M9 5h10v10"></path>
+			</svg>
+		</span>
 	</div>
 
 	<div class="category-card__content">
 		<h2>{title}</h2>
-		<p>{description}</p>
+		{description && <p>{description}</p>}
 	</div>
 </a>
 
 <style>
 	.category-card {
-		min-height: 300px;
+		position: relative;
+		min-height: 340px;
 		padding: clamp(26px, 3vw, 40px);
 		display: flex;
 		flex-direction: column;
 		justify-content: space-between;
+		overflow: hidden;
 		border: 1px solid rgba(20, 20, 20, 0.14);
 		background: rgba(255, 255, 255, 0.28);
 		color: var(--color-black, #141414);
 		text-decoration: none;
 		transition:
-			background-color 220ms ease,
-			color 220ms ease,
-			transform 220ms ease;
+			transform 220ms ease,
+			box-shadow 220ms ease;
 	}
 
 	.category-card:hover {
-		background: var(--color-black, #141414);
-		color: var(--color-beige, #fff6ed);
 		transform: translateY(-4px);
+		box-shadow: 0 20px 46px rgba(20, 20, 20, 0.16);
+	}
+
+	.category-card__fallback {
+		position: absolute;
+		inset: 0;
+		z-index: 0;
+		background:
+			radial-gradient(
+				circle at 20% 15%,
+				rgba(255, 77, 42, 0.14),
+				transparent 55%
+			),
+			rgba(20, 20, 20, 0.05);
+	}
+
+	.category-card__image {
+		position: absolute;
+		inset: 0;
+		z-index: 0;
+		background-image: var(--category-card-image);
+		background-size: cover;
+		background-position: center;
+		transition: transform 420ms ease;
+	}
+
+	.category-card--has-image:hover .category-card__image {
+		transform: scale(1.04);
+	}
+
+	.category-card__image::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(
+			180deg,
+			rgba(10, 8, 7, 0.15) 0%,
+			rgba(10, 8, 7, 0.2) 45%,
+			rgba(10, 8, 7, 0.86) 100%
+		);
+	}
+
+	.category-card--has-image {
+		color: var(--color-beige, #fff6ed);
+		border-color: rgba(255, 255, 255, 0.12);
+	}
+
+	.category-card__top,
+	.category-card__content {
+		position: relative;
+		z-index: 1;
 	}
 
 	.category-card__top {
@@ -74,17 +140,26 @@ const {
 		opacity: 0.6;
 	}
 
-	.category-card svg {
+	.category-card--has-image .category-card__number {
+		opacity: 0.85;
+	}
+
+	.category-card__arrow {
+		display: grid;
+		place-items: center;
+	}
+
+	.category-card__arrow svg {
 		width: 24px;
 		height: 24px;
 		transition: transform 220ms ease;
 	}
 
-	.category-card:hover svg {
+	.category-card:hover .category-card__arrow svg {
 		transform: translate(4px, -4px);
 	}
 
-	.category-card h2 {
+	.category-card__content h2 {
 		margin: 0 0 14px;
 		font-size: clamp(28px, 3vw, 42px);
 		font-weight: 600;
@@ -92,11 +167,23 @@ const {
 		letter-spacing: -0.045em;
 	}
 
-	.category-card p {
+	.category-card__content p {
 		max-width: 430px;
 		margin: 0;
 		font-size: 14px;
 		line-height: 1.6;
 		opacity: 0.7;
+	}
+
+	.category-card--has-image .category-card__content p {
+		opacity: 0.85;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.category-card,
+		.category-card__image,
+		.category-card__arrow svg {
+			transition: none;
+		}
 	}
 </style>

@@ -1,4 +1,6 @@
 ---
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import Header from "../../components/Header.astro";
 import Breadcrumbs from "../../components/Breadcrumbs.astro";
@@ -14,12 +16,40 @@ interface Category {
 	slug: string;
 }
 
-const productCategories =
-	await sanityClient.fetch<Category[]>(
-		categoryPathsQuery,
+const base = import.meta.env.BASE_URL;
+
+// Mismas fotos ya usadas en la portada (CategoriesTeaser) y en el
+// hero de cada categoria; "kits-y-regalos" aun no tiene foto propia.
+const categoryImageFiles: Record<string, string> = {
+	parrilla: "parrilla.webp",
+	"cocina-y-mesa": "cocina-mesa.webp",
+	oficina: "oficina.webp",
+};
+
+function getCategoryImageSrc(slug: string): string | undefined {
+	const fileName = categoryImageFiles[slug];
+	if (!fileName) return undefined;
+
+	const absolutePath = resolve(
+		process.cwd(),
+		"public",
+		"images",
+		"home",
+		"categorias",
+		fileName,
 	);
 
-const base = import.meta.env.BASE_URL;
+	if (!existsSync(absolutePath)) return undefined;
+
+	return `${base}images/home/categorias/${fileName}`;
+}
+
+const productCategories = (
+	await sanityClient.fetch<Category[]>(categoryPathsQuery)
+).map((category) => ({
+	...category,
+	imageSrc: getCategoryImageSrc(category.slug),
+}));
 ---
 
 <BaseLayout
@@ -62,6 +92,7 @@ const base = import.meta.env.BASE_URL;
 							description={category.description}
 							href={`${base}categorias/${category.slug}/`}
 							index={index + 1}
+							imageSrc={category.imageSrc}
 						/>
 					))
 				}

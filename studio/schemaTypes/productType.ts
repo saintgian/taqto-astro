@@ -190,6 +190,45 @@ export const productType = defineType({
     }),
 
     defineField({
+      name: 'longDescriptionImage',
+      title: 'Imagen editorial de la descripción',
+      type: 'image',
+      group: 'general',
+      description:
+        'Opcional. Se muestra junto a la descripción completa en una composición de texto e imagen.',
+
+      options: {
+        hotspot: true,
+      },
+
+      fields: [
+        defineField({
+          name: 'alt',
+          title: 'Texto alternativo',
+          type: 'string',
+          validation: (rule) =>
+            rule.custom((value, context) => {
+              const parent = context.parent as {
+                asset?: unknown
+              }
+
+              if (parent?.asset && !value) {
+                return 'El texto alternativo es obligatorio cuando hay una imagen.'
+              }
+
+              return true
+            }),
+        }),
+
+        defineField({
+          name: 'caption',
+          title: 'Leyenda (opcional)',
+          type: 'string',
+        }),
+      ],
+    }),
+
+    defineField({
       name: 'materials',
       title: 'Otros materiales',
       type: 'array',

@@ -1,4 +1,6 @@
 ---
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
 import { sanityClient } from "../lib/sanity";
 import { categoryPathsQuery } from "../lib/categoryQueries";
 
@@ -9,13 +11,43 @@ interface Category {
 	slug: string;
 }
 
-const base = import.meta.env.BASE_URL;
+const rawBase = import.meta.env.BASE_URL;
+const base = rawBase.endsWith("/") ? rawBase : `${rawBase}/`;
+
+const categoryImageFiles: Record<string, string> = {
+	parrilla: "parrilla.webp",
+	"cocina-y-mesa": "cocina-mesa.webp",
+	oficina: "oficina.webp",
+};
+
+function getCategoryImageSrc(slug: string): string | undefined {
+	const fileName = categoryImageFiles[slug];
+	if (!fileName) return undefined;
+
+	const absolutePath = resolve(
+		process.cwd(),
+		"public",
+		"images",
+		"home",
+		"categorias",
+		fileName,
+	);
+
+	if (!existsSync(absolutePath)) {
+		return undefined;
+	}
+
+	return `${base}images/home/categorias/${fileName}`;
+}
 
 const categories = await sanityClient.fetch<Category[]>(
 	categoryPathsQuery,
 );
 
-const featured = categories.slice(0, 3);
+const featured = categories.slice(0, 3).map((category) => ({
+	...category,
+	imageSrc: getCategoryImageSrc(category.slug),
+}));
 ---
 
 {
@@ -35,32 +67,66 @@ const featured = categories.slice(0, 3);
 			<div class="categories-teaser__grid">
 				{featured.map((category) => (
 					<a
-						class="categories-teaser__card"
+						class:list={[
+							"categories-teaser__card",
+							!category.imageSrc &&
+								"categories-teaser__card--placeholder",
+						]}
 						href={`${base}categorias/${category.slug}/`}
 					>
-						<div class="categories-teaser__image">
-							<span>Foto próximamente</span>
+						<div
+							class:list={[
+								"categories-teaser__image",
+								!category.imageSrc &&
+									"categories-teaser__image--placeholder",
+							]}
+						>
+							{
+								category.imageSrc && (
+									<img
+										src={category.imageSrc}
+										alt=""
+										aria-hidden="true"
+										width="480"
+										height="360"
+										loading="lazy"
+										decoding="async"
+									/>
+								)
+							}
 						</div>
 
-						<h3>{category.title}</h3>
+						<div class="categories-teaser__scrim" aria-hidden="true"></div>
 
-						{category.description && (
-							<p>{category.description}</p>
-						)}
+						<div class="categories-teaser__content">
+							<h3>{category.title}</h3>
 
-						<span class="categories-teaser__link">
-							Ver colección
-							<svg
-								viewBox="0 0 24 24"
-								aria-hidden="true"
-								fill="none"
-								stroke="currentColor"
-								stroke-width="1.8"
-							>
-								<path d="M5 12h14" />
-								<path d="m14 7 5 5-5 5" />
-							</svg>
-						</span>
+							{category.description && (
+								<p>{category.description}</p>
+							)}
+
+							{
+								!category.imageSrc && (
+									<p class="categories-teaser__placeholder-note">
+										Foto próximamente
+									</p>
+								)
+							}
+
+							<span class="categories-teaser__link">
+								Ver colección
+								<svg
+									viewBox="0 0 24 24"
+									aria-hidden="true"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="1.8"
+								>
+									<path d="M5 12h14" />
+									<path d="m14 7 5 5-5 5" />
+								</svg>
+							</span>
+						</div>
 					</a>
 				))}
 			</div>
@@ -111,46 +177,81 @@ const featured = categories.slice(0, 3);
 	}
 
 	.categories-teaser__card {
+		position: relative;
+		aspect-ratio: 4 / 5;
 		display: flex;
 		flex-direction: column;
-		align-items: center;
-		gap: 6px;
-		padding: 26px 22px 30px;
+		justify-content: flex-end;
+		overflow: hidden;
 		border: 1px solid rgba(20, 20, 20, 0.1);
 		border-radius: 22px;
-		background: rgba(255, 255, 255, 0.4);
-		color: var(--color-black);
-		text-align: center;
+		background: rgba(20, 20, 20, 0.04);
+		color: var(--color-beige);
 		text-decoration: none;
 		transition:
 			transform 220ms ease,
-			border-color 220ms ease,
 			box-shadow 220ms ease;
 	}
 
 	.categories-teaser__card:hover {
 		transform: translateY(-4px);
-		border-color: rgba(20, 20, 20, 0.22);
-		box-shadow: 0 20px 46px rgba(20, 20, 20, 0.1);
+		box-shadow: 0 20px 46px rgba(20, 20, 20, 0.18);
+	}
+
+	.categories-teaser__card--placeholder {
+		color: var(--color-black);
 	}
 
 	.categories-teaser__image {
-		width: 100%;
-		aspect-ratio: 4 / 3;
-		margin-bottom: 18px;
-		display: grid;
-		place-items: center;
-		border: 1px dashed rgba(20, 20, 20, 0.22);
-		border-radius: 16px;
-		background: rgba(20, 20, 20, 0.03);
+		position: absolute;
+		inset: 0;
+		z-index: 0;
+		overflow: hidden;
 	}
 
-	.categories-teaser__image span {
-		color: rgba(20, 20, 20, 0.35);
-		font-size: 11px;
-		font-weight: 600;
-		letter-spacing: 0.06em;
-		text-transform: uppercase;
+	.categories-teaser__image--placeholder {
+		background:
+			radial-gradient(
+				circle at 20% 15%,
+				rgba(255, 77, 42, 0.12),
+				transparent 55%
+			),
+			rgba(20, 20, 20, 0.03);
+	}
+
+	.categories-teaser__image img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: center;
+		transition: transform 420ms ease;
+	}
+
+	.categories-teaser__card:hover .categories-teaser__image img {
+		transform: scale(1.05);
+	}
+
+	.categories-teaser__scrim {
+		position: absolute;
+		inset: 0;
+		z-index: 1;
+		background: linear-gradient(
+			180deg,
+			rgba(10, 8, 7, 0) 0%,
+			rgba(10, 8, 7, 0.18) 45%,
+			rgba(10, 8, 7, 0.86) 100%
+		);
+	}
+
+	.categories-teaser__card--placeholder .categories-teaser__scrim {
+		display: none;
+	}
+
+	.categories-teaser__content {
+		position: relative;
+		z-index: 2;
+		padding: clamp(20px, 3vw, 30px);
 	}
 
 	.categories-teaser__card h3 {
@@ -163,9 +264,18 @@ const featured = categories.slice(0, 3);
 	.categories-teaser__card p {
 		max-width: 320px;
 		margin: 8px 0 0;
-		color: rgba(20, 20, 20, 0.6);
+		color: inherit;
+		opacity: 0.82;
 		font-size: 13.5px;
 		line-height: 1.55;
+	}
+
+	.categories-teaser__placeholder-note {
+		color: rgba(20, 20, 20, 0.4);
+		font-size: 11px;
+		font-weight: 600;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
 	}
 
 	.categories-teaser__link {
@@ -173,7 +283,7 @@ const featured = categories.slice(0, 3);
 		display: inline-flex;
 		align-items: center;
 		gap: 8px;
-		color: var(--color-black);
+		color: inherit;
 		font-size: 11px;
 		font-weight: 700;
 		letter-spacing: 0.06em;
@@ -194,6 +304,14 @@ const featured = categories.slice(0, 3);
 		.categories-teaser__grid {
 			grid-template-columns: 1fr;
 			max-width: 420px;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.categories-teaser__card,
+		.categories-teaser__image img,
+		.categories-teaser__link svg {
+			transition: none;
 		}
 	}
 </style>

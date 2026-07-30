@@ -31,6 +31,17 @@ export const productDetailQuery = `
 			asset
 		},
 
+		longDescriptionImage {
+			alt,
+			caption,
+			asset->{
+				...,
+				"metadata": metadata{dimensions}
+			},
+			crop,
+			hotspot
+		},
+
 		"category": category->{
 			title,
 			"slug": slug.current

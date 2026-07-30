@@ -14,12 +14,152 @@ interface WoodGuideItem {
 }
 
 interface Props {
-	woods: WoodGuideItem[];
+	woods?: WoodGuideItem[];
 }
+
+const base = import.meta.env.BASE_URL.endsWith("/")
+	? import.meta.env.BASE_URL
+	: `${import.meta.env.BASE_URL}/`;
+
+const getWoodImage = (fileName: string): string =>
+	`${base}images/home/maderas/${fileName}`;
+
+/*
+ * =========================================================
+ * CONTENIDO EDITABLE DE LAS MADERAS
+ * =========================================================
+ *
+ * Para modificar los textos, cambia únicamente:
+ *
+ * name: nombre mostrado en las cards y como título.
+ * description: descripción visible en el panel de detalle.
+ * alt: descripción accesible de la imagen.
+ *
+ * No cambies id ni el nombre del archivo salvo que también
+ * renombres la imagen dentro de public/images/home/maderas/.
+ */
+
+const defaultWoods: WoodGuideItem[] = [
+	{
+		id: "huayruro",
+		name: "Huayruro",
+
+		// TEXTO EDITABLE: descripción del Huayruro
+		description:
+			"Madera de expresión marcada y variaciones naturales que hacen que cada pieza tenga una apariencia única.",
+
+		image: {
+			src: getWoodImage("huayruro.webp"),
+
+			// TEXTO EDITABLE: descripción accesible de la imagen
+			alt: "Detalle de la veta natural de la madera Huayruro utilizada por TAQTO",
+
+			// Cambia estas medidas si conoces las dimensiones reales.
+			width: 1600,
+			height: 1280,
+		},
+	},
+	{
+		id: "pumaquiro",
+		name: "Pumaquiro",
+
+		// TEXTO EDITABLE: descripción del Pumaquiro
+		description:
+			"Madera de apariencia cálida y veta natural, seleccionada para crear piezas funcionales y visualmente equilibradas.",
+
+		image: {
+			src: getWoodImage("pumaquiro.webp"),
+
+			// TEXTO EDITABLE: descripción accesible de la imagen
+			alt: "Detalle de la veta natural de la madera Pumaquiro utilizada por TAQTO",
+
+			width: 1600,
+			height: 1280,
+		},
+	},
+	{
+		id: "shihuahuaco",
+		name: "Shihuahuaco",
+
+		// TEXTO EDITABLE: descripción del Shihuahuaco
+		description:
+			"Madera de presencia sólida y veta definida, con variaciones naturales de tono entre una pieza y otra.",
+
+		image: {
+			src: getWoodImage("shihuahuaco.webp"),
+
+			// TEXTO EDITABLE: descripción accesible de la imagen
+			alt: "Detalle de la veta natural de la madera Shihuahuaco utilizada por TAQTO",
+
+			width: 1600,
+			height: 1280,
+		},
+	},
+	{
+		id: "cachimbo",
+		name: "Cachimbo",
+
+		// TEXTO EDITABLE: descripción del Cachimbo
+		description:
+			"Madera de tonalidad cálida y apariencia natural, adecuada para piezas de diseño limpio y uso cotidiano.",
+
+		image: {
+			src: getWoodImage("cachimbo.webp"),
+
+			// TEXTO EDITABLE: descripción accesible de la imagen
+			alt: "Detalle de la veta natural de la madera Cachimbo utilizada por TAQTO",
+
+			width: 1600,
+			height: 1280,
+		},
+	},
+	{
+		id: "teca",
+		name: "Teca",
+
+		// TEXTO EDITABLE: descripción de la Teca
+		description:
+			"Madera de apariencia cálida y veta reconocible, utilizada para crear piezas sobrias y funcionales.",
+
+		image: {
+			src: getWoodImage("teca.webp"),
+
+			// TEXTO EDITABLE: descripción accesible de la imagen
+			alt: "Detalle de la veta natural de la madera Teca utilizada por TAQTO",
+
+			width: 1600,
+			height: 1280,
+		},
+	},
+];
 
 const { woods = [] } = Astro.props;
 
-const visibleWoods = woods.filter(
+/*
+ * Si la página envía datos mediante la prop `woods`, se combinan con
+ * `defaultWoods` (por `id`) para conservar imagen y descripción locales
+ * aunque la página solo especifique `id` y `name`. Si no envía nada,
+ * se utilizan directamente los datos anteriores.
+ */
+const defaultWoodsById = new Map(
+	defaultWoods.map((wood) => [wood.id, wood]),
+);
+
+const sourceWoods: WoodGuideItem[] =
+	woods.length > 0
+		? woods.map((wood) => {
+				const fallback = defaultWoodsById.get(wood.id);
+
+				return {
+					...fallback,
+					...wood,
+					description: wood.description ?? fallback?.description,
+					image: wood.image ?? fallback?.image,
+				};
+			})
+		: defaultWoods;
+
+const visibleWoods = sourceWoods.filter(
 	(wood) => wood.id?.trim() && wood.name?.trim(),
 );
 
@@ -33,6 +173,9 @@ const safeId = (value: string): string =>
 const componentId = `wood-guide-${safeId(
 	visibleWoods[0]?.id || "materials",
 )}`;
+
+const panelId = `${componentId}-panel`;
+const firstWood = visibleWoods[0];
 ---
 
 {
@@ -61,19 +204,19 @@ const componentId = `wood-guide-${safeId(
 				</header>
 
 				<div
-					class="wood-guide__tabs"
+					class="wood-guide__selector"
 					role="tablist"
 					aria-label="Selecciona una especie de madera"
+					data-wood-selector
 				>
 					{
 						visibleWoods.map((wood, index) => {
 							const tabId = `${componentId}-tab-${index}`;
-							const panelId = `${componentId}-panel-${index}`;
 
 							return (
 								<button
 									id={tabId}
-									class="wood-guide__tab"
+									class="wood-guide__card"
 									type="button"
 									role="tab"
 									aria-selected={index === 0 ? "true" : "false"}
@@ -81,78 +224,68 @@ const componentId = `wood-guide-${safeId(
 									tabindex={index === 0 ? 0 : -1}
 									data-wood-tab
 									data-wood-tab-index={index}
+									data-wood-name={wood.name}
+									data-wood-description={wood.description || ""}
+									data-wood-image-src={wood.image?.src || ""}
+									data-wood-image-alt={wood.image?.alt || ""}
+									data-wood-image-width={wood.image?.width || ""}
+									data-wood-image-height={wood.image?.height || ""}
 								>
-									{wood.name}
+									<span class="wood-guide__card-name">
+										{wood.name}
+									</span>
 								</button>
 							);
 						})
 					}
 				</div>
 
-				<div class="wood-guide__panels">
-					{
-						visibleWoods.map((wood, index) => {
-							const tabId = `${componentId}-tab-${index}`;
-							const panelId = `${componentId}-panel-${index}`;
-
-							return (
-								<article
-									id={panelId}
-									class:list={[
-										"wood-guide__panel",
-										index === 0 && "is-active",
-									]}
-									role="tabpanel"
-									aria-labelledby={tabId}
-									aria-hidden={index === 0 ? "false" : "true"}
-									hidden={index !== 0}
-									data-wood-panel
+				<article
+					id={panelId}
+					class="wood-guide__panel"
+					aria-live="polite"
+					data-wood-panel
+				>
+					<div class="wood-guide__media" data-wood-media>
+						{
+							firstWood?.image ? (
+								<img
+									data-wood-media-img
+									src={firstWood.image.src}
+									alt={firstWood.image.alt}
+									width={firstWood.image.width}
+									height={firstWood.image.height}
+									loading="lazy"
+									decoding="async"
+								/>
+							) : (
+								<div
+									class="wood-guide__placeholder"
+									data-wood-placeholder
 								>
-									<div class="wood-guide__media">
-										{
-											wood.image ? (
-												<img
-													src={wood.image.src}
-													alt={wood.image.alt}
-													width={wood.image.width}
-													height={wood.image.height}
-													loading="lazy"
-													decoding="async"
-												/>
-											) : (
-												<div class="wood-guide__placeholder">
-													<span>Foto próximamente</span>
-												</div>
-											)
-										}
-									</div>
+									<span>Foto próximamente</span>
+								</div>
+							)
+						}
+					</div>
 
-									<div class="wood-guide__content">
-										<p class="wood-guide__selected-label">
-											Madera seleccionada
-										</p>
+					<div class="wood-guide__content">
+						<p class="wood-guide__selected-label">
+							Madera seleccionada
+						</p>
 
-										<h3>{wood.name}</h3>
+						<h3 data-wood-name-output>
+							{firstWood?.name}
+						</h3>
 
-										{
-											wood.description && (
-												<p class="wood-guide__description">
-													{wood.description}
-												</p>
-											)
-										}
-									</div>
-								</article>
-							);
-						})
-					}
-				</div>
-
-				<p class="wood-guide__note">
-					<span aria-hidden="true">✦</span>
-					La veta y el tono pueden variar
-					naturalmente entre piezas.
-				</p>
+						<p
+							class="wood-guide__description"
+							data-wood-description-output
+						>
+							{firstWood?.description}
+						</p>
+					</div>
+				</article>
 			</div>
 		</section>
 	)
@@ -177,15 +310,101 @@ const componentId = `wood-guide-${safeId(
 				),
 			);
 
-			const panels = Array.from(
-				section.querySelectorAll<HTMLElement>(
-					"[data-wood-panel]",
-				),
+			const panel = section.querySelector<HTMLElement>(
+				"[data-wood-panel]",
 			);
 
-			if (tabs.length === 0 || panels.length === 0) {
+			if (tabs.length === 0 || !panel) {
 				return;
 			}
+
+			const mediaContainer = panel.querySelector<HTMLElement>(
+				"[data-wood-media]",
+			);
+			const nameOutput = panel.querySelector<HTMLElement>(
+				"[data-wood-name-output]",
+			);
+			const descriptionOutput = panel.querySelector<HTMLElement>(
+				"[data-wood-description-output]",
+			);
+
+			const renderPanel = (tab: HTMLButtonElement) => {
+				const {
+					woodName,
+					woodDescription,
+					woodImageSrc,
+					woodImageAlt,
+					woodImageWidth,
+					woodImageHeight,
+				} = tab.dataset;
+
+				if (nameOutput) {
+					nameOutput.textContent = woodName || "";
+				}
+
+				if (descriptionOutput) {
+					descriptionOutput.textContent = woodDescription || "";
+				}
+
+				if (mediaContainer) {
+					// Astro aplica los estilos con ámbito mediante un atributo
+					// data-astro-cid-* generado en build. Los elementos creados
+					// aquí en runtime deben heredarlo del contenedor o quedan
+					// fuera del alcance de los estilos del componente.
+					const scopeAttr = Array.from(
+						mediaContainer.attributes,
+					).find((attr) => attr.name.startsWith("data-astro-cid-"));
+
+					if (woodImageSrc) {
+						mediaContainer.innerHTML = "";
+
+						const img = document.createElement("img");
+						img.setAttribute("data-wood-media-img", "");
+						img.src = woodImageSrc;
+						img.alt = woodImageAlt || "";
+						img.loading = "lazy";
+						img.decoding = "async";
+
+						if (woodImageWidth) {
+							img.width = Number(woodImageWidth);
+						}
+
+						if (woodImageHeight) {
+							img.height = Number(woodImageHeight);
+						}
+
+						if (scopeAttr) {
+							img.setAttribute(scopeAttr.name, scopeAttr.value);
+						}
+
+						mediaContainer.appendChild(img);
+					} else {
+						mediaContainer.innerHTML = "";
+
+						const placeholder = document.createElement("div");
+						placeholder.className = "wood-guide__placeholder";
+						placeholder.setAttribute("data-wood-placeholder", "");
+
+						if (scopeAttr) {
+							placeholder.setAttribute(
+								scopeAttr.name,
+								scopeAttr.value,
+							);
+						}
+
+						const span = document.createElement("span");
+						span.textContent = "Foto próximamente";
+
+						if (scopeAttr) {
+							span.setAttribute(scopeAttr.name, scopeAttr.value);
+						}
+
+						placeholder.appendChild(span);
+
+						mediaContainer.appendChild(placeholder);
+					}
+				}
+			};
 
 			const activateTab = (
 				index: number,
@@ -208,16 +427,7 @@ const componentId = `wood-guide-${safeId(
 					);
 				});
 
-				panels.forEach((panel, panelIndex) => {
-					const isSelected = panelIndex === normalizedIndex;
-
-					panel.classList.toggle("is-active", isSelected);
-					panel.hidden = !isSelected;
-					panel.setAttribute(
-						"aria-hidden",
-						isSelected ? "false" : "true",
-					);
-				});
+				renderPanel(tabs[normalizedIndex]);
 
 				if (moveFocus) {
 					tabs[normalizedIndex]?.focus();
@@ -322,72 +532,75 @@ const componentId = `wood-guide-${safeId(
 		line-height: 1.6;
 	}
 
-	.wood-guide__tabs {
-		display: flex;
-		gap: clamp(20px, 3vw, 44px);
-		overflow-x: auto;
+	.wood-guide__selector {
+		display: grid;
+		grid-template-columns: repeat(5, minmax(0, 1fr));
+		gap: clamp(10px, 1.4vw, 16px);
 		margin-bottom: clamp(30px, 4vw, 48px);
-		border-bottom: 1px solid rgba(20, 20, 20, 0.14);
-		scrollbar-width: thin;
 	}
 
-	.wood-guide__tab {
-		position: relative;
-		min-height: 48px;
-		flex: 0 0 auto;
-		padding: 0 0 14px;
+	.wood-guide__card {
+		display: flex;
+		min-width: 0;
+		min-height: 44px;
+		align-items: center;
+		justify-content: center;
+		padding: 12px 8px;
 		border: 0;
+		border-bottom: 2px solid rgba(20, 20, 20, 0.1);
 		background: transparent;
-		color: rgba(20, 20, 20, 0.5);
 		font: inherit;
-		font-size: clamp(16px, 1.6vw, 22px);
-		font-weight: 600;
-		letter-spacing: -0.02em;
+		text-align: center;
 		cursor: pointer;
+		transition: border-color 180ms ease;
+	}
+
+	.wood-guide__card-name {
+		min-width: 0;
+		overflow: hidden;
+		color: rgba(20, 20, 20, 0.6);
+		font-size: 14px;
+		font-weight: 600;
+		letter-spacing: -0.01em;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 		transition: color 180ms ease;
 	}
 
-	.wood-guide__tab::after {
-		position: absolute;
-		right: 0;
-		bottom: -1px;
-		left: 0;
-		height: 2px;
-		background: var(--color-brown);
-		content: "";
-		transform: scaleX(0);
-		transform-origin: left;
-		transition: transform 220ms ease;
+	.wood-guide__card[aria-selected="true"] {
+		border-bottom-color: var(--color-brown);
 	}
 
-	.wood-guide__tab[aria-selected="true"] {
+	.wood-guide__card[aria-selected="true"] .wood-guide__card-name {
 		color: var(--color-black);
 	}
 
-	.wood-guide__tab[aria-selected="true"]::after {
-		transform: scaleX(1);
-	}
-
-	.wood-guide__tab:focus-visible {
+	.wood-guide__card:focus-visible {
 		outline: 2px solid var(--color-orange);
 		outline-offset: 4px;
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.wood-guide__card:hover {
+			border-bottom-color: rgba(91, 49, 42, 0.4);
+		}
+
+		.wood-guide__card:hover .wood-guide__card-name {
+			color: var(--color-black);
+		}
 	}
 
 	.wood-guide__panel {
 		display: grid;
 		grid-template-columns:
 			minmax(0, 1.18fr)
-			minmax(280px, 0.82fr);
+			minmax(0, 0.82fr);
 		align-items: center;
 		gap: clamp(36px, 5vw, 90px);
 	}
 
-	.wood-guide__panel[hidden] {
-		display: none;
-	}
-
 	.wood-guide__media {
-		aspect-ratio: 5 / 4;
+		min-width: 0;
 		overflow: hidden;
 		border-radius: 22px;
 		background: var(--color-beige);
@@ -396,15 +609,16 @@ const componentId = `wood-guide-${safeId(
 	.wood-guide__media img {
 		display: block;
 		width: 100%;
-		height: 100%;
-		object-fit: cover;
+		max-width: 100%;
+		height: auto;
+		object-fit: contain;
 		object-position: center;
 	}
 
 	.wood-guide__placeholder {
 		display: grid;
 		width: 100%;
-		height: 100%;
+		aspect-ratio: 5 / 4;
 		place-items: center;
 		border: 1px dashed rgba(20, 20, 20, 0.22);
 		border-radius: 22px;
@@ -420,6 +634,7 @@ const componentId = `wood-guide-${safeId(
 	}
 
 	.wood-guide__content {
+		min-width: 0;
 		max-width: 520px;
 	}
 
@@ -448,42 +663,19 @@ const componentId = `wood-guide-${safeId(
 		line-height: 1.6;
 	}
 
-	.wood-guide__note {
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		margin: clamp(32px, 4vw, 52px) 0 0;
-		padding-top: 20px;
-		border-top: 1px solid rgba(20, 20, 20, 0.12);
-		color: rgba(20, 20, 20, 0.64);
-		font-size: 12.5px;
-		line-height: 1.5;
-	}
-
-	.wood-guide__note span {
-		color: var(--color-orange);
-		font-size: 12px;
-	}
-
-	@media (hover: hover) and (pointer: fine) {
-		.wood-guide__tab:hover {
-			color: var(--color-brown);
-		}
-	}
-
 	@media (max-width: 960px) {
 		.wood-guide__header {
 			grid-template-columns: 1fr;
 			gap: 12px;
 		}
 
+		.wood-guide__selector {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+
 		.wood-guide__panel {
 			grid-template-columns: 1fr;
 			gap: 28px;
-		}
-
-		.wood-guide__media {
-			aspect-ratio: 16 / 10;
 		}
 
 		.wood-guide__content {
@@ -504,19 +696,15 @@ const componentId = `wood-guide-${safeId(
 			font-size: clamp(30px, 10vw, 42px);
 		}
 
-		.wood-guide__tabs {
-			gap: 24px;
-			margin-inline: -18px;
-			padding-inline: 18px;
+		.wood-guide__selector {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
 		}
 
-		.wood-guide__tab {
-			min-height: 44px;
-			font-size: 18px;
+		.wood-guide__card:last-child:nth-child(odd) {
+			grid-column: 1 / -1;
 		}
 
 		.wood-guide__media {
-			aspect-ratio: 4 / 3;
 			border-radius: 16px;
 		}
 

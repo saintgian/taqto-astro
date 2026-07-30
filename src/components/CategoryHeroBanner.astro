@@ -6,6 +6,7 @@ interface Props {
 	description?: string;
 	count: number;
 	countLabel: string;
+	imageSrc?: string;
 }
 
 const {
@@ -15,37 +16,23 @@ const {
 	description,
 	count,
 	countLabel,
+	imageSrc,
 } = Astro.props;
-
-const embers = Array.from({ length: 12 });
-const steams = Array.from({ length: 5 });
 ---
 
-<header class:list={["theme-hero", `theme-hero--${categorySlug}`]}>
-	<div class="theme-hero__effect" aria-hidden="true">
-		{
-			categorySlug === "parrilla" &&
-				embers.map((_, i) => (
-					<span class="ember" style={`--i:${i}`} />
-				))
-		}
-
-		{
-			categorySlug === "cocina-y-mesa" &&
-				steams.map((_, i) => (
-					<span class="steam" style={`--i:${i}`} />
-				))
-		}
-
-		{
-			categorySlug === "oficina" && (
-				<>
-					<span class="office-grid" />
-					<span class="scan-line" />
-				</>
-			)
-		}
-	</div>
+<header
+	class:list={[
+		"theme-hero",
+		`theme-hero--${categorySlug}`,
+		{ "theme-hero--has-image": Boolean(imageSrc) },
+	]}
+	style={imageSrc ? `--hero-image: url('${imageSrc}');` : undefined}
+>
+	{
+		imageSrc && (
+			<div class="theme-hero__image" aria-hidden="true" />
+		)
+	}
 
 	<div class="theme-hero__content">
 		{
@@ -90,16 +77,43 @@ const steams = Array.from({ length: 5 });
 		text-align: center;
 	}
 
-	.theme-hero__effect {
+	.theme-hero__image {
 		position: absolute;
 		inset: 0;
+		z-index: 0;
 		overflow: hidden;
-		pointer-events: none;
+		background-image: var(--hero-image);
+		background-size: cover;
+		background-position: center;
+		transform: scale(1.045);
+		animation: theme-hero-zoom 12s ease-out forwards;
+	}
+
+	.theme-hero__image::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(
+			180deg,
+			rgba(10, 8, 7, 0.5) 0%,
+			rgba(10, 8, 7, 0.32) 45%,
+			rgba(10, 8, 7, 0.78) 100%
+		);
+	}
+
+	@keyframes theme-hero-zoom {
+		from {
+			transform: scale(1.045);
+		}
+
+		to {
+			transform: scale(1);
+		}
 	}
 
 	.theme-hero__content {
 		position: relative;
-		z-index: 1;
+		z-index: 2;
 		max-width: 760px;
 		margin-inline: auto;
 	}
@@ -154,7 +168,7 @@ const steams = Array.from({ length: 5 });
 		text-transform: uppercase;
 	}
 
-	/* ---------- PARRILLA: brasas ---------- */
+	/* ---------- PARRILLA ---------- */
 
 	.theme-hero--parrilla {
 		background:
@@ -166,47 +180,7 @@ const steams = Array.from({ length: 5 });
 			#161311;
 	}
 
-	.ember {
-		position: absolute;
-		bottom: -10px;
-		left: calc(var(--i) * 8.5% + 2%);
-		width: 5px;
-		height: 5px;
-		border-radius: 50%;
-		background: #ff8a3d;
-		box-shadow: 0 0 8px 2px rgba(255, 138, 61, 0.8);
-		opacity: 0;
-		animation: ember-rise 4.5s ease-in infinite;
-		animation-delay: calc(var(--i) * 0.4s);
-	}
-
-	.ember:nth-child(3n) {
-		background: #ff4d2a;
-		width: 4px;
-		height: 4px;
-	}
-
-	.ember:nth-child(4n) {
-		background: #ffc36b;
-		width: 3px;
-		height: 3px;
-	}
-
-	@keyframes ember-rise {
-		0% {
-			transform: translateY(0) translateX(0);
-			opacity: 0;
-		}
-		12% {
-			opacity: 1;
-		}
-		100% {
-			transform: translateY(-160px) translateX(14px);
-			opacity: 0;
-		}
-	}
-
-	/* ---------- COCINA Y MESA: vapor calido ---------- */
+	/* ---------- COCINA Y MESA ---------- */
 
 	.theme-hero--cocina-y-mesa {
 		background:
@@ -218,86 +192,10 @@ const steams = Array.from({ length: 5 });
 			#181410;
 	}
 
-	.steam {
-		position: absolute;
-		bottom: -30px;
-		left: calc(var(--i) * 19% + 8%);
-		width: 60px;
-		height: 100px;
-		border-radius: 50%;
-		background: rgba(255, 246, 237, 0.12);
-		filter: blur(10px);
-		opacity: 0;
-		animation: steam-rise 7s ease-in-out infinite;
-		animation-delay: calc(var(--i) * 1.1s);
-	}
-
-	@keyframes steam-rise {
-		0% {
-			transform: translateY(0) scale(0.8);
-			opacity: 0;
-		}
-		30% {
-			opacity: 0.9;
-		}
-		100% {
-			transform: translateY(-180px) scale(1.3);
-			opacity: 0;
-		}
-	}
-
-	/* ---------- OFICINA: precision ---------- */
+	/* ---------- OFICINA ---------- */
 
 	.theme-hero--oficina {
 		background: #131417;
-	}
-
-	.office-grid {
-		position: absolute;
-		inset: 0;
-		background-image:
-			linear-gradient(
-				rgba(255, 255, 255, 0.05) 1px,
-				transparent 1px
-			),
-			linear-gradient(
-				90deg,
-				rgba(255, 255, 255, 0.05) 1px,
-				transparent 1px
-			);
-		background-size: 42px 42px;
-		mask-image: radial-gradient(
-			circle at 50% 40%,
-			#000 40%,
-			transparent 78%
-		);
-	}
-
-	.scan-line {
-		position: absolute;
-		top: 0;
-		left: -20%;
-		width: 30%;
-		height: 100%;
-		background: linear-gradient(
-			90deg,
-			transparent,
-			rgba(255, 138, 92, 0.16),
-			transparent
-		);
-		animation: scan-sweep 6s ease-in-out infinite;
-	}
-
-	@keyframes scan-sweep {
-		0% {
-			left: -30%;
-		}
-		50% {
-			left: 100%;
-		}
-		100% {
-			left: -30%;
-		}
 	}
 
 	/* ---------- Default (kits y regalos, empresas, etc.) ---------- */
@@ -312,12 +210,20 @@ const steams = Array.from({ length: 5 });
 			#141414;
 	}
 
+	/*
+	 * Con imagen de fondo, la foto reemplaza el fondo decorativo del
+	 * tema; se mantiene un fondo solido como respaldo si la imagen
+	 * tarda en cargar. Los efectos (brasas, vapor, grid) siguen
+	 * renderizando encima, como una capa adicional sutil.
+	 */
+	.theme-hero--has-image {
+		background: #141414;
+	}
+
 	@media (prefers-reduced-motion: reduce) {
-		.ember,
-		.steam,
-		.scan-line {
+		.theme-hero__image {
 			animation: none;
-			opacity: 0;
+			transform: scale(1);
 		}
 	}
 

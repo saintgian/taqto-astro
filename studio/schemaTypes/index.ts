@@ -1,4 +1,5 @@
 import {categoryType} from './categoryType'
+import {homeCampaignType} from './homeCampaignType'
 import {productType} from './productType'
 import {sizeType} from './sizeType'
 import {subcategoryType} from './subcategoryType'
@@ -10,4 +11,5 @@ export const schemaTypes = [
   woodType,
   sizeType,
   productType,
+  homeCampaignType,
 ]

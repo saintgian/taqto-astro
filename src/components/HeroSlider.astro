@@ -1,5 +1,14 @@
 ---
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
+
 const base = import.meta.env.BASE_URL;
+
+function heroImageExists(fileName: string): boolean {
+	return existsSync(
+		resolve(process.cwd(), "public", "images", "hero", fileName),
+	);
+}
 
 const slides = [
 	{
@@ -10,8 +19,12 @@ const slides = [
 		button: "Descubre tu tabla",
 		href: `${base}categorias/parrilla/`,
 		image: `${base}images/hero/hero-parrilla.webp`,
+		mobileImage: heroImageExists("hero-parrilla-mobile.webp")
+			? `${base}images/hero/hero-parrilla-mobile.webp`
+			: undefined,
 		alt: "Tabla parrillera personalizada de madera TAQTO",
 		position: "center right",
+		mobilePosition: "center 30%",
 		theme: "dark",
 	},
 	{
@@ -22,8 +35,12 @@ const slides = [
 		button: "Explorar la colección",
 		href: `${base}categorias/cocina-y-mesa/`,
 		image: `${base}images/hero/hero-cocina.webp`,
+		mobileImage: heroImageExists("hero-cocina-mobile.webp")
+			? `${base}images/hero/hero-cocina-mobile.webp`
+			: undefined,
 		alt: "Accesorios de madera para cocina y mesa TAQTO",
 		position: "center center",
+		mobilePosition: "center center",
 		theme: "light",
 	},
 	{
@@ -34,8 +51,12 @@ const slides = [
 		button: "Ver colección de oficina",
 		href: `${base}categorias/oficina/`,
 		image: `${base}images/hero/hero-oficina.webp`,
+		mobileImage: heroImageExists("hero-oficina-mobile.webp")
+			? `${base}images/hero/hero-oficina-mobile.webp`
+			: undefined,
 		alt: "Organizador de escritorio de madera TAQTO",
 		position: "center right",
+		mobilePosition: "center 25%",
 		theme: "dark",
 	},
 ];
@@ -58,17 +79,28 @@ const slides = [
 					]}
 					data-slide
 					aria-hidden={index === 0 ? "false" : "true"}
-					style={`--slide-image: url('${slide.image}'); --slide-position: ${slide.position};`}
+					style={`--slide-image: url('${slide.image}'); --slide-position: ${slide.position}; --slide-position-mobile: ${slide.mobilePosition || slide.position};${slide.overlayDesktop !== undefined ? ` --overlay-desktop-peak: ${slide.overlayDesktop};` : ""}${slide.overlayMobile !== undefined ? ` --overlay-mobile-peak: ${slide.overlayMobile};` : ""}`}
 				>
-					<img
-						class="hero-slide__image"
-						src={slide.image}
-						alt={slide.alt}
-						width="2048"
-						height="900"
-						loading={index === 0 ? "eager" : "lazy"}
-						fetchpriority={index === 0 ? "high" : "auto"}
-					/>
+					<picture>
+						{
+							slide.mobileImage && (
+								<source
+									srcset={slide.mobileImage}
+									media="(max-width: 768px)"
+								/>
+							)
+						}
+
+						<img
+							class="hero-slide__image"
+							src={slide.image}
+							alt={slide.alt}
+							width="2048"
+							height="900"
+							loading={index === 0 ? "eager" : "lazy"}
+							fetchpriority={index === 0 ? "high" : "auto"}
+						/>
+					</picture>
 
 					<div class="hero-slide__overlay"></div>
 
@@ -382,15 +414,15 @@ const slides = [
 		background:
 			linear-gradient(
 				90deg,
-				rgba(10, 8, 7, 0.88) 0%,
-				rgba(10, 8, 7, 0.7) 32%,
-				rgba(10, 8, 7, 0.25) 58%,
-				rgba(10, 8, 7, 0.04) 100%
+				rgba(10, 8, 7, var(--overlay-desktop-peak, 0.8)) 0%,
+				rgba(10, 8, 7, 0.42) 30%,
+				rgba(10, 8, 7, 0.14) 52%,
+				rgba(10, 8, 7, 0) 72%
 			),
 			linear-gradient(
 				0deg,
-				rgba(10, 8, 7, 0.48) 0%,
-				transparent 38%
+				rgba(10, 8, 7, 0.32) 0%,
+				transparent 28%
 			);
 	}
 
@@ -398,15 +430,15 @@ const slides = [
 		background:
 			linear-gradient(
 				90deg,
-				rgba(255, 246, 237, 0.97) 0%,
-				rgba(255, 246, 237, 0.86) 35%,
-				rgba(255, 246, 237, 0.3) 62%,
-				rgba(255, 246, 237, 0.03) 100%
+				rgba(255, 246, 237, var(--overlay-desktop-peak, 0.92)) 0%,
+				rgba(255, 246, 237, 0.58) 35%,
+				rgba(255, 246, 237, 0.18) 60%,
+				rgba(255, 246, 237, 0) 78%
 			),
 			linear-gradient(
 				0deg,
-				rgba(20, 20, 20, 0.15) 0%,
-				transparent 35%
+				rgba(20, 20, 20, 0.12) 0%,
+				transparent 32%
 			);
 	}
 
@@ -724,9 +756,9 @@ const slides = [
 			background:
 				linear-gradient(
 					0deg,
-					rgba(12, 9, 8, 0.94) 0%,
-					rgba(12, 9, 8, 0.72) 45%,
-					rgba(12, 9, 8, 0.12) 82%
+					rgba(12, 9, 8, var(--overlay-mobile-peak, 0.86)) 0%,
+					rgba(12, 9, 8, 0.48) 34%,
+					rgba(12, 9, 8, 0.08) 58%
 				);
 		}
 
@@ -757,7 +789,7 @@ const slides = [
 		}
 
 		.hero-slide__image {
-			object-position: center;
+			object-position: var(--slide-position-mobile, center);
 		}
 
 		.hero-slide__container {

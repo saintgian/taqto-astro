@@ -1,4 +1,6 @@
 ---
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Header from "../components/Header.astro";
 import HeroSlider from "../components/HeroSlider.astro";
@@ -13,14 +15,124 @@ import WoodGuide from "../components/WoodGuide.astro";
 import PurchaseProcess from "../components/PurchaseProcess.astro";
 import CustomerProof from "../components/CustomerProof.astro";
 import BusinessGateway from "../components/BusinessGateway.astro";
+import { sanityClient, urlForImage } from "../lib/sanity";
+import { homeCampaignQuery } from "../lib/homeCampaignQuery";
 
 const rawBase = import.meta.env.BASE_URL;
 const base = rawBase.endsWith("/") ? rawBase : `${rawBase}/`;
 
-// Los archivos de imagen todavía no existen en public/images/home/, así que
-// cada componente muestra un placeholder hasta que se agreguen en esas rutas.
-// PersonalizationSteps (sin imageSrc) usará: images/home/personalizacion-grabado.webp
-// BusinessGateway (sin image) usará: images/home/empresas-regalos-corporativos.webp
+interface HomeCampaign {
+	enabled?: boolean;
+	eyebrow?: string;
+	title?: string;
+	description?: string;
+	ctaLabel?: string;
+	ctaLink?: string;
+	alt?: string;
+	theme?: "light" | "dark";
+	layoutMode?: "editorial" | "productSpotlight";
+	contentPosition?: "left" | "center" | "right";
+	overlayStrength?: "soft" | "medium" | "strong";
+	desktopImage?: unknown;
+	mobileImage?: unknown;
+	featuredProduct?: Record<string, unknown> | null;
+}
+
+let homeCampaign: HomeCampaign | null = null;
+
+try {
+	homeCampaign = await sanityClient.fetch<HomeCampaign | null>(
+		homeCampaignQuery,
+	);
+} catch (error) {
+	// Sin conexión a Sanity (por ejemplo, build sin variables de entorno):
+	// la portada conserva el contenido de respaldo de CampaignBanner.
+	homeCampaign = null;
+}
+
+const campaignHasContent = Boolean(
+	homeCampaign?.title || homeCampaign?.description,
+);
+
+const campaignIsUsable =
+	Boolean(homeCampaign?.enabled) && campaignHasContent;
+
+// Si el documento existe y fue desactivado explícitamente, no se muestra
+// la sección (sin espacio vacío). Si no existe documento, se conserva el
+// contenido de respaldo de CampaignBanner.
+const isCampaignExplicitlyDisabled =
+	homeCampaign !== null && homeCampaign?.enabled === false;
+
+const showCampaignSection = !isCampaignExplicitlyDisabled;
+
+const resolveCampaignLink = (link?: string) => {
+	if (!link) return undefined;
+	if (/^https?:\/\//i.test(link)) return link;
+
+	const cleanLink = link.replace(/^\/+/, "");
+	return `${base}${cleanLink}${cleanLink.endsWith("/") ? "" : "/"}`;
+};
+
+const campaignDesktopImageUrl =
+	campaignIsUsable && homeCampaign?.desktopImage
+		? urlForImage(homeCampaign.desktopImage)
+				.width(1400)
+				.height(700)
+				.fit("crop")
+				.auto("format")
+				.url()
+		: undefined;
+
+const campaignMobileImageUrl =
+	campaignIsUsable && homeCampaign?.mobileImage
+		? urlForImage(homeCampaign.mobileImage)
+				.width(900)
+				.height(700)
+				.fit("crop")
+				.auto("format")
+				.url()
+		: undefined;
+
+// El campo "Texto del botón" en Sanity contiene actualmente "WHSTASPP"
+// (contenido mal definido por el equipo de contenido). Mientras se corrige
+// en el Studio, se usa un texto temporal en su lugar.
+const rawCtaLabel = homeCampaign?.ctaLabel?.trim();
+const ctaLabel =
+	rawCtaLabel && rawCtaLabel.toUpperCase() !== "WHSTASPP"
+		? rawCtaLabel
+		: "Ver campaña";
+
+const campaignProps = campaignIsUsable
+	? {
+			eyebrow: homeCampaign?.eyebrow,
+			title: homeCampaign?.title,
+			description: homeCampaign?.description,
+			buttonText: ctaLabel,
+			buttonHref: resolveCampaignLink(homeCampaign?.ctaLink),
+			imageUrl: campaignDesktopImageUrl,
+			mobileImageUrl: campaignMobileImageUrl,
+			imageAlt: homeCampaign?.alt,
+			theme: homeCampaign?.theme || undefined,
+			layoutMode: homeCampaign?.layoutMode || undefined,
+			contentPosition: homeCampaign?.contentPosition || undefined,
+			overlayStrength: homeCampaign?.overlayStrength || undefined,
+			featuredProduct: homeCampaign?.featuredProduct || undefined,
+		}
+	: {};
+
+function getHomeImagePath(...segments: string[]): string | undefined {
+	const absolutePath = resolve(
+		process.cwd(),
+		"public",
+		"images",
+		"home",
+		...segments,
+	);
+
+	return existsSync(absolutePath)
+		? `${base}images/home/${segments.join("/")}`
+		: undefined;
+}
 
 const lifestyleItems = [
 	{
@@ -29,7 +141,6 @@ const lifestyleItems = [
 		description:
 			"Piezas resistentes para preparar, servir y compartir.",
 		href: `${base}categorias/parrilla/`,
-		// futuro: images/home/lifestyle-parrilla.webp
 	},
 	{
 		label: "Oficina",
@@ -37,7 +148,6 @@ const lifestyleItems = [
 		description:
 			"Accesorios de madera que organizan y acompañan tu jornada.",
 		href: `${base}categorias/oficina/`,
-		// futuro: images/home/lifestyle-oficina.webp
 	},
 	{
 		label: "Cocina y mesa",
@@ -45,12 +155,10 @@ const lifestyleItems = [
 		description:
 			"Funcionales y contemporáneas, listas para la mesa.",
 		href: `${base}categorias/cocina-y-mesa/`,
-		// futuro: images/home/lifestyle-cocina-mesa.webp
 	},
 ];
 
 // Todas las especies confirmadas y activas en Sanity (studio/schemaTypes/woodType.ts).
-// Rutas futuras: images/home/maderas/<id>.webp
 const woodGuideItems = [
 	{ id: "huayruro", name: "Huayruro" },
 	{ id: "pumaquiro", name: "Pumaquiro" },
@@ -68,6 +176,39 @@ const purchaseLinks = [
 		href: `${base}preguntas-frecuentes/`,
 	},
 ];
+
+const businessImageSrc = getHomeImagePath(
+	"empresas-regalos-corporativos.webp",
+);
+
+const businessImage = businessImageSrc
+	? {
+			src: businessImageSrc,
+			alt: "Piezas de madera TAQTO personalizadas para regalos corporativos",
+			width: 1200,
+			height: 1500,
+		}
+	: undefined;
+
+const customerProofProjects = (
+	["proyecto-01.webp", "proyecto-02.webp", "proyecto-03.webp"] as const
+)
+	.map((file) => {
+		const src = getHomeImagePath("clientes", file);
+
+		if (!src) return null;
+
+		return {
+			type: "project" as const,
+			image: {
+				src,
+				alt: "Pieza TAQTO elaborada para un cliente",
+				width: 1000,
+				height: 1250,
+			},
+		};
+	})
+	.filter((item): item is NonNullable<typeof item> => item !== null);
 ---
 
 <BaseLayout
@@ -79,6 +220,16 @@ const purchaseLinks = [
 	<main>
 		<HeroSlider />
 
+		{
+			showCampaignSection && (
+				<section class="campaign-section">
+					<div class="campaign-section__container">
+						<CampaignBanner {...campaignProps} />
+					</div>
+				</section>
+			)
+		}
+
 		<CategoriesTeaser />
 
 		<FeaturedProducts />
@@ -88,12 +239,6 @@ const purchaseLinks = [
 			ctaHref={`${base}categorias/`}
 		/>
 
-		<section class="campaign-section">
-			<div class="campaign-section__container">
-				<CampaignBanner />
-			</div>
-		</section>
-
 		<LifestyleGallery items={lifestyleItems} />
 
 		<WoodGuide woods={woodGuideItems} />
@@ -102,9 +247,13 @@ const purchaseLinks = [
 
 		<PurchaseProcess links={purchaseLinks} />
 
-		<CustomerProof mode="projects" items={[]} />
+		<CustomerProof
+			mode="projects"
+			items={customerProofProjects}
+		/>
 
 		<BusinessGateway
+			image={businessImage}
 			mainHref={`${base}categorias/empresas/`}
 			corporateGiftsHref={`${base}categorias/empresas/regalos-corporativos/`}
 			wholesaleHref={`${base}categorias/empresas/ventas-al-por-mayor/`}
@@ -118,9 +267,9 @@ const purchaseLinks = [
 <style>
 	.campaign-section {
 		padding:
-			clamp(48px, 7vw, 100px)
+			clamp(32px, 4vw, 56px)
 			var(--page-padding)
-			clamp(70px, 9vw, 130px);
+			clamp(20px, 2.5vw, 36px);
 		background: var(--color-beige);
 	}
 
@@ -134,9 +283,9 @@ const purchaseLinks = [
 	@media (max-width: 760px) {
 		.campaign-section {
 			padding:
-				36px
+				24px
 				18px
-				70px;
+				16px;
 		}
 
 		.campaign-section__container {
