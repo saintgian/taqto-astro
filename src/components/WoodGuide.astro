@@ -199,89 +199,91 @@ const firstWood = visibleWoods[0];
 					</div>
 				</header>
 
-				<div
-					class="wood-guide__selector"
-					role="tablist"
-					aria-label="Selecciona una especie de madera"
-					data-wood-selector
-				>
-					{
-						visibleWoods.map((wood, index) => {
-							const tabId = `${componentId}-tab-${index}`;
-
-							return (
-								<button
-									id={tabId}
-									class="wood-guide__card"
-									type="button"
-									role="tab"
-									aria-selected={index === 0 ? "true" : "false"}
-									aria-controls={panelId}
-									tabindex={index === 0 ? 0 : -1}
-									data-wood-tab
-									data-wood-tab-index={index}
-									data-wood-name={wood.name}
-									data-wood-description={wood.description || ""}
-									data-wood-image-src={wood.image?.src || ""}
-									data-wood-image-alt={wood.image?.alt || ""}
-									data-wood-image-width={wood.image?.width || ""}
-									data-wood-image-height={wood.image?.height || ""}
-								>
-									<span class="wood-guide__card-name">
-										{wood.name}
-									</span>
-								</button>
-							);
-						})
-					}
-				</div>
-
-				<article
-					id={panelId}
-					class="wood-guide__panel"
-					aria-live="polite"
-					data-wood-panel
-				>
-					<div class="wood-guide__media" data-wood-media>
+				<div class="wood-guide__tabs">
+					<div
+						class="wood-guide__selector"
+						role="tablist"
+						aria-label="Selecciona una especie de madera"
+						data-wood-selector
+					>
 						{
-							firstWood?.image ? (
-								<img
-									data-wood-media-img
-									src={firstWood.image.src}
-									alt={firstWood.image.alt}
-									width={firstWood.image.width}
-									height={firstWood.image.height}
-									loading="lazy"
-									decoding="async"
-								/>
-							) : (
-								<div
-									class="wood-guide__placeholder"
-									data-wood-placeholder
-								>
-									<span>Foto próximamente</span>
-								</div>
-							)
+							visibleWoods.map((wood, index) => {
+								const tabId = `${componentId}-tab-${index}`;
+
+								return (
+									<button
+										id={tabId}
+										class="wood-guide__card"
+										type="button"
+										role="tab"
+										aria-selected={index === 0 ? "true" : "false"}
+										aria-controls={panelId}
+										tabindex={index === 0 ? 0 : -1}
+										data-wood-tab
+										data-wood-tab-index={index}
+										data-wood-name={wood.name}
+										data-wood-description={wood.description || ""}
+										data-wood-image-src={wood.image?.src || ""}
+										data-wood-image-alt={wood.image?.alt || ""}
+										data-wood-image-width={wood.image?.width || ""}
+										data-wood-image-height={wood.image?.height || ""}
+									>
+										<span class="wood-guide__card-name">
+											{wood.name}
+										</span>
+									</button>
+								);
+							})
 						}
 					</div>
 
-					<div class="wood-guide__content">
-						<p class="wood-guide__selected-label">
-							Madera seleccionada
-						</p>
+					<article
+						id={panelId}
+						class="wood-guide__panel"
+						aria-live="polite"
+						data-wood-panel
+					>
+						<div class="wood-guide__media" data-wood-media>
+							{
+								firstWood?.image ? (
+									<img
+										data-wood-media-img
+										src={firstWood.image.src}
+										alt={firstWood.image.alt}
+										width={firstWood.image.width}
+										height={firstWood.image.height}
+										loading="lazy"
+										decoding="async"
+									/>
+								) : (
+									<div
+										class="wood-guide__placeholder"
+										data-wood-placeholder
+									>
+										<span>Foto próximamente</span>
+									</div>
+								)
+							}
+						</div>
 
-						<h3 data-wood-name-output>
-							{firstWood?.name}
-						</h3>
+						<div class="wood-guide__content">
+							<p class="wood-guide__selected-label">
+								Madera seleccionada
+							</p>
 
-						<p
-							class="wood-guide__description"
-							data-wood-description-output
-						>
-							{firstWood?.description}
-						</p>
-					</div>
-				</article>
+							<h3 data-wood-name-output>
+								{firstWood?.name}
+							</h3>
+
+							<p
+								class="wood-guide__description"
+								data-wood-description-output
+							>
+								{firstWood?.description}
+							</p>
+						</div>
+					</article>
+				</div>
 			</div>
 		</section>
 	)
@@ -425,6 +427,16 @@ const firstWood = visibleWoods[0];
 
 				renderPanel(tabs[normalizedIndex]);
 
+				const prefersReducedMotion = window.matchMedia(
+					"(prefers-reduced-motion: reduce)",
+				).matches;
+
+				tabs[normalizedIndex]?.scrollIntoView({
+					behavior: prefersReducedMotion ? "auto" : "smooth",
+					inline: "nearest",
+					block: "nearest",
+				});
+
 				if (moveFocus) {
 					tabs[normalizedIndex]?.focus();
 				}
@@ -479,117 +491,107 @@ const firstWood = visibleWoods[0];
 
 <style>
 	.wood-guide {
-		padding-block: clamp(26px, 8vw, 36px);
-		padding-inline: var(--page-padding);
+		padding-block: clamp(56px, 6vw, 72px);
+		padding-inline: var(--container-gutter);
 		background: var(--surface);
 		color: var(--color-black);
 	}
 
-	@media (min-width: 768px) {
-		.wood-guide {
-			padding-block: clamp(34px, 5vw, 44px);
-		}
-	}
-
-	@media (min-width: 1024px) {
-		.wood-guide {
-			padding-block: clamp(44px, 3.2vw, 56px);
-		}
-	}
-
 	.wood-guide__container {
-		width: min(100%, var(--page-width));
+		width: min(100%, var(--container-editorial));
 		margin-inline: auto;
 	}
 
 	.wood-guide__header {
-		display: grid;
-		grid-template-columns:
-			minmax(0, 0.42fr)
-			minmax(0, 1fr);
-		align-items: end;
-		gap: clamp(24px, 5vw, 80px);
-		margin-bottom: clamp(28px, 4vw, 48px);
+		margin-bottom: clamp(24px, 3vw, 32px);
 	}
 
 	.wood-guide__heading h2 {
-		max-width: 780px;
+		max-width: 46ch;
 		margin: 0;
 		color: var(--color-black);
-		font-size: clamp(1.8125rem, 1.5rem + 1.5vw, 2.875rem);
+		font-size: clamp(1.75rem, 1.5rem + 1vw, 2.5rem);
 		font-weight: 600;
-		line-height: 1.08;
+		line-height: 1.1;
 		letter-spacing: -0.02em;
 	}
 
-	.wood-guide__heading > p {
-		max-width: 480px;
-		margin: 14px 0 0;
-		color: rgba(20, 20, 20, 0.68);
-		font-size: 16px;
-		line-height: 1.6;
+	.wood-guide__heading {
+		margin-bottom: 16px;
 	}
 
-	@media (min-width: 768px) {
-		.wood-guide__heading > p {
-			font-size: 17px;
-		}
+	.wood-guide__heading > p {
+		max-width: 44ch;
+		margin: 14px 0 0;
+		color: rgba(20, 20, 20, 0.68);
+		font-size: clamp(17px, 0.3vw + 16.4px, 18px);
+		line-height: 1.55;
+	}
+
+	.wood-guide__tabs {
+		display: flex;
+		flex-direction: column;
+		gap: 18px;
 	}
 
 	.wood-guide__selector {
-		display: grid;
-		grid-template-columns: repeat(5, minmax(0, 1fr));
-		gap: clamp(10px, 1.4vw, 16px);
-		margin-bottom: clamp(30px, 4vw, 48px);
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: flex-start;
+		align-items: center;
+		gap: 4px 8px;
 	}
 
 	.wood-guide__card {
 		display: flex;
-		min-width: 0;
 		min-height: 44px;
 		align-items: center;
 		justify-content: center;
-		padding: 12px 8px;
-		border: 0;
-		border-bottom: 2px solid rgba(20, 20, 20, 0.1);
+		padding: 0 12px;
+		border: 1px solid transparent;
+		border-radius: 10px;
 		background: transparent;
 		font: inherit;
 		text-align: center;
 		cursor: pointer;
-		transition: border-color 180ms ease;
+		transition:
+			background-color 200ms ease,
+			border-color 200ms ease,
+			color 200ms ease;
 	}
 
 	.wood-guide__card-name {
 		min-width: 0;
 		overflow: hidden;
-		color: rgba(20, 20, 20, 0.6);
-		font-size: 14px;
-		font-weight: 600;
+		color: rgba(20, 20, 20, 0.55);
+		font-size: 16px;
+		font-weight: 500;
 		letter-spacing: -0.01em;
 		text-overflow: ellipsis;
 		white-space: nowrap;
-		transition: color 180ms ease;
+		transition: color 200ms ease;
 	}
 
 	.wood-guide__card[aria-selected="true"] {
-		border-bottom-color: var(--color-brown);
+		padding: 10px 16px;
+		border-color: rgba(20, 20, 20, 0.16);
+		border-radius: 12px;
+		background: var(--surface);
 	}
 
 	.wood-guide__card[aria-selected="true"] .wood-guide__card-name {
 		color: var(--color-black);
+		font-weight: 600;
 	}
 
 	.wood-guide__card:focus-visible {
 		outline: 2px solid var(--color-orange);
-		outline-offset: 4px;
+		outline-offset: 2px;
 	}
 
 	@media (hover: hover) and (pointer: fine) {
-		.wood-guide__card:hover {
-			border-bottom-color: rgba(91, 49, 42, 0.4);
-		}
-
-		.wood-guide__card:hover .wood-guide__card-name {
+		.wood-guide__card:not([aria-selected="true"]):hover
+			.wood-guide__card-name {
 			color: var(--color-black);
 		}
 	}
@@ -597,10 +599,14 @@ const firstWood = visibleWoods[0];
 	.wood-guide__panel {
 		display: grid;
 		grid-template-columns:
-			minmax(0, 1.18fr)
-			minmax(0, 0.82fr);
+			minmax(0, 1.25fr)
+			minmax(0, 0.95fr);
 		align-items: center;
-		gap: clamp(36px, 5vw, 90px);
+		gap: clamp(40px, 5vw, 72px);
+		border: 1px solid rgba(20, 20, 20, 0.14);
+		border-radius: var(--radius-md);
+		background: var(--surface);
+		padding: clamp(24px, 3vw, 36px);
 	}
 
 	.wood-guide__media {
@@ -645,47 +651,32 @@ const firstWood = visibleWoods[0];
 	.wood-guide__selected-label {
 		margin: 0;
 		color: var(--color-orange);
-		font-size: 10px;
+		font-size: 13px;
 		font-weight: 700;
-		letter-spacing: 0.14em;
+		letter-spacing: 0.1em;
 		text-transform: uppercase;
 	}
 
 	.wood-guide__content h3 {
-		margin: 10px 0 0;
+		margin: 8px 0 0;
 		color: var(--color-black);
-		font-size: clamp(22px, 2.2vw, 28px);
+		font-size: clamp(28px, 1.4vw + 24px, 34px);
 		font-weight: 600;
 		line-height: 1.15;
 		letter-spacing: -0.02em;
 	}
 
 	.wood-guide__description {
-		margin: 18px 0 0;
+		margin: 16px 0 0;
 		color: rgba(20, 20, 20, 0.7);
-		font-size: 16px;
+		font-size: clamp(17px, 0.4vw + 16px, 19px);
 		line-height: 1.6;
 	}
 
-	@media (min-width: 768px) {
-		.wood-guide__description {
-			font-size: 17px;
-		}
-	}
-
 	@media (max-width: 960px) {
-		.wood-guide__header {
-			grid-template-columns: 1fr;
-			gap: 12px;
-		}
-
-		.wood-guide__selector {
-			grid-template-columns: repeat(3, minmax(0, 1fr));
-		}
-
 		.wood-guide__panel {
 			grid-template-columns: 1fr;
-			gap: 28px;
+			gap: 24px;
 		}
 
 		.wood-guide__content {
@@ -698,20 +689,29 @@ const firstWood = visibleWoods[0];
 			padding-inline: 18px;
 		}
 
-		.wood-guide__header {
-			margin-bottom: 22px;
-		}
-
 		.wood-guide__selector {
-			grid-template-columns: repeat(2, minmax(0, 1fr));
+			flex-wrap: nowrap;
+			overflow-x: auto;
+			scroll-snap-type: x proximity;
+			scroll-padding-inline: 4px;
+			padding-bottom: 1px;
+			-webkit-overflow-scrolling: touch;
+			scrollbar-width: thin;
 		}
 
-		.wood-guide__card:last-child:nth-child(odd) {
-			grid-column: 1 / -1;
+		.wood-guide__card {
+			flex: 0 0 auto;
+			scroll-snap-align: start;
 		}
 
 		.wood-guide__media {
 			border-radius: 16px;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.wood-guide__card {
+			transition: none;
 		}
 	}
 </style>

@@ -1,4 +1,6 @@
 ---
+import { ArrowRight } from "@lucide/astro";
+
 interface PurchaseLink {
 	label: string;
 	href: string;
@@ -10,35 +12,61 @@ interface Props {
 
 const { links = [] } = Astro.props;
 
+const base = import.meta.env.BASE_URL.endsWith("/")
+	? import.meta.env.BASE_URL
+	: `${import.meta.env.BASE_URL}/`;
+
+const findLink = (label: string) =>
+	links.find(
+		(link) =>
+			link.label === label &&
+			link.href?.trim().length > 0,
+	);
+
+const shippingLink = findLink("Envíos");
+const faqLink = findLink("Preguntas frecuentes");
+
 const steps = [
 	{
 		number: "01",
 		title: "Elige tu pieza",
 		description:
 			"Explora el catálogo y encuentra el diseño que mejor se adapte a tu espacio, uso o regalo.",
+		cta: { label: "Ver tienda", href: `${base}tienda/` },
 	},
 	{
 		number: "02",
 		title: "Define la personalización",
 		description:
 			"Selecciona las opciones disponibles y añade el nombre, frase o imagen que quieras grabar.",
+		cta: {
+			label: "Ver personalización",
+			href: "#personalization-title",
+		},
 	},
 	{
 		number: "03",
 		title: "Confirmamos los detalles",
 		description:
 			"Revisamos la información necesaria para preparar correctamente tu pieza antes de producirla.",
+		cta: faqLink
+			? { label: "Ver preguntas frecuentes", href: faqLink.href }
+			: undefined,
 	},
 	{
 		number: "04",
 		title: "Preparamos y enviamos",
 		description:
 			"Trabajamos tu pedido, lo embalamos con cuidado y coordinamos el envío correspondiente.",
+		cta: shippingLink
+			? { label: "Ver envíos", href: shippingLink.href }
+			: undefined,
 	},
 ];
 
-const visibleLinks = links.filter(
+const auxLinks = links.filter(
 	(link) =>
+		(link.label === "Cuidados" || link.label === "Garantía") &&
 		link.label?.trim().length > 0 &&
 		link.href?.trim().length > 0,
 );
@@ -62,43 +90,60 @@ const visibleLinks = links.filter(
 
 		<ol class="purchase-process__steps">
 			{
-				steps.map((step) => (
-					<li class="purchase-process__step">
-						<div
-							class="purchase-process__marker"
-							aria-hidden="true"
-						>
-							<span>{step.number}</span>
-						</div>
+				steps.map((step) => {
+					const CardTag = step.cta ? "a" : "div";
 
-						<div class="purchase-process__content">
-							<h3>{step.title}</h3>
-							<p>{step.description}</p>
-						</div>
-					</li>
-				))
+					return (
+						<li class="purchase-process__step">
+							<CardTag
+								class="purchase-process__card"
+								href={step.cta?.href}
+							>
+								<span
+									class="purchase-process__number"
+									aria-hidden="true"
+								>
+									{step.number}
+								</span>
+
+								<h3>{step.title}</h3>
+								<p>{step.description}</p>
+
+								{
+									step.cta && (
+										<span class="purchase-process__action">
+											<span class="purchase-process__action-label">
+												{step.cta.label}
+											</span>
+											<span
+												class="purchase-process__arrow"
+												aria-hidden="true"
+											>
+												<ArrowRight stroke-width={1.75} />
+											</span>
+										</span>
+									)
+								}
+							</CardTag>
+						</li>
+					);
+				})
 			}
 		</ol>
 
 		{
-			visibleLinks.length > 0 && (
-				<nav
-					class="purchase-process__links"
-					aria-label="Información sobre tu compra"
-				>
-					<ul>
-						{
-							visibleLinks.map((link) => (
-								<li>
-									<a href={link.href}>
-										{link.label}
-										<span aria-hidden="true">→</span>
-									</a>
-								</li>
-							))
-						}
-					</ul>
-				</nav>
+			auxLinks.length > 0 && (
+				<p class="purchase-process__aux">
+					También puede interesarte:{" "}
+					{auxLinks.map((link, index) => (
+						<>
+							<a href={link.href}>{link.label}</a>
+							{index < auxLinks.length - 1 && (
+								<span aria-hidden="true"> · </span>
+							)}
+						</>
+					))}
+				</p>
 			)
 		}
 	</div>
@@ -106,180 +151,224 @@ const visibleLinks = links.filter(
 
 <style>
 	.purchase-process {
-		padding-block: clamp(24px, 8vw, 34px);
-		padding-inline: var(--page-padding);
+		padding-block: var(--section-py);
+		padding-inline: var(--container-gutter);
 		background: var(--surface);
 		color: var(--color-black);
 	}
 
-	@media (min-width: 768px) {
-		.purchase-process {
-			padding-block: clamp(32px, 5vw, 42px);
-		}
-	}
-
-	@media (min-width: 1024px) {
-		.purchase-process {
-			padding-block: clamp(40px, 3.2vw, 52px);
-		}
-	}
-
 	.purchase-process__container {
-		width: min(100%, var(--page-width));
+		width: min(100%, var(--container-comercial));
 		margin-inline: auto;
 	}
 
 	.purchase-process__header {
-		max-width: 700px;
-		margin-bottom: clamp(28px, 4vw, 48px);
+		max-width: 62ch;
+		margin-bottom: var(--header-gap);
 	}
 
 	.purchase-process__header h2 {
 		margin: 0;
 		color: var(--color-black);
-		font-size: clamp(1.8125rem, 1.5rem + 1.5vw, 2.875rem);
+		font-size: clamp(34px, 2.4vw, 40px);
 		font-weight: 600;
-		line-height: 1.1;
+		line-height: 1.15;
 		letter-spacing: -0.02em;
 	}
 
 	.purchase-process__intro {
-		max-width: 560px;
-		margin: 14px 0 0;
-		color: rgba(20, 20, 20, 0.68);
-		font-size: 16px;
+		max-width: 60ch;
+		margin: 12px 0 0;
+		color: var(--ink-70);
+		font-size: clamp(17px, 0.3vw + 16.4px, 19px);
 		line-height: 1.6;
 	}
 
-	@media (min-width: 768px) {
-		.purchase-process__intro {
-			font-size: 17px;
-		}
-	}
-
 	.purchase-process__steps {
-		position: relative;
 		display: grid;
 		grid-template-columns: repeat(4, minmax(0, 1fr));
-		gap: clamp(18px, 2.5vw, 32px);
+		gap: clamp(20px, 2vw, 28px);
 		margin: 0;
 		padding: 0;
 		list-style: none;
 	}
 
-	.purchase-process__steps::before {
-		position: absolute;
-		z-index: 0;
-		top: 27px;
-		right: calc(12.5% - 1px);
-		left: calc(12.5% - 1px);
-		height: 1px;
-		background: rgba(20, 20, 20, 0.16);
-		content: "";
-	}
-
 	.purchase-process__step {
+		height: 100%;
+	}
+
+	.purchase-process__card {
 		position: relative;
-		z-index: 1;
+		display: flex;
+		height: 100%;
+		flex-direction: column;
 		min-width: 0;
-	}
-
-	.purchase-process__marker {
-		display: grid;
-		width: 54px;
-		height: 54px;
-		place-items: center;
-		border: 1px solid rgba(92, 49, 42, 0.28);
-		border-radius: 50%;
+		padding: clamp(26px, 1.6vw, 32px);
+		border: 1px solid var(--ink-15);
+		border-radius: var(--radius-md);
 		background: var(--surface);
+		color: inherit;
+		text-decoration: none;
+		transition:
+			border-color 200ms ease,
+			background-color 200ms ease;
 	}
 
-	.purchase-process__marker span {
+	.purchase-process__number {
+		display: inline-flex;
+		width: fit-content;
+		min-width: 32px;
+		height: 26px;
+		align-items: center;
+		justify-content: center;
+		margin: 0 0 18px;
+		padding: 0 10px;
+		border-radius: 999px;
+		background: var(--ink-08);
 		color: var(--color-brown);
-		font-size: 14px;
+		font-size: 13px;
 		font-weight: 700;
 		letter-spacing: 0.06em;
 	}
 
-	.purchase-process__content {
-		padding-top: 20px;
-	}
-
-	.purchase-process__content h3 {
+	.purchase-process__card h3 {
 		margin: 0;
 		color: var(--color-black);
-		font-size: clamp(20px, 2vw, 24px);
+		font-size: clamp(21px, 0.5vw + 19.7px, 25px);
 		font-weight: 600;
 		line-height: 1.2;
 		letter-spacing: -0.02em;
+		transition: color 200ms ease;
 	}
 
-	.purchase-process__content p {
+	.purchase-process__card p {
 		margin: 10px 0 0;
-		color: rgba(20, 20, 20, 0.7);
-		font-size: 16px;
-		line-height: 1.6;
+		color: var(--ink-70);
+		font-size: clamp(16.5px, 0.3vw + 15.9px, 18px);
+		line-height: 1.55;
 	}
 
-	@media (min-width: 768px) {
-		.purchase-process__content p {
-			font-size: 17px;
-		}
-	}
-
-	.purchase-process__links {
-		margin-top: clamp(40px, 5vw, 64px);
-		padding-top: 22px;
-		border-top: 1px solid rgba(20, 20, 20, 0.14);
-	}
-
-	.purchase-process__links ul {
+	.purchase-process__action {
 		display: flex;
 		align-items: center;
-		flex-wrap: wrap;
-		gap: 10px 26px;
-		margin: 0;
-		padding: 0;
-		list-style: none;
+		justify-content: space-between;
+		gap: 16px;
+		margin-top: auto;
+		padding-top: 22px;
 	}
 
-	.purchase-process__links a {
-		display: inline-flex;
-		min-height: 44px;
-		align-items: center;
-		gap: 8px;
+	.purchase-process__action-label {
 		color: var(--color-brown);
-		font-size: 14px;
+		font-size: clamp(14px, 0.2vw + 13.7px, 16px);
 		font-weight: 700;
-		letter-spacing: 0.03em;
-		text-decoration: none;
-		text-transform: uppercase;
+		letter-spacing: 0.01em;
 	}
 
-	.purchase-process__links a span {
-		font-size: 14px;
-		transition: transform 180ms ease;
+	.purchase-process__arrow {
+		display: inline-flex;
+		width: 42px;
+		height: 42px;
+		flex: 0 0 auto;
+		align-items: center;
+		justify-content: center;
+		border: 1px solid var(--ink-15);
+		border-radius: 50%;
+		background: transparent;
+		color: var(--color-black);
+		transition:
+			transform 200ms ease,
+			border-color 200ms ease,
+			background-color 200ms ease;
 	}
 
-	.purchase-process__links a:focus-visible {
+	.purchase-process__arrow svg {
+		width: 18px;
+		height: 18px;
+	}
+
+	.purchase-process__card:focus-visible {
 		outline: 2px solid var(--color-orange);
-		outline-offset: 4px;
+		outline-offset: 3px;
+		border-color: var(--ink-35);
+		background: var(--ink-08);
+	}
+
+	.purchase-process__card:focus-visible h3 {
+		color: var(--color-brown);
+	}
+
+	.purchase-process__card:focus-visible .purchase-process__arrow {
+		border-color: var(--color-brown);
+		background: var(--surface);
 	}
 
 	@media (hover: hover) and (pointer: fine) {
-		.purchase-process__links a:hover span {
+		.purchase-process__card:hover {
+			border-color: var(--ink-35);
+			background: var(--ink-08);
+		}
+
+		.purchase-process__card:hover h3 {
+			color: var(--color-brown);
+		}
+
+		.purchase-process__card:hover .purchase-process__arrow {
+			border-color: var(--color-brown);
+			background: var(--surface);
+		}
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		.purchase-process__card:hover .purchase-process__arrow,
+		.purchase-process__card:focus-visible .purchase-process__arrow {
 			transform: translateX(4px);
+		}
+	}
+
+	@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+		.purchase-process__card {
+			transition:
+				border-color 200ms ease,
+				background-color 200ms ease,
+				transform 200ms ease;
+		}
+
+		.purchase-process__card:hover {
+			transform: translateY(-2px);
+		}
+	}
+
+	.purchase-process__aux {
+		margin: clamp(24px, 2.4vw, 32px) 0 0;
+		padding-top: 20px;
+		border-top: 1px solid var(--ink-15);
+		color: var(--ink-70);
+		font-size: 14px;
+	}
+
+	.purchase-process__aux a {
+		color: var(--color-brown);
+		font-weight: 700;
+		text-decoration: none;
+	}
+
+	.purchase-process__aux a:focus-visible {
+		outline: 2px solid var(--color-orange);
+		outline-offset: 3px;
+		border-radius: 4px;
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.purchase-process__aux a:hover {
+			text-decoration: underline;
+			text-underline-offset: 0.15em;
 		}
 	}
 
 	@media (max-width: 920px) {
 		.purchase-process__steps {
 			grid-template-columns: repeat(2, minmax(0, 1fr));
-			row-gap: 40px;
-		}
-
-		.purchase-process__steps::before {
-			display: none;
+			gap: 20px;
 		}
 	}
 
@@ -292,33 +381,21 @@ const visibleLinks = links.filter(
 			margin-bottom: 26px;
 		}
 
+		.purchase-process__header h2 {
+			font-size: clamp(28px, 7vw, 32px);
+		}
+
+		.purchase-process__intro {
+			font-size: clamp(16px, 1vw + 15px, 17px);
+		}
+
 		.purchase-process__steps {
 			grid-template-columns: 1fr;
-			gap: 28px;
+			gap: 18px;
 		}
 
-		.purchase-process__content {
-			padding-top: 14px;
-		}
-
-		.purchase-process__links {
-			margin-top: 12px;
-		}
-
-		.purchase-process__links ul {
-			display: grid;
-			grid-template-columns: 1fr;
-			gap: 0;
-		}
-
-		.purchase-process__links li {
-			border-bottom: 1px solid rgba(20, 20, 20, 0.1);
-		}
-
-		.purchase-process__links a {
-			width: 100%;
-			justify-content: space-between;
-			padding-block: 4px;
+		.purchase-process__aux {
+			margin-top: 20px;
 		}
 	}
 </style>

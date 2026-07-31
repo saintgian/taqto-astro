@@ -1,4 +1,6 @@
 ---
+import { ArrowRight, X } from "@lucide/astro";
+
 interface Props {
 	eyebrow?: string;
 	title?: string;
@@ -81,19 +83,13 @@ const hasButton = Boolean(buttonText && buttonHref);
 			)}
 
 			{hasButton && (
-				<a class="campaign-banner__button" href={buttonHref}>
+				<a
+					class="btn btn--primary btn--on-dark campaign-banner__button"
+					href={buttonHref}
+				>
 					<span>{buttonText}</span>
 
-					<svg
-						viewBox="0 0 24 24"
-						aria-hidden="true"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="1.8"
-					>
-						<path d="M5 12h14"></path>
-						<path d="m14 7 5 5-5 5"></path>
-					</svg>
+					<ArrowRight aria-hidden="true" stroke-width={1.75} />
 				</a>
 			)}
 		</div>
@@ -104,18 +100,27 @@ const hasButton = Boolean(buttonText && buttonHref);
 			aria-label="Cerrar campaña"
 			data-campaign-close
 		>
-			<svg
-				viewBox="0 0 24 24"
-				aria-hidden="true"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="1.7"
-			>
-				<path d="m6 6 12 12"></path>
-				<path d="M18 6 6 18"></path>
-			</svg>
+			<X aria-hidden="true" stroke-width={1.75} />
 		</button>
 	</div>
+
+	<script is:inline>
+		(function () {
+			var banner = document.currentScript.parentElement;
+			var campaignId = banner && banner.dataset.campaignId;
+			if (!campaignId) return;
+
+			try {
+				if (
+					sessionStorage.getItem(
+						"taqto-campaign-" + campaignId,
+					) === "closed"
+				) {
+					banner.hidden = true;
+				}
+			} catch (error) {}
+		})();
+	</script>
 </aside>
 
 <script>
@@ -128,15 +133,9 @@ const hasButton = Boolean(buttonText && buttonHref);
 		const closeButton =
 			banner.querySelector<HTMLButtonElement>("[data-campaign-close]");
 
-		if (!campaignId) return;
+		if (!campaignId || banner.hidden) return;
 
 		const storageKey = `taqto-campaign-${campaignId}`;
-		const wasClosed = sessionStorage.getItem(storageKey) === "closed";
-
-		if (wasClosed) {
-			banner.hidden = true;
-			return;
-		}
 
 		closeButton?.addEventListener("click", () => {
 			banner.classList.add("is-closing");
@@ -304,30 +303,11 @@ const hasButton = Boolean(buttonText && buttonHref);
 		margin-inline: auto;
 	}
 
+	/* Solo posicion: color, geometria y estados vienen de `.btn--primary`. */
 	.campaign-banner__button {
-		min-height: 54px;
 		margin-top: 6px;
-		padding: 0 26px;
-		display: inline-flex;
 		align-self: flex-start;
-		align-items: center;
-		justify-content: center;
-		gap: 18px;
-		border: 1px solid rgba(255, 246, 237, 0.65);
-		border-radius: var(--radius-full, 999px);
-		background: var(--color-beige, #fff6ed);
-		color: var(--color-black, #141414);
-		font-size: 11px;
-		font-weight: 700;
-		letter-spacing: 0.09em;
-		text-decoration: none;
-		text-transform: uppercase;
 		white-space: nowrap;
-		transition:
-			background-color 200ms ease,
-			border-color 200ms ease,
-			color 200ms ease,
-			transform 200ms ease;
 	}
 
 	.campaign-banner--content-center .campaign-banner__button {
@@ -338,21 +318,8 @@ const hasButton = Boolean(buttonText && buttonHref);
 		align-self: flex-end;
 	}
 
-	.campaign-banner--light .campaign-banner__button {
-		border-color: rgba(20, 20, 20, 0.2);
-	}
-
 	.campaign-banner__button svg {
-		width: 19px;
-		height: 19px;
 		transition: transform 200ms ease;
-	}
-
-	.campaign-banner__button:hover {
-		border-color: var(--color-orange, #ff4d2a);
-		background: var(--color-orange, #ff4d2a);
-		color: #fff6ed;
-		transform: translateY(-2px);
 	}
 
 	.campaign-banner__button:hover svg {
@@ -394,7 +361,6 @@ const hasButton = Boolean(buttonText && buttonHref);
 		height: 19px;
 	}
 
-	.campaign-banner__button:focus-visible,
 	.campaign-banner__close:focus-visible {
 		outline: 2px solid var(--color-orange, #ff4d2a);
 		outline-offset: 3px;

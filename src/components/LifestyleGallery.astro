@@ -1,6 +1,7 @@
 ---
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
+import { ArrowRight } from "@lucide/astro";
 
 interface LifestyleItem {
 	label: string;
@@ -87,6 +88,8 @@ const defaultItems: LifestyleItem[] = [
 
 const { items = [] } = Astro.props;
 
+const categoriesHref = `${base}categorias/`;
+
 const sourceItems = items.length > 0 ? items : defaultItems;
 
 const visibleItems = sourceItems.slice(0, 3).map((item, index) => ({
@@ -103,16 +106,28 @@ const visibleItems = sourceItems.slice(0, 3).map((item, index) => ({
 		>
 			<div class="lifestyle-gallery__container">
 				<header class="lifestyle-gallery__header">
-					<div>
-						<h2 id="lifestyle-gallery-title">
-							Diseñadas para momentos reales
-						</h2>
-					</div>
-
-					<p class="lifestyle-gallery__intro">
-						Piezas funcionales para compartir,
-						organizar y acompañar cada día.
+					<p class="lifestyle-gallery__eyebrow">
+						Momentos reales
 					</p>
+
+					<h2 id="lifestyle-gallery-title">
+						Diseñadas para momentos reales
+					</h2>
+
+					<div class="lifestyle-gallery__subrow">
+						<p class="lifestyle-gallery__intro">
+							Piezas funcionales para compartir,
+							organizar y acompañar cada día.
+						</p>
+
+						<a
+							class="lifestyle-gallery__cta"
+							href={categoriesHref}
+						>
+							Ver todas las categorías
+							<ArrowRight aria-hidden="true" stroke-width={1.75} />
+						</a>
+					</div>
 				</header>
 
 				<ul
@@ -176,7 +191,7 @@ const visibleItems = sourceItems.slice(0, 3).map((item, index) => ({
 											href={item.href}
 										>
 											Descubrir
-											<span aria-hidden="true">→</span>
+											<ArrowRight aria-hidden="true" stroke-width={1.75} />
 										</a>
 									</div>
 								</article>
@@ -191,60 +206,95 @@ const visibleItems = sourceItems.slice(0, 3).map((item, index) => ({
 
 <style>
 	.lifestyle-gallery {
-		padding-block: clamp(24px, 8vw, 34px);
-		padding-inline: var(--page-padding);
+		padding-block: var(--section-py);
+		padding-inline: var(--container-gutter);
 		background: var(--surface);
 		color: var(--color-black);
 	}
 
-	@media (min-width: 768px) {
-		.lifestyle-gallery {
-			padding-block: clamp(32px, 5vw, 42px);
-		}
-	}
-
-	@media (min-width: 1024px) {
-		.lifestyle-gallery {
-			padding-block: clamp(40px, 3.2vw, 52px);
-		}
-	}
-
 	.lifestyle-gallery__container {
-		width: min(100%, var(--page-width));
+		width: min(100%, var(--container-comercial));
 		margin-inline: auto;
 	}
 
 	.lifestyle-gallery__header {
-		display: grid;
-		grid-template-columns:
-			minmax(0, 1.25fr)
-			minmax(280px, 0.75fr);
-		align-items: end;
-		gap: clamp(24px, 5vw, 80px);
-		margin-bottom: clamp(28px, 4vw, 48px);
+		margin-bottom: var(--header-gap);
+	}
+
+	.lifestyle-gallery__eyebrow {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		margin: 0 0 14px;
+		color: var(--color-orange);
+		font-size: clamp(12px, 0.15vw + 11.7px, 14px);
+		font-weight: 700;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+	}
+
+	.lifestyle-gallery__eyebrow::before {
+		width: 28px;
+		height: 1px;
+		background: currentColor;
+		content: "";
 	}
 
 	.lifestyle-gallery__header h2 {
-		max-width: 780px;
-		margin: 0;
+		max-width: 640px;
+		margin: 0 0 18px;
 		color: var(--color-black);
-		font-size: clamp(1.8125rem, 1.5rem + 1.5vw, 2.875rem);
+		font-size: clamp(34px, 3vw, 42px);
 		font-weight: 600;
-		line-height: 1.08;
+		line-height: 1.1;
 		letter-spacing: -0.02em;
 	}
 
+	.lifestyle-gallery__subrow {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-end;
+		justify-content: space-between;
+		gap: 12px 32px;
+	}
+
 	.lifestyle-gallery__intro {
-		max-width: 420px;
-		margin: 0 0 4px;
-		color: rgba(20, 20, 20, 0.68);
-		font-size: 16px;
+		max-width: 56ch;
+		margin: 0;
+		color: var(--ink-70);
+		font-size: clamp(17px, 0.3vw + 16.4px, 19px);
 		line-height: 1.6;
 	}
 
-	@media (min-width: 768px) {
-		.lifestyle-gallery__intro {
-			font-size: 17px;
+	.lifestyle-gallery__cta {
+		display: inline-flex;
+		flex-shrink: 0;
+		align-items: center;
+		gap: 8px;
+		min-height: 44px;
+		color: var(--color-brown);
+		font-size: 15px;
+		font-weight: 700;
+		letter-spacing: 0.01em;
+		text-decoration: none;
+		white-space: nowrap;
+	}
+
+	.lifestyle-gallery__cta svg {
+		width: 15px;
+		height: 15px;
+		transition: transform 180ms ease;
+	}
+
+	.lifestyle-gallery__cta:focus-visible {
+		outline: 2px solid var(--color-orange);
+		outline-offset: 4px;
+		border-radius: 4px;
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.lifestyle-gallery__cta:hover svg {
+			transform: translateX(4px);
 		}
 	}
 
@@ -322,23 +372,23 @@ const visibleItems = sourceItems.slice(0, 3).map((item, index) => ({
 	}
 
 	.lifestyle-card__caption {
-		padding-top: 16px;
+		padding-top: 12px;
 	}
 
 	.lifestyle-card__label {
 		margin: 0 0 6px;
 		color: var(--color-orange);
-		font-size: 10px;
+		font-size: 14px;
 		font-weight: 700;
-		letter-spacing: 0.14em;
+		letter-spacing: 0.06em;
 		text-transform: uppercase;
 	}
 
 	.lifestyle-card__caption h3 {
 		margin: 0;
-		font-size: clamp(20px, 1.6vw, 26px);
+		font-size: clamp(21px, 0.6vw + 19.5px, 25px);
 		font-weight: 600;
-		line-height: 1.15;
+		line-height: 1.2;
 		letter-spacing: -0.02em;
 	}
 
@@ -350,16 +400,10 @@ const visibleItems = sourceItems.slice(0, 3).map((item, index) => ({
 
 	.lifestyle-card__description {
 		max-width: 480px;
-		margin: 9px 0 0;
-		color: rgba(20, 20, 20, 0.7);
-		font-size: 16px;
-		line-height: 1.6;
-	}
-
-	@media (min-width: 768px) {
-		.lifestyle-card__description {
-			font-size: 17px;
-		}
+		margin: 8px 0 0;
+		color: var(--ink-70);
+		font-size: clamp(16px, 0.3vw + 15.4px, 18px);
+		line-height: 1.55;
 	}
 
 	.lifestyle-card__link {
@@ -367,17 +411,17 @@ const visibleItems = sourceItems.slice(0, 3).map((item, index) => ({
 		min-height: 40px;
 		align-items: center;
 		gap: 8px;
-		margin-top: 8px;
+		margin-top: 6px;
 		color: var(--color-brown);
-		font-size: 10px;
+		font-size: 14px;
 		font-weight: 700;
-		letter-spacing: 0.09em;
+		letter-spacing: 0.02em;
 		text-decoration: none;
-		text-transform: uppercase;
 	}
 
-	.lifestyle-card__link span {
-		font-size: 14px;
+	.lifestyle-card__link svg {
+		width: 14px;
+		height: 14px;
 		transition: transform 180ms ease;
 	}
 
@@ -393,21 +437,12 @@ const visibleItems = sourceItems.slice(0, 3).map((item, index) => ({
 			color: var(--color-brown);
 		}
 
-		.lifestyle-card__link:hover span {
+		.lifestyle-card__link:hover svg {
 			transform: translateX(4px);
 		}
 	}
 
 	@media (max-width: 980px) {
-		.lifestyle-gallery__header {
-			grid-template-columns: 1fr;
-			gap: 18px;
-		}
-
-		.lifestyle-gallery__intro {
-			max-width: 600px;
-		}
-
 		.lifestyle-gallery__grid {
 			grid-template-columns: repeat(2, minmax(0, 1fr));
 			grid-template-rows: auto;
@@ -431,6 +466,22 @@ const visibleItems = sourceItems.slice(0, 3).map((item, index) => ({
 
 		.lifestyle-gallery__header {
 			margin-bottom: 24px;
+		}
+
+		.lifestyle-gallery__header h2 {
+			max-width: none;
+			font-size: clamp(27px, 8vw, 32px);
+		}
+
+		.lifestyle-gallery__subrow {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 14px;
+		}
+
+		.lifestyle-gallery__intro {
+			max-width: none;
+			font-size: clamp(16px, 1vw + 15px, 17px);
 		}
 
 		.lifestyle-gallery__grid {

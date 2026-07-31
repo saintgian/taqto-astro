@@ -1,11 +1,21 @@
 ---
 import PageLayout from "../../../layouts/PageLayout.astro";
+import PageHero from "../../../components/PageHero.astro";
+import InfoCard from "../../../components/InfoCard.astro";
+import ProcessSteps from "../../../components/ProcessSteps.astro";
 import Breadcrumbs from "../../../components/Breadcrumbs.astro";
 import { WHATSAPP_NUMBER } from "../../../lib/constants";
+import {
+	Gift,
+	Boxes,
+	PenLine,
+	ScanLine,
+	Truck,
+	TreePine,
+} from "@lucide/astro";
 
 const base = import.meta.env.BASE_URL;
 
-const empresasHref = `${base}categorias/empresas/`;
 const regalosHref = `${base}categorias/empresas/regalos-corporativos/`;
 const mayoreoHref = `${base}categorias/empresas/ventas-al-por-mayor/`;
 
@@ -14,16 +24,73 @@ const whatsappMessage = encodeURIComponent(
 );
 
 const whatsappHref = `https://wa.me/${WHATSAPP_NUMBER}?text=${whatsappMessage}`;
+
+const resumen = [
+	{
+		icon: Gift,
+		label: "Regalos corporativos",
+		value: "Co-branding",
+		hint: "Tu marca junto al sello TAQTO.",
+	},
+	{
+		icon: Boxes,
+		label: "Ventas al por mayor",
+		value: "Desde 12 unidades",
+		hint: "Para reventa o uso profesional.",
+	},
+];
+
+const incluye = [
+	{
+		icon: PenLine,
+		title: "Personalización incluida",
+		text: "Grabado láser de un logo o imagen y una frase o nombre, sujeto a viabilidad técnica y condiciones vigentes.",
+	},
+	{
+		icon: ScanLine,
+		title: "Co-branding",
+		text: "El sello TAQTO permanece visible junto a la marca de tu empresa, preferentemente al reverso y, según el producto, en la base o una esquina.",
+	},
+	{
+		icon: Truck,
+		title: "Cobertura nacional",
+		text: "Enviamos a todo el Perú, con tarifa plana en Lima y embalaje adecuado según el producto.",
+	},
+	{
+		icon: TreePine,
+		title: "Materialidad real",
+		text: "Piezas de madera y cuero con veta, tono y textura que varían de forma natural entre unidades, tal como se muestra en nuestras fotos referenciales.",
+	},
+];
+
+const proceso = [
+	{
+		title: "Cuéntanos qué necesitas",
+		text: "Escríbenos por WhatsApp indicando si buscas regalos corporativos, compra al por mayor, o ambos.",
+	},
+	{
+		title: "Revisamos tu pedido",
+		text: "Conversamos sobre piezas, cantidades y personalización, y te confirmamos condiciones y tiempos.",
+	},
+	{
+		title: "Confirmamos y producimos",
+		text: "Una vez aprobado el pedido, coordinamos producción, grabado y entrega a nivel nacional.",
+	},
+];
 ---
 
 <PageLayout
 	title="Empresas | Regalos corporativos y venta al por mayor | TAQTO"
 	description="Soluciones TAQTO para empresas: regalos corporativos con co-branding y venta al por mayor de piezas de madera y cuero, con grabado láser incluido."
-	eyebrow="Soluciones con identidad"
-	heading="Empresas"
 >
-	<div class="space-y-14">
+	<PageHero
+		eyebrow="Soluciones con identidad"
+		title="Empresas"
+		lede="TAQTO trabaja con empresas, restaurantes y negocios que buscan piezas de madera y cuero con identidad propia: regalos corporativos personalizados y pedidos al por mayor para reventa o uso profesional."
+		split="7-5"
+	>
 		<Breadcrumbs
+			slot="before"
 			items={[
 				{ label: "Inicio", href: base },
 				{ label: "Categorías", href: `${base}categorias/` },
@@ -31,190 +98,193 @@ const whatsappHref = `https://wa.me/${WHATSAPP_NUMBER}?text=${whatsappMessage}`;
 			]}
 		/>
 
-		<!-- Introducción -->
-		<section class="space-y-4 text-base leading-relaxed text-black/70">
-			<p>
-				TAQTO trabaja con empresas, restaurantes y negocios que buscan
-				piezas de madera y cuero con identidad propia: regalos
-				corporativos personalizados y pedidos al por mayor para
-				reventa o uso profesional.
-			</p>
-			<p>
-				En ambos casos, cada pieza conserva la misma precisión,
-				materialidad honesta y personalización que ofrecemos a
-				nuestros clientes individuales, adaptada a las necesidades de
-				tu empresa.
-			</p>
-		</section>
+		<div class="actions">
+			<a
+				href={whatsappHref}
+				target="_blank"
+				rel="noopener noreferrer"
+				class="btn btn--primary"
+			>
+				Cotizar por WhatsApp
+			</a>
 
-		<!-- Acceso a las dos líneas -->
-		<section class="space-y-4">
-			<h2 class="text-2xl font-semibold text-black">
-				Dos formas de trabajar con TAQTO
-			</h2>
+			<a href={regalosHref} class="sp-btn sp-btn--ghost">
+				Regalos corporativos
+			</a>
+		</div>
 
-			<div class="grid gap-6 sm:grid-cols-2">
-				<a
-					href={regalosHref}
-					class="block space-y-2 rounded-2xl border border-black/10 p-6 transition hover:border-black/25"
-				>
-					<p class="text-xs font-semibold uppercase tracking-widest text-orange">
-						Co-branding
+		<div slot="aside">
+			<p class="facts-caption">Dos líneas de trabajo</p>
+
+			<ul class="facts">
+				{
+					resumen.map((item) => {
+						const Icon = item.icon;
+
+						return (
+							<li>
+								<Icon
+									class="facts__icon"
+									aria-hidden="true"
+									size={20}
+									stroke-width={1.75}
+								/>
+
+								<div>
+									<p class="facts__label">{item.label}</p>
+									<p class="facts__value">{item.value}</p>
+									<p class="facts__hint">{item.hint}</p>
+								</div>
+							</li>
+						);
+					})
+				}
+			</ul>
+		</div>
+	</PageHero>
+
+	<!-- Dos soluciones: bloques diferenciados de 6 columnas -->
+	<section class="sect">
+		<div class="wrap">
+			<div class="sect__head">
+				<h2>Dos formas de trabajar con TAQTO</h2>
+			</div>
+
+			<ul class="cards solutions" style="--cols:2">
+				<li>
+					<InfoCard
+						href={regalosHref}
+						eyebrow="Co-branding"
+						icon={Gift}
+						title="Regalos corporativos"
+						cta="Ver regalos corporativos"
+					>
+						<p>
+							Piezas personalizadas con el logo o marca de tu
+							empresa, junto al sello TAQTO, para clientes,
+							colaboradores o aliados.
+						</p>
+					</InfoCard>
+				</li>
+
+				<li>
+					<InfoCard
+						href={mayoreoHref}
+						eyebrow="Pedido mínimo: 12 unidades"
+						icon={Boxes}
+						title="Ventas al por mayor"
+						cta="Ver ventas al por mayor"
+					>
+						<p>
+							Pedidos al por mayor para restaurantes, tiendas y
+							negocios que buscan revender o equipar su espacio
+							con piezas TAQTO.
+						</p>
+					</InfoCard>
+				</li>
+			</ul>
+		</div>
+	</section>
+
+	<!-- Lo que incluye: cuatro tarjetas de 3 columnas -->
+	<section class="sect sect--tint">
+		<div class="wrap">
+			<div class="sect__head">
+				<h2>Lo que incluye trabajar con TAQTO</h2>
+
+				<p class="lede measure-lede">
+					En ambos casos, cada pieza conserva la misma precisión,
+					materialidad honesta y personalización que ofrecemos a
+					nuestros clientes individuales, adaptada a las
+					necesidades de tu empresa.
+				</p>
+			</div>
+
+			<ul class="cards" style="--cols:4">
+				{
+					incluye.map((item) => (
+						<li>
+							<InfoCard
+								icon={item.icon}
+								title={item.title}
+								compactTitle
+							>
+								<p>{item.text}</p>
+							</InfoCard>
+						</li>
+					))
+				}
+			</ul>
+		</div>
+	</section>
+
+	<!-- Proceso: encabezado de 4 columnas + pasos de 8 -->
+	<section class="sect">
+		<div class="wrap">
+			<div class="g12">
+				<div class="c4 flow" style="--flow:16px">
+					<h2>Cómo te atendemos</h2>
+
+					<p class="lede measure-tight">
+						Un mismo camino para cualquiera de las dos líneas.
 					</p>
-					<h3 class="text-xl font-semibold text-black">
+				</div>
+
+				<div class="c8">
+					<ProcessSteps steps={proceso} cols={3} />
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- CTA final -->
+	<section class="sect sect--last">
+		<div class="wrap">
+			<div class="page-cta page-cta--split">
+				<div class="page-cta__text">
+					<p class="eyebrow">Cotiza tu pedido</p>
+
+					<h2>Conversemos sobre tu proyecto</h2>
+
+					<p class="measure">
+						Cuéntanos qué necesita tu empresa y te ayudamos a
+						encontrar la pieza correcta, con la personalización y
+						condiciones que correspondan.
+					</p>
+
+					<p class="note measure">
+						También puedes revisar directamente nuestras{" "}
+						<a href={mayoreoHref}>ventas al por mayor</a>.
+					</p>
+				</div>
+
+				<div class="actions">
+					<a
+						href={whatsappHref}
+						target="_blank"
+						rel="noopener noreferrer"
+						class="btn btn--primary"
+					>
+						Cotizar por WhatsApp
+					</a>
+
+					<a href={regalosHref} class="sp-btn sp-btn--ghost">
 						Regalos corporativos
-					</h3>
-					<p class="text-sm text-black/70">
-						Piezas personalizadas con el logo o marca de tu
-						empresa, junto al sello TAQTO, para clientes,
-						colaboradores o aliados.
-					</p>
-					<span class="inline-flex items-center gap-2 pt-2 text-sm font-semibold text-black">
-						Ver regalos corporativos
-						<span aria-hidden="true">→</span>
-					</span>
-				</a>
-
-				<a
-					href={mayoreoHref}
-					class="block space-y-2 rounded-2xl border border-black/10 p-6 transition hover:border-black/25"
-				>
-					<p class="text-xs font-semibold uppercase tracking-widest text-orange">
-						Pedido mínimo: 12 unidades
-					</p>
-					<h3 class="text-xl font-semibold text-black">
-						Ventas al por mayor
-					</h3>
-					<p class="text-sm text-black/70">
-						Pedidos al por mayor para restaurantes, tiendas y
-						negocios que buscan revender o equipar su espacio con
-						piezas TAQTO.
-					</p>
-					<span class="inline-flex items-center gap-2 pt-2 text-sm font-semibold text-black">
-						Ver ventas al por mayor
-						<span aria-hidden="true">→</span>
-					</span>
-				</a>
+					</a>
+				</div>
 			</div>
-		</section>
-
-		<!-- Beneficios generales -->
-		<section class="space-y-4 text-base leading-relaxed text-black/70">
-			<h2 class="text-2xl font-semibold text-black">
-				Lo que incluye trabajar con TAQTO
-			</h2>
-
-			<dl class="grid gap-6 sm:grid-cols-2">
-				<div>
-					<dt class="font-semibold text-black">
-						Personalización incluida
-					</dt>
-					<dd>
-						Grabado láser de un logo o imagen y una frase o
-						nombre, sujeto a viabilidad técnica y condiciones
-						vigentes.
-					</dd>
-				</div>
-				<div>
-					<dt class="font-semibold text-black">Co-branding</dt>
-					<dd>
-						El sello TAQTO permanece visible junto a la marca de
-						tu empresa, preferentemente al reverso y, según el
-						producto, en la base o una esquina.
-					</dd>
-				</div>
-				<div>
-					<dt class="font-semibold text-black">
-						Cobertura nacional
-					</dt>
-					<dd>
-						Enviamos a todo el Perú, con tarifa plana en Lima y
-						embalaje adecuado según el producto.
-					</dd>
-				</div>
-				<div>
-					<dt class="font-semibold text-black">
-						Materialidad real
-					</dt>
-					<dd>
-						Piezas de madera y cuero con veta, tono y textura que
-						varían de forma natural entre unidades, tal como se
-						muestra en nuestras fotos referenciales.
-					</dd>
-				</div>
-			</dl>
-		</section>
-
-		<!-- Proceso básico de atención -->
-		<section class="space-y-4 text-base leading-relaxed text-black/70">
-			<h2 class="text-2xl font-semibold text-black">
-				Cómo te atendemos
-			</h2>
-
-			<ol class="grid gap-6 sm:grid-cols-3">
-				<li>
-					<p class="text-3xl font-semibold text-black">1</p>
-					<p class="font-semibold text-black">Cuéntanos qué necesitas</p>
-					<p>
-						Escríbenos por WhatsApp indicando si buscas regalos
-						corporativos, compra al por mayor, o ambos.
-					</p>
-				</li>
-				<li>
-					<p class="text-3xl font-semibold text-black">2</p>
-					<p class="font-semibold text-black">Revisamos tu pedido</p>
-					<p>
-						Conversamos sobre piezas, cantidades y
-						personalización, y te confirmamos condiciones y
-						tiempos.
-					</p>
-				</li>
-				<li>
-					<p class="text-3xl font-semibold text-black">3</p>
-					<p class="font-semibold text-black">Confirmamos y producimos</p>
-					<p>
-						Una vez aprobado el pedido, coordinamos producción,
-						grabado y entrega a nivel nacional.
-					</p>
-				</li>
-			</ol>
-		</section>
-
-		<!-- CTA final -->
-		<section class="space-y-4 rounded-2xl bg-black/5 p-8 text-base leading-relaxed text-black/70">
-			<p class="text-xs font-semibold uppercase tracking-widest text-orange">
-				Cotiza tu pedido
-			</p>
-			<h2 class="text-2xl font-semibold text-black">
-				Conversemos sobre tu proyecto
-			</h2>
-			<p>
-				Cuéntanos qué necesita tu empresa y te ayudamos a encontrar la
-				pieza correcta, con la personalización y condiciones que
-				correspondan.
-			</p>
-			<div class="flex flex-wrap gap-3 pt-2">
-				<a
-					href={whatsappHref}
-					target="_blank"
-					rel="noopener noreferrer"
-					class="inline-flex items-center justify-center rounded-lg bg-orange px-5 py-3 text-sm font-semibold text-white"
-				>
-					Cotizar por WhatsApp
-				</a>
-				<a
-					href={regalosHref}
-					class="inline-flex items-center justify-center rounded-lg border border-black/15 px-5 py-3 text-sm font-semibold text-black"
-				>
-					Regalos corporativos
-				</a>
-				<a
-					href={mayoreoHref}
-					class="inline-flex items-center justify-center rounded-lg border border-black/15 px-5 py-3 text-sm font-semibold text-black"
-				>
-					Ventas al por mayor
-				</a>
-			</div>
-		</section>
-	</div>
+		</div>
+	</section>
 </PageLayout>
+
+<style>
+	/* Las dos soluciones son la decisión principal de la página:
+	   más aire que una tarjeta informativa corriente. */
+	.solutions :global(.card) {
+		padding: clamp(26px, 2.6vw, 38px);
+	}
+
+	.solutions :global(.card__body) {
+		max-inline-size: 42ch;
+	}
+</style>

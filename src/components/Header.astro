@@ -7,6 +7,25 @@ import {
 	EMPRESAS_SUBCATEGORIES,
 } from "../lib/constants";
 import ProductSearch from "./ProductSearch.astro";
+import {
+	Search,
+	ChevronDown,
+	ChevronRight,
+	ArrowRight,
+	X,
+	ShoppingBag,
+	Trash2,
+	Minus,
+	Plus,
+	ArrowLeft,
+	LockKeyhole,
+	Flame,
+	UtensilsCrossed,
+	Laptop,
+	Gift,
+	Building2,
+	LayoutGrid,
+} from "@lucide/astro";
 
 interface NavSubcategory {
 	_id: string;
@@ -70,64 +89,16 @@ const whatsappMessage = encodeURIComponent(
 const whatsappHref =
 	`https://wa.me/${WHATSAPP_NUMBER}?text=${whatsappMessage}`;
 
-const categoryIcons: Record<string, string> = {
-	parrilla: `
-		<svg viewBox="0 0 24 24" aria-hidden="true">
-			<path d="M5 11h14"></path>
-			<path d="M7 11v4a5 5 0 0 0 10 0v-4"></path>
-			<path d="M9 19l-1 3"></path>
-			<path d="M15 19l1 3"></path>
-			<path d="M9 7c0-1 1-1.5 1-2.5"></path>
-			<path d="M13 7c0-1 1-1.5 1-2.5"></path>
-		</svg>
-	`,
-	"cocina-y-mesa": `
-		<svg viewBox="0 0 24 24" aria-hidden="true">
-			<circle cx="12" cy="12" r="7"></circle>
-			<circle cx="12" cy="12" r="3"></circle>
-			<path d="M4 4v7"></path>
-			<path d="M2.5 7h3"></path>
-			<path d="M20 4v16"></path>
-		</svg>
-	`,
-	oficina: `
-		<svg viewBox="0 0 24 24" aria-hidden="true">
-			<rect x="3" y="5" width="18" height="13" rx="2"></rect>
-			<path d="M8 22h8"></path>
-			<path d="M12 18v4"></path>
-		</svg>
-	`,
-	"kits-y-regalos": `
-		<svg viewBox="0 0 24 24" aria-hidden="true">
-			<rect x="3" y="9" width="18" height="12" rx="1.5"></rect>
-			<path d="M12 9v12"></path>
-			<path d="M3 13h18"></path>
-			<path d="M12 9H8.5A2.5 2.5 0 1 1 11 6.5V9"></path>
-			<path d="M12 9h3.5A2.5 2.5 0 1 0 13 6.5V9"></path>
-		</svg>
-	`,
-	empresas: `
-		<svg viewBox="0 0 24 24" aria-hidden="true">
-			<path d="M4 21V5h10v16"></path>
-			<path d="M14 10h6v11"></path>
-			<path d="M8 9h2"></path>
-			<path d="M8 13h2"></path>
-			<path d="M8 17h2"></path>
-			<path d="M17 14h1"></path>
-			<path d="M17 17h1"></path>
-		</svg>
-	`,
+const categoryIcons: Record<string, typeof Flame> = {
+	parrilla: Flame,
+	"cocina-y-mesa": UtensilsCrossed,
+	oficina: Laptop,
+	"kits-y-regalos": Gift,
+	empresas: Building2,
 };
 
-const defaultCategoryIcon = `
-	<svg viewBox="0 0 24 24" aria-hidden="true">
-		<rect x="4" y="4" width="16" height="16" rx="3"></rect>
-		<path d="M4 10h16"></path>
-	</svg>
-`;
-
 const getCategoryIcon = (slug: string) =>
-	categoryIcons[slug] || defaultCategoryIcon;
+	categoryIcons[slug] || LayoutGrid;
 ---
 
 <header class="site-header" data-site-header>
@@ -170,16 +141,7 @@ const getCategoryIcon = (slug: string) =>
 					aria-controls="product-search-panel"
 					data-search-trigger
 				>
-					<svg
-						viewBox="0 0 24 24"
-						aria-hidden="true"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="1.8"
-					>
-						<circle cx="11" cy="11" r="6.5"></circle>
-						<path d="m16 16 4 4"></path>
-					</svg>
+					<Search aria-hidden="true" stroke-width={1.75} />
 				</button>
 			</div>
 
@@ -238,6 +200,8 @@ const getCategoryIcon = (slug: string) =>
 							const isCurrent =
 								currentPath.startsWith(categoryPath);
 
+							const CategoryIcon = getCategoryIcon(category.slug);
+
 							return (
 								<li
 									class:list={[
@@ -255,10 +219,9 @@ const getCategoryIcon = (slug: string) =>
 											]}
 											href={categoryHref}
 										>
-											<span
-												class="navigation__category-icon"
-												set:html={getCategoryIcon(category.slug)}
-											></span>
+											<span class="navigation__category-icon">
+												<CategoryIcon aria-hidden="true" />
+											</span>
 
 											<span>{category.title}</span>
 										</a>
@@ -270,15 +233,7 @@ const getCategoryIcon = (slug: string) =>
 											aria-expanded="false"
 											data-dropdown-toggle
 										>
-											<svg
-												viewBox="0 0 24 24"
-												aria-hidden="true"
-												fill="none"
-												stroke="currentColor"
-												stroke-width="1.8"
-											>
-												<path d="m7 9 5 5 5-5"></path>
-											</svg>
+											<ChevronDown aria-hidden="true" stroke-width={1.75} />
 										</button>
 									</div>
 
@@ -287,10 +242,9 @@ const getCategoryIcon = (slug: string) =>
 										data-dropdown-menu
 									>
 										<div class="dropdown__header">
-											<span
-												class="dropdown__category-icon"
-												set:html={getCategoryIcon(category.slug)}
-											></span>
+											<span class="dropdown__category-icon">
+												<CategoryIcon aria-hidden="true" />
+											</span>
 
 											<div>
 												<p>{category.eyebrow}</p>
@@ -312,16 +266,7 @@ const getCategoryIcon = (slug: string) =>
 																	{subcategory.title}
 																</span>
 
-																<svg
-																	viewBox="0 0 24 24"
-																	aria-hidden="true"
-																	fill="none"
-																	stroke="currentColor"
-																	stroke-width="1.7"
-																>
-																	<path d="M5 12h14"></path>
-																	<path d="m14 7 5 5-5 5"></path>
-																</svg>
+																<ChevronRight aria-hidden="true" stroke-width={1.75} />
 															</a>
 														</li>
 													),
@@ -334,7 +279,7 @@ const getCategoryIcon = (slug: string) =>
 											href={categoryHref}
 										>
 											<span>Ver toda la categoría</span>
-											<span aria-hidden="true">→</span>
+											<ArrowRight aria-hidden="true" size={16} stroke-width={1.75} />
 										</a>
 									</div>
 								</li>
@@ -353,16 +298,7 @@ const getCategoryIcon = (slug: string) =>
 					aria-controls="product-search-panel"
 					data-search-trigger
 				>
-					<svg
-						viewBox="0 0 24 24"
-						aria-hidden="true"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="1.8"
-					>
-						<circle cx="11" cy="11" r="6.5"></circle>
-						<path d="m16 16 4 4"></path>
-					</svg>
+					<Search aria-hidden="true" stroke-width={1.75} />
 				</button>
 
 				<a
@@ -385,20 +321,17 @@ const getCategoryIcon = (slug: string) =>
 					class="icon-button cart-button"
 					aria-label="Carrito, 0 productos"
 					aria-expanded="false"
-					aria-controls="cart-drawer"
+					aria-controls="minicart"
+					aria-haspopup="dialog"
 					data-cart-trigger
 				>
 					<span class="cart-button__icon">
-						<svg
-							viewBox="0 0 24 24"
+						<ShoppingBag aria-hidden="true" stroke-width={1.75} />
+
+						<span
+							class="cart-button__fill"
 							aria-hidden="true"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="1.8"
-						>
-							<path d="M5 7h14l-1 13H6L5 7Z"></path>
-							<path d="M9 7V5a3 3 0 0 1 6 0v2"></path>
-						</svg>
+						></span>
 
 						<span class="cart-count" data-cart-count>0</span>
 					</span>
@@ -411,72 +344,181 @@ const getCategoryIcon = (slug: string) =>
 		</div>
 	</div>
 
+	<!--
+		Minicarrito: modal compacto centrado (no drawer). El cuerpo se
+		reescribe entero en cada render para que el DOM represente una
+		sola condicion: o lista de productos o estado vacio, nunca ambas.
+	-->
 	<div
-		class="cart-drawer"
-		id="cart-drawer"
-		data-cart-drawer
+		class="minicart"
+		id="minicart"
+		data-minicart
+		data-state="empty"
 		aria-hidden="true"
 	>
-		<div
-			class="cart-drawer__backdrop"
-			data-cart-drawer-backdrop
-		></div>
+		<div class="minicart__backdrop" data-minicart-backdrop></div>
 
-		<aside
-			class="cart-drawer__panel"
+		<div
+			class="minicart__dialog"
 			role="dialog"
 			aria-modal="true"
-			aria-label="Resumen del carrito"
+			aria-labelledby="minicart-title"
+			data-minicart-dialog
 		>
-			<div class="cart-drawer__header">
-				<p>Tu carrito</p>
+			<div class="minicart__head">
+				<!--
+					El titulo del dialogo es un <p>, no un heading: la pagina
+					mantiene su unico H1 y el esquema de encabezados no cambia.
+					`aria-labelledby` no exige que sea un heading.
+				-->
+				<p class="minicart__title" id="minicart-title">
+					<ShoppingBag
+						class="minicart__title-icon"
+						aria-hidden="true"
+						stroke-width={1.75}
+					/>
+					Tu carrito
+				</p>
 
 				<button
 					type="button"
-					class="cart-drawer__close"
-					data-cart-drawer-close
+					class="btn btn--icon minicart__close"
+					data-minicart-close
 					aria-label="Cerrar carrito"
+					title="Cerrar carrito"
 				>
-					<svg
-						viewBox="0 0 24 24"
-						aria-hidden="true"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="1.8"
-					>
-						<path d="M6 6l12 12M18 6 6 18"></path>
-					</svg>
+					<X aria-hidden="true" stroke-width={1.75} />
 				</button>
 			</div>
 
-			<div
-				class="cart-drawer__items"
-				data-cart-drawer-items
-			></div>
+			<div class="minicart__body" data-minicart-body>
+				<div class="minicart__empty">
+					<ShoppingBag
+						class="minicart__empty-icon"
+						aria-hidden="true"
+						stroke-width={1.75}
+					/>
 
-			<div class="cart-drawer__empty" data-cart-drawer-empty hidden>
-				<p>Tu carrito está vacío.</p>
+					<p class="minicart__empty-title">
+						Tu carrito está vacío
+					</p>
 
-				<a href={storeHref} data-cart-drawer-close>
-					Ver catálogo
-				</a>
+					<p class="minicart__empty-text">
+						Explora el catálogo y añade tu primera pieza
+						con grabado personalizado.
+					</p>
+
+					<a
+						class="btn btn--primary minicart__empty-link"
+						href={storeHref}
+					>
+						Ver catálogo
+					</a>
+				</div>
 			</div>
 
-			<div class="cart-drawer__footer">
-				<div class="cart-drawer__subtotal">
+			<div class="minicart__foot" data-minicart-foot hidden>
+				<div class="minicart__subtotal">
 					<span>Subtotal</span>
-					<strong data-cart-drawer-subtotal>S/ 0.00</strong>
+					<strong data-minicart-subtotal>S/ 0.00</strong>
 				</div>
 
-				<a class="cart-drawer__checkout" href={cartHref}>
+				<a
+					class="btn btn--primary btn--full minicart__checkout"
+					href={cartHref}
+				>
+					<LockKeyhole aria-hidden="true" stroke-width={1.75} />
 					Ir a pagar
 				</a>
+
+				<button
+					type="button"
+					class="btn btn--secondary btn--full minicart__keep"
+					data-minicart-close
+				>
+					<ArrowLeft aria-hidden="true" stroke-width={1.75} />
+					Seguir comprando
+				</button>
 			</div>
-		</aside>
+		</div>
 	</div>
 </header>
 
-<ProductSearch />
+<!--
+	Plantillas del minicarrito. Mantienen los iconos Lucide reales
+	(nada de SVG copiados a mano dentro de cadenas de innerHTML).
+-->
+<template data-minicart-list-template>
+	<ul class="minicart__list"></ul>
+</template>
+
+<template data-minicart-empty-template>
+	<div class="minicart__empty">
+		<ShoppingBag
+			class="minicart__empty-icon"
+			aria-hidden="true"
+			stroke-width={1.75}
+		/>
+
+		<p class="minicart__empty-title">Tu carrito está vacío</p>
+
+		<p class="minicart__empty-text">
+			Explora el catálogo y añade tu primera pieza con grabado
+			personalizado.
+		</p>
+
+		<a class="btn btn--primary minicart__empty-link" href={storeHref}>
+			Ver catálogo
+		</a>
+	</div>
+</template>
+
+<template data-minicart-item-template>
+	<li class="minicart__item">
+		<span class="minicart__item-media">
+			<img data-role="image" alt="" loading="lazy" />
+			<span class="minicart__item-placeholder" data-role="placeholder">
+				TAQTO
+			</span>
+		</span>
+
+		<div class="minicart__item-main">
+			<p class="minicart__item-title" data-role="title"></p>
+			<p class="minicart__item-variant" data-role="variant"></p>
+			<p class="minicart__item-engraving" data-role="engraving"></p>
+		</div>
+
+		<div class="minicart__item-qty" data-role="quantity">
+			<button type="button" data-role="decrease">
+				<Minus aria-hidden="true" stroke-width={1.75} />
+			</button>
+
+			<span data-role="quantity-value">1</span>
+
+			<button type="button" data-role="increase">
+				<Plus aria-hidden="true" stroke-width={1.75} />
+			</button>
+		</div>
+
+		<p class="minicart__item-price" data-role="price"></p>
+
+		<button
+			type="button"
+			class="btn btn--danger minicart__item-remove"
+			data-role="remove"
+		>
+			<Trash2 aria-hidden="true" stroke-width={1.75} />
+			<span class="minicart__item-remove-text">Quitar</span>
+		</button>
+	</li>
+</template>
+
+<ProductSearch
+	categories={productCategories.map((category) => ({
+		title: category.title,
+		slug: category.slug,
+	}))}
+/>
 
 <script>
 	import {
@@ -484,43 +526,255 @@ const getCategoryIcon = (slug: string) =>
 		getItemCount,
 		getSubtotal,
 		removeItem,
+		updateQuantity,
 		onCartUpdated,
+		onCartItemAdded,
 		type CartItem,
 	} from "../lib/cart";
 
 	import { formatPEN } from "../lib/productPricing";
+	import { openOverlay, closeOverlay } from "../lib/overlay";
+
+	const OVERLAY_ID = "minicart";
+	const FILL_ANIMATION_MS = 560;
 
 	const variantLabelOf = (item: CartItem) =>
 		[item.woodTitle, item.sizeTitle]
 			.filter(Boolean)
 			.join(" · ");
 
-	const renderCartDrawer = () => {
-		const items = getCart();
-		const count = getItemCount();
-		const subtotal = getSubtotal();
+	const initMinicart = () => {
+		const minicart =
+			document.querySelector<HTMLElement>("[data-minicart]");
 
-		document
-			.querySelectorAll<HTMLElement>(
-				"[data-cart-count]",
-			)
-			.forEach((badge) => {
-				badge.textContent = String(count);
-			});
+		if (!minicart || minicart.dataset.initialized === "true") {
+			return;
+		}
 
-		document
-			.querySelectorAll<HTMLElement>(
-				"[data-cart-total]",
-			)
-			.forEach((label) => {
-				label.textContent = formatPEN(subtotal);
-			});
+		minicart.dataset.initialized = "true";
 
-		document
-			.querySelectorAll<HTMLButtonElement>(
-				"[data-cart-trigger]",
-			)
-			.forEach((trigger) => {
+		const dialog = minicart.querySelector<HTMLElement>(
+			"[data-minicart-dialog]",
+		);
+		const backdrop = minicart.querySelector<HTMLElement>(
+			"[data-minicart-backdrop]",
+		);
+		const body = minicart.querySelector<HTMLElement>(
+			"[data-minicart-body]",
+		);
+		const foot = minicart.querySelector<HTMLElement>(
+			"[data-minicart-foot]",
+		);
+		const subtotalLabel = minicart.querySelector<HTMLElement>(
+			"[data-minicart-subtotal]",
+		);
+		const listTemplate = document.querySelector<HTMLTemplateElement>(
+			"[data-minicart-list-template]",
+		);
+		const emptyTemplate = document.querySelector<HTMLTemplateElement>(
+			"[data-minicart-empty-template]",
+		);
+		const itemTemplate = document.querySelector<HTMLTemplateElement>(
+			"[data-minicart-item-template]",
+		);
+
+		if (
+			!dialog ||
+			!backdrop ||
+			!body ||
+			!foot ||
+			!subtotalLabel ||
+			!listTemplate ||
+			!emptyTemplate ||
+			!itemTemplate
+		) {
+			return;
+		}
+
+		const triggers = () =>
+			Array.from(
+				document.querySelectorAll<HTMLButtonElement>(
+					"[data-cart-trigger]",
+				),
+			);
+
+		const cloneOf = (template: HTMLTemplateElement) =>
+			template.content.firstElementChild!.cloneNode(
+				true,
+			) as HTMLElement;
+
+		const buildRow = (item: CartItem) => {
+			const row = cloneOf(itemTemplate);
+
+			row.dataset.itemId = item.id;
+
+			const pick = <T extends HTMLElement>(role: string) =>
+				row.querySelector<T>(`[data-role="${role}"]`);
+
+			const image = pick<HTMLImageElement>("image");
+			const placeholder = pick("placeholder");
+
+			if (item.image && image) {
+				image.src = item.image;
+				image.alt = item.title;
+				placeholder?.remove();
+			} else {
+				image?.remove();
+			}
+
+			const title = pick("title");
+			if (title) title.textContent = item.title;
+
+			const variantText = variantLabelOf(item);
+			const variant = pick("variant");
+
+			if (variant) {
+				if (variantText) {
+					variant.textContent = variantText;
+				} else {
+					variant.remove();
+				}
+			}
+
+			const engraving = pick("engraving");
+
+			if (engraving) {
+				if (item.engravingText) {
+					engraving.textContent = `Grabado: “${item.engravingText}”`;
+				} else {
+					engraving.remove();
+				}
+			}
+
+			const quantityValue = pick("quantity-value");
+			if (quantityValue) {
+				quantityValue.textContent = String(item.quantity);
+			}
+
+			const quantityGroup = pick("quantity");
+			quantityGroup?.setAttribute(
+				"aria-label",
+				`Cantidad de ${item.title}`,
+			);
+
+			const decrease = pick<HTMLButtonElement>("decrease");
+
+			if (decrease) {
+				decrease.setAttribute(
+					"aria-label",
+					`Disminuir cantidad de ${item.title}`,
+				);
+				decrease.disabled = item.quantity <= 1;
+				decrease.addEventListener("click", () => {
+					updateQuantity(item.id, item.quantity - 1);
+				});
+			}
+
+			const increase = pick<HTMLButtonElement>("increase");
+
+			if (increase) {
+				increase.setAttribute(
+					"aria-label",
+					`Aumentar cantidad de ${item.title}`,
+				);
+				increase.addEventListener("click", () => {
+					updateQuantity(item.id, item.quantity + 1);
+				});
+			}
+
+			const price = pick("price");
+			if (price) {
+				price.textContent = formatPEN(
+					item.unitPrice * item.quantity,
+				);
+			}
+
+			const remove = pick<HTMLButtonElement>("remove");
+
+			if (remove) {
+				remove.setAttribute(
+					"aria-label",
+					`Quitar ${item.title} del carrito`,
+				);
+				remove.addEventListener("click", () => {
+					removeItem(item.id);
+				});
+			}
+
+			return row;
+		};
+
+		/*
+		 * El cuerpo se reconstruye entero: o lista o estado vacio. Nunca
+		 * conviven en el DOM, asi que no puede volver a verse "Tu carrito
+		 * esta vacio" encima de un producto.
+		 */
+		/*
+		 * El cuerpo se reescribe entero en cada render, asi que el control
+		 * que tenia el foco desaparece. Se anota cual era para devolverlo:
+		 * sin esto, ajustar la cantidad tira el foco al body y el popover
+		 * pierde el contexto de teclado.
+		 */
+		const rememberFocus = () => {
+			const element = document.activeElement as HTMLElement | null;
+
+			if (!element || !body.contains(element)) return null;
+
+			const row = element.closest<HTMLElement>("[data-item-id]");
+			const role = element.getAttribute("data-role");
+
+			return row?.dataset.itemId && role
+				? { id: row.dataset.itemId, role }
+				: null;
+		};
+
+		const restoreFocus = (
+			memory: { id: string; role: string } | null,
+		) => {
+			if (!memory) return;
+
+			const row = body.querySelector<HTMLElement>(
+				`[data-item-id="${CSS.escape(memory.id)}"]`,
+			);
+
+			if (!row) return;
+
+			const exact = row.querySelector<HTMLButtonElement>(
+				`[data-role="${memory.role}"]`,
+			);
+
+			// Si el control quedo deshabilitado (bajar de 1) el foco pasa
+			// al hermano util en vez de perderse.
+			const target =
+				exact && !exact.disabled
+					? exact
+					: row.querySelector<HTMLButtonElement>(
+							'[data-role="increase"]',
+						);
+
+			target?.focus();
+		};
+
+		const renderMinicart = () => {
+			const focusMemory = rememberFocus();
+			const items = getCart();
+			const count = getItemCount();
+			const subtotal = getSubtotal();
+			const isEmpty = items.length === 0;
+
+			document
+				.querySelectorAll<HTMLElement>("[data-cart-count]")
+				.forEach((badge) => {
+					badge.textContent = String(count);
+				});
+
+			document
+				.querySelectorAll<HTMLElement>("[data-cart-total]")
+				.forEach((label) => {
+					label.textContent = formatPEN(subtotal);
+				});
+
+			triggers().forEach((trigger) => {
 				trigger.setAttribute(
 					"aria-label",
 					`Carrito, ${count} ${
@@ -529,146 +783,220 @@ const getCategoryIcon = (slug: string) =>
 				);
 			});
 
-		const drawerItemsContainer =
-			document.querySelector<HTMLElement>(
-				"[data-cart-drawer-items]",
+			minicart.dataset.state = isEmpty ? "empty" : "filled";
+			body.replaceChildren();
+
+			if (isEmpty) {
+				body.appendChild(cloneOf(emptyTemplate));
+				foot.hidden = true;
+				subtotalLabel.textContent = formatPEN(0);
+				return;
+			}
+
+			const list = cloneOf(listTemplate);
+			items.forEach((item) => list.appendChild(buildRow(item)));
+
+			body.appendChild(list);
+			foot.hidden = false;
+			subtotalLabel.textContent = formatPEN(subtotal);
+
+			restoreFocus(focusMemory);
+		};
+
+		const isOpen = () => minicart.classList.contains("is-open");
+
+		/*
+		 * El breakpoint sale del layout: por debajo el Header colapsa y
+		 * anclar un popover al icono deja de tener sentido.
+		 */
+		const desktopQuery = window.matchMedia("(min-width: 768px)");
+		const isPopover = () => desktopQuery.matches;
+
+		let anchorTrigger: HTMLElement | null = null;
+		let anchorFrame = 0;
+
+		/* Posicion del popover a partir del rect real del trigger. */
+		const anchorToTrigger = () => {
+			if (!anchorTrigger || !isPopover()) return;
+
+			const rect = anchorTrigger.getBoundingClientRect();
+			const top = rect.bottom + 12;
+
+			/*
+			 * El dialogo se posiciona contra el bloque contenedor inicial,
+			 * que excluye la barra de scroll: usar `innerWidth` lo dejaria
+			 * desplazado justo el ancho de esa barra.
+			 */
+			const viewportWidth = document.documentElement.clientWidth;
+			const viewportHeight = document.documentElement.clientHeight;
+
+			// Borde derecho alineado con el trigger, con margen seguro.
+			const right = Math.max(
+				16,
+				Math.min(
+					viewportWidth - rect.right,
+					viewportWidth - 16,
+				),
 			);
 
-		const drawerEmpty = document.querySelector<HTMLElement>(
-			"[data-cart-drawer-empty]",
-		);
+			const available = viewportHeight - top - 16;
 
-		const drawerSubtotal =
-			document.querySelector<HTMLElement>(
-				"[data-cart-drawer-subtotal]",
+			const maxHeight = Math.max(
+				260,
+				Math.min(650, viewportHeight * 0.7, available),
 			);
 
-		if (!drawerItemsContainer || !drawerEmpty) return;
+			minicart.style.setProperty("--minicart-top", `${top}px`);
+			minicart.style.setProperty("--minicart-right", `${right}px`);
 
-		drawerEmpty.hidden = items.length > 0;
-		drawerItemsContainer.innerHTML = "";
+			minicart.style.setProperty(
+				"--minicart-max-height",
+				`${maxHeight}px`,
+			);
+		};
 
-		if (drawerSubtotal) {
-			drawerSubtotal.textContent = formatPEN(subtotal);
-		}
+		const scheduleAnchor = () => {
+			if (anchorFrame) return;
 
-		items.forEach((item) => {
-			const row = document.createElement("div");
-			row.className = "cart-drawer__item";
-
-			const variant = variantLabelOf(item);
-
-			row.innerHTML = `
-				<div class="cart-drawer__item-media">
-					${
-						item.image
-							? `<img src="${item.image}" alt="${item.title}" loading="lazy" />`
-							: `<div class="cart-drawer__item-placeholder">TAQTO</div>`
-					}
-				</div>
-
-				<div class="cart-drawer__item-content">
-					<p class="cart-drawer__item-title">${item.title}</p>
-					${
-						variant
-							? `<p class="cart-drawer__item-variant">${variant}</p>`
-							: ""
-					}
-					<p class="cart-drawer__item-meta">
-						${item.quantity} × ${formatPEN(item.unitPrice)}
-					</p>
-				</div>
-
-				<button
-					type="button"
-					class="cart-drawer__item-remove"
-					aria-label="Quitar ${item.title} del carrito"
-				>
-					Quitar
-				</button>
-			`;
-
-			row
-				.querySelector<HTMLButtonElement>(
-					".cart-drawer__item-remove",
-				)
-				?.addEventListener("click", () => {
-					removeItem(item.id);
-				});
-
-			drawerItemsContainer.appendChild(row);
-		});
-	};
-
-	renderCartDrawer();
-	onCartUpdated(renderCartDrawer);
-
-	document.addEventListener(
-		"astro:page-load",
-		renderCartDrawer,
-	);
-
-	const cartDrawer = document.querySelector<HTMLElement>(
-		"[data-cart-drawer]",
-	);
-
-	const openCartDrawer = () => {
-		if (!cartDrawer) return;
-
-		cartDrawer.classList.add("is-open");
-		cartDrawer.setAttribute("aria-hidden", "false");
-
-		document
-			.querySelectorAll<HTMLButtonElement>(
-				"[data-cart-trigger]",
-			)
-			.forEach((trigger) => {
-				trigger.setAttribute("aria-expanded", "true");
+			anchorFrame = window.requestAnimationFrame(() => {
+				anchorFrame = 0;
+				anchorToTrigger();
 			});
-	};
+		};
 
-	const closeCartDrawer = () => {
-		if (!cartDrawer) return;
+		const closeMinicart = () => {
+			if (!isOpen()) return;
 
-		cartDrawer.classList.remove("is-open");
-		cartDrawer.setAttribute("aria-hidden", "true");
+			minicart.classList.remove("is-open");
+			minicart.setAttribute("aria-hidden", "true");
+			anchorTrigger = null;
 
-		document
-			.querySelectorAll<HTMLButtonElement>(
-				"[data-cart-trigger]",
-			)
-			.forEach((trigger) => {
+			window.removeEventListener("resize", scheduleAnchor);
+			window.removeEventListener("scroll", scheduleAnchor, true);
+
+			triggers().forEach((trigger) => {
 				trigger.setAttribute("aria-expanded", "false");
 			});
-	};
 
-	document
-		.querySelectorAll<HTMLButtonElement>(
-			"[data-cart-trigger]",
-		)
-		.forEach((trigger) => {
+			closeOverlay(OVERLAY_ID);
+		};
+
+		const openMinicart = (trigger: HTMLElement) => {
+			if (isOpen()) return;
+
+			const popover = isPopover();
+
+			minicart.dataset.mode = popover ? "popover" : "modal";
+
+			/*
+			 * `aria-modal` solo cuando de verdad bloquea la pagina: el
+			 * popover de desktop no lo hace.
+			 */
+			if (popover) {
+				dialog.removeAttribute("aria-modal");
+			} else {
+				dialog.setAttribute("aria-modal", "true");
+			}
+
+			anchorTrigger = trigger;
+
+			if (popover) {
+				anchorToTrigger();
+
+				window.addEventListener("resize", scheduleAnchor);
+				window.addEventListener("scroll", scheduleAnchor, true);
+			}
+
+			minicart.classList.add("is-open");
+			minicart.setAttribute("aria-hidden", "false");
+
+			triggers().forEach((element) => {
+				element.setAttribute("aria-expanded", "true");
+			});
+
+			openOverlay({
+				id: OVERLAY_ID,
+				container: dialog,
+				trigger,
+				close: closeMinicart,
+				modal: !popover,
+				initialFocus:
+					minicart.querySelector<HTMLElement>(
+						"[data-minicart-close]",
+					),
+			});
+		};
+
+		triggers().forEach((trigger) => {
 			trigger.addEventListener("click", () => {
-				if (cartDrawer?.classList.contains("is-open")) {
-					closeCartDrawer();
+				if (isOpen()) {
+					closeMinicart();
 				} else {
-					openCartDrawer();
+					openMinicart(trigger);
 				}
 			});
 		});
 
-	document
-		.querySelectorAll<HTMLElement>(
-			"[data-cart-drawer-backdrop], [data-cart-drawer-close]",
-		)
-		.forEach((element) => {
-			element.addEventListener("click", closeCartDrawer);
+		// Cambiar de popover a modal (o al reves) con el panel abierto
+		// dejaria un dialogo mal anclado: se cierra y se reabre limpio.
+		desktopQuery.addEventListener("change", () => {
+			if (isOpen()) closeMinicart();
 		});
 
-	document.addEventListener("keydown", (event) => {
-		if (event.key === "Escape") {
-			closeCartDrawer();
-		}
-	});
+		backdrop.addEventListener("click", closeMinicart);
+
+		minicart
+			.querySelectorAll<HTMLElement>("[data-minicart-close]")
+			.forEach((element) => {
+				element.addEventListener("click", closeMinicart);
+			});
+
+		// ---------- Animacion "el carrito se llena" ----------
+
+		let fillTimer: ReturnType<typeof setTimeout> | undefined;
+
+		const playFillAnimation = () => {
+			const prefersReducedMotion = window.matchMedia(
+				"(prefers-reduced-motion: reduce)",
+			).matches;
+
+			if (prefersReducedMotion) return;
+
+			const buttons = triggers();
+			if (buttons.length === 0) return;
+
+			// Un unico timer compartido: reagregar rapido reinicia la
+			// animacion en vez de acumular temporizadores.
+			if (fillTimer) clearTimeout(fillTimer);
+
+			buttons.forEach((button) => {
+				button.classList.remove("is-cart-adding");
+			});
+
+			// Reflow forzado para que el navegador reinicie la animacion
+			// cuando la clase se quita y se vuelve a poner en el mismo tick.
+			void buttons[0].offsetWidth;
+
+			buttons.forEach((button) => {
+				button.classList.add("is-cart-adding");
+			});
+
+			fillTimer = setTimeout(() => {
+				buttons.forEach((button) => {
+					button.classList.remove("is-cart-adding");
+				});
+
+				fillTimer = undefined;
+			}, FILL_ANIMATION_MS);
+		};
+
+		renderMinicart();
+		onCartUpdated(renderMinicart);
+		onCartItemAdded(playFillAnimation);
+	};
+
+	initMinicart();
+	document.addEventListener("astro:page-load", initMinicart);
 
 	const initializeHeaders = () => {
 		const headers =
@@ -906,11 +1234,12 @@ const getCategoryIcon = (slug: string) =>
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		gap: clamp(16px, 3vw, 32px);
+		gap: clamp(24px, 3vw, 40px);
 		color: var(--cream-90);
-		font-size: var(--text-xs);
-		font-weight: 600;
-		letter-spacing: 0.08em;
+		font-size: 12px;
+		font-weight: 700;
+		line-height: 1;
+		letter-spacing: 0.09em;
 		text-transform: uppercase;
 	}
 
@@ -933,6 +1262,17 @@ const getCategoryIcon = (slug: string) =>
 		.announcement__divider,
 		.announcement__item--secondary {
 			display: none;
+		}
+
+		.announcement {
+			width: 100%;
+			padding-inline: clamp(12px, 4vw, 16px);
+		}
+
+		.announcement__item {
+			font-size: clamp(9.5px, 2.7vw, 11px);
+			letter-spacing: 0.06em;
+			line-height: 1.15;
 		}
 	}
 
@@ -985,7 +1325,7 @@ const getCategoryIcon = (slug: string) =>
 		height: 100%;
 		display: flex;
 		align-items: stretch;
-		gap: clamp(6px, 1.1vw, 20px);
+		gap: clamp(22px, 2vw, 34px);
 		margin: 0;
 		padding: 0;
 		list-style: none;
@@ -1010,9 +1350,10 @@ const getCategoryIcon = (slug: string) =>
 		gap: 7px;
 		padding-inline: 4px;
 		color: var(--ink-70);
-		font-size: var(--text-xs);
+		font-size: clamp(13px, 0.3vw + 12.5px, 14px);
 		font-weight: 600;
-		letter-spacing: 0.03em;
+		line-height: 1;
+		letter-spacing: 0.02em;
 		text-decoration: none;
 		text-transform: uppercase;
 		white-space: nowrap;
@@ -1369,6 +1710,7 @@ const getCategoryIcon = (slug: string) =>
 
 	.cart-button__icon {
 		position: relative;
+		flex: 0 0 auto;
 		display: grid;
 		place-items: center;
 	}
@@ -1546,11 +1888,11 @@ const getCategoryIcon = (slug: string) =>
 
 	@media (max-width: 680px) {
 		.header-shell::before {
-			height: 30px;
+			height: 32px;
 		}
 
 		.announcement {
-			min-height: 30px;
+			min-height: 32px;
 			justify-content: center;
 			text-align: center;
 		}
@@ -1624,233 +1966,481 @@ const getCategoryIcon = (slug: string) =>
 		}
 	}
 
-	.cart-drawer {
+	/*
+	 * ---------- Minicarrito ----------
+	 * Movil: modal centrado con backdrop (composicion aprobada).
+	 * Desktop: popover anclado al icono del Header. La capa sigue
+	 * cubriendo el viewport, pero es transparente: solo sirve para
+	 * detectar el clic exterior, no oscurece la pagina.
+	 */
+	.minicart {
 		position: fixed;
 		inset: 0;
 		z-index: 300;
 		visibility: hidden;
 	}
 
-	.cart-drawer.is-open {
+	.minicart.is-open {
 		visibility: visible;
 	}
 
-	.cart-drawer__backdrop {
+	.minicart__backdrop {
 		position: absolute;
 		inset: 0;
-		background: rgba(3, 3, 3, 0.55);
-		backdrop-filter: blur(3px);
+		background: rgba(20, 20, 20, 0.34);
 		opacity: 0;
-		transition: opacity 220ms ease;
+		transition: opacity 200ms ease;
 	}
 
-	.cart-drawer.is-open .cart-drawer__backdrop {
+	.minicart.is-open .minicart__backdrop {
 		opacity: 1;
 	}
 
-	.cart-drawer__panel {
+	.minicart__dialog {
 		position: absolute;
-		top: 0;
-		right: 0;
-		bottom: 0;
-		width: min(400px, 100vw);
-		padding: 22px;
+		top: 50%;
+		left: 50%;
+		width: min(92vw, 560px);
+		max-height: min(78vh, 720px);
 		display: flex;
 		flex-direction: column;
-		border-left: 1px solid var(--ink-15);
+		padding: 24px;
+		border: 1px solid var(--ink-15);
+		border-radius: 18px;
 		background: var(--surface);
 		color: var(--color-black);
-		box-shadow: -20px 0 48px rgba(20, 20, 20, 0.12);
-		transform: translateX(100%);
-		transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+		box-shadow: 0 18px 44px rgba(20, 20, 20, 0.14);
+		opacity: 0;
+		transform: translate(-50%, calc(-50% + 8px));
+		pointer-events: none;
+		transition:
+			opacity 200ms ease,
+			transform 200ms ease;
 	}
 
-	.cart-drawer.is-open .cart-drawer__panel {
-		transform: translateX(0);
+	.minicart.is-open .minicart__dialog {
+		opacity: 1;
+		transform: translate(-50%, -50%);
+		pointer-events: auto;
 	}
 
-	.cart-drawer__header {
-		margin-bottom: 18px;
+	/* ---------- Popover anclado (desktop) ---------- */
+
+	@media (min-width: 768px) {
+		.minicart[data-mode="popover"] .minicart__backdrop {
+			background: transparent;
+		}
+
+		/*
+		 * `--minicart-top` / `--minicart-right` los calcula el script a
+		 * partir del rect real del trigger. Los valores por defecto
+		 * corresponden al Header en reposo, asi que la primera apertura
+		 * no depende de que el calculo llegue antes que la pintura.
+		 */
+		.minicart[data-mode="popover"] .minicart__dialog {
+			top: var(--minicart-top, 106px);
+			right: var(--minicart-right, 24px);
+			left: auto;
+			width: min(440px, calc(100vw - 32px));
+			max-height: var(--minicart-max-height, min(70vh, 650px));
+			padding: 20px;
+			border-radius: 16px;
+			box-shadow: 0 16px 40px rgba(20, 20, 20, 0.13);
+			transform: translateY(-8px) scale(0.96);
+			transform-origin: top right;
+		}
+
+		.minicart[data-mode="popover"].is-open .minicart__dialog {
+			transform: translateY(0) scale(1);
+		}
+
+		/* El popover es mas estrecho: la miniatura baja al minimo util. */
+		.minicart[data-mode="popover"] .minicart__item {
+			grid-template-columns: 76px minmax(0, 1fr) auto;
+			column-gap: 12px;
+		}
+
+		.minicart[data-mode="popover"] .minicart__item-media {
+			width: 76px;
+			height: 76px;
+		}
+	}
+
+	.minicart__head {
+		flex: 0 0 auto;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
+		gap: var(--space-xs);
+		padding-bottom: 16px;
+		border-bottom: 1px solid var(--ink-15);
 	}
 
-	.cart-drawer__header p {
+	.minicart__title {
+		margin: 0;
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		font-size: var(--text-md);
+		font-weight: 600;
+		letter-spacing: -0.01em;
+	}
+
+	.minicart__title-icon {
+		width: 20px;
+		height: 20px;
+		flex: 0 0 20px;
+		color: var(--ink-55);
+	}
+
+	/* Solo posicion: color y estados vienen de `.btn--icon`. */
+	.minicart__close {
+		flex: 0 0 44px;
+	}
+
+	.minicart__body {
+		flex: 1 1 auto;
+		min-height: 0;
+		overflow-y: auto;
+		overscroll-behavior: contain;
+	}
+
+	.minicart__list {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.minicart__item {
+		display: grid;
+		grid-template-columns: 80px minmax(0, 1fr) auto;
+		grid-template-areas:
+			"media main price"
+			"media qty remove";
+		align-items: center;
+		column-gap: 14px;
+		row-gap: 10px;
+		padding: 16px 0;
+		border-bottom: 1px solid var(--ink-15);
+	}
+
+	.minicart__item:last-child {
+		border-bottom: 0;
+	}
+
+	.minicart__item-media {
+		grid-area: media;
+		position: relative;
+		width: 80px;
+		height: 80px;
+		aspect-ratio: 1 / 1;
+		overflow: hidden;
+		border: 1px solid var(--ink-15);
+		border-radius: 12px;
+		background: var(--surface);
+	}
+
+	.minicart__item-media img {
+		width: 100%;
+		height: 100%;
+		padding: 6px;
+		object-fit: contain;
+	}
+
+	.minicart__item-placeholder {
+		position: absolute;
+		inset: 0;
+		display: grid;
+		place-items: center;
+		color: var(--color-brown);
+		font-size: 9px;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+	}
+
+	.minicart__item-main {
+		grid-area: main;
+		min-width: 0;
+	}
+
+	.minicart__item-title {
 		margin: 0;
 		font-size: var(--text-sm);
-		font-weight: 700;
+		font-weight: 600;
+		line-height: var(--leading-snug);
 	}
 
-	.cart-drawer__close {
+	.minicart__item-variant,
+	.minicart__item-engraving {
+		margin: 3px 0 0;
+		color: var(--ink-55);
+		font-size: 14px;
+		line-height: var(--leading-snug);
+	}
+
+	.minicart__item-engraving {
+		font-style: italic;
+	}
+
+	.minicart__item-qty {
+		grid-area: qty;
+		justify-self: start;
+		display: inline-flex;
+		align-items: center;
+		border: 1px solid var(--ink-15);
+		border-radius: var(--radius-sm);
+	}
+
+	.minicart__item-qty button {
 		width: 44px;
 		height: 44px;
 		display: grid;
 		place-items: center;
 		border: 0;
-		border-radius: var(--radius-full);
-		background: var(--ink-08);
+		border-radius: var(--radius-sm);
+		background: transparent;
 		color: var(--color-black);
 		cursor: pointer;
+		transition: background-color 150ms ease;
 	}
 
-	.cart-drawer__close svg {
+	.minicart__item-qty button:hover:not(:disabled) {
+		background: var(--ink-08);
+	}
+
+	.minicart__item-qty button:disabled {
+		color: var(--ink-35);
+		cursor: not-allowed;
+		opacity: 1;
+	}
+
+	.minicart__item-qty svg {
 		width: 16px;
 		height: 16px;
 	}
 
-	.cart-drawer__close:hover {
-		background: var(--ink-15);
-	}
-
-	.cart-drawer__items {
-		flex: 1;
-		overflow-y: auto;
-		display: flex;
-		flex-direction: column;
-		gap: 12px;
-		padding-right: 4px;
-	}
-
-	.cart-drawer__item {
-		display: grid;
-		grid-template-columns: 56px minmax(0, 1fr) auto;
-		align-items: center;
-		gap: 12px;
-		padding: 10px;
-		border: 1px solid var(--ink-15);
-		border-radius: var(--radius-md);
-		background: var(--surface);
-	}
-
-	.cart-drawer__item-media {
-		width: 56px;
-		height: 56px;
-		overflow: hidden;
-		border-radius: 9px;
-		background: var(--surface-warm);
-	}
-
-	.cart-drawer__item-media img {
-		display: block;
-		width: 100%;
-		height: 100%;
-		object-fit: contain;
-		padding: 5px;
-	}
-
-	.cart-drawer__item-placeholder {
-		width: 100%;
-		height: 100%;
-		display: grid;
-		place-items: center;
-		color: var(--color-brown);
-		font-size: 8px;
-		font-weight: 700;
-	}
-
-	.cart-drawer__item-title {
-		margin: 0;
-		font-size: var(--text-xs);
+	.minicart__item-qty span {
+		min-width: 26px;
+		font-size: 15px;
 		font-weight: 600;
+		text-align: center;
+		font-variant-numeric: tabular-nums;
 	}
 
-	.cart-drawer__item-variant {
-		margin: 2px 0 0;
-		color: var(--ink-55);
-		font-size: 12px;
-	}
-
-	.cart-drawer__item-meta {
-		margin: 2px 0 0;
-		color: var(--ink-55);
-		font-size: 12px;
-	}
-
-	.cart-drawer__item-remove {
-		min-height: 44px;
-		padding: 0 var(--space-2xs);
-		display: inline-flex;
-		align-items: center;
-		border: 0;
-		background: transparent;
-		color: var(--color-orange-hover);
-		font-size: 12.5px;
+	.minicart__item-price {
+		grid-area: price;
+		align-self: start;
+		margin: 0;
+		font-size: var(--text-sm);
 		font-weight: 700;
-		letter-spacing: 0.04em;
-		text-transform: uppercase;
-		cursor: pointer;
 		white-space: nowrap;
 	}
 
-	.cart-drawer__empty {
-		flex: 1;
+	/* Solo posicion: color y estados vienen de `.btn--danger`. */
+	.minicart__item-remove {
+		grid-area: remove;
+		justify-self: end;
+		gap: 6px;
+	}
+
+	.minicart__empty {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		justify-content: center;
-		gap: 14px;
+		gap: 10px;
+		padding: 44px 16px 36px;
 		text-align: center;
 	}
 
-	.cart-drawer__empty p {
+	.minicart__empty-icon {
+		width: 32px;
+		height: 32px;
+		color: var(--ink-35);
+	}
+
+	.minicart__empty-title {
+		margin: 6px 0 0;
+		font-size: var(--text-md);
+		font-weight: 600;
+	}
+
+	.minicart__empty-text {
 		margin: 0;
+		max-width: 34ch;
 		color: var(--ink-55);
+		font-size: var(--text-sm);
+		line-height: var(--leading-snug);
 	}
 
-	.cart-drawer__empty a {
-		color: var(--color-black);
-		font-weight: 700;
-		text-decoration: underline;
+	/* Solo posicion: color y estados vienen de `.btn--primary`. */
+	.minicart__empty-link {
+		margin-top: 10px;
 	}
 
-	.cart-drawer__footer {
-		margin-top: 18px;
+	.minicart__foot {
+		flex: 0 0 auto;
 		padding-top: 18px;
 		border-top: 1px solid var(--ink-15);
 	}
 
-	.cart-drawer__subtotal {
+	.minicart__subtotal {
 		margin-bottom: 14px;
 		display: flex;
-		align-items: center;
+		align-items: baseline;
 		justify-content: space-between;
-		font-size: 14px;
+		gap: var(--space-xs);
+		font-size: var(--text-sm);
+		color: var(--ink-70);
 	}
 
-	.cart-drawer__subtotal strong {
-		font-size: 19px;
-	}
-
-	.cart-drawer__checkout {
-		min-height: 50px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		border-radius: var(--radius-md);
-		background: var(--color-orange);
+	.minicart__subtotal strong {
 		color: var(--color-black);
-		font-size: 13px;
-		font-weight: 700;
-		letter-spacing: 0.06em;
-		text-transform: uppercase;
-		text-decoration: none;
-		transition:
-			background-color 180ms ease,
-			color 180ms ease,
-			transform 180ms ease;
+		font-size: var(--text-md);
 	}
 
-	.cart-drawer__checkout:hover {
-		background: var(--color-brown);
-		color: var(--color-beige);
-		transform: translateY(-2px);
+	/* Solo posicion: color y estados vienen del sistema global. */
+	.minicart__checkout svg {
+		width: 18px;
+		height: 18px;
 	}
 
-	@media (max-width: 480px) {
-		.cart-drawer__panel {
-			width: 100vw;
-			padding: 18px 14px;
+	.minicart__keep {
+		margin-top: 10px;
+	}
+
+	.minicart__keep svg {
+		width: 16px;
+		height: 16px;
+	}
+
+	@media (max-width: 680px) {
+		.minicart__dialog {
+			width: calc(100% - 24px);
+			max-height: calc(100dvh - 32px);
+			padding: 19px;
+			border-radius: var(--radius-md);
 		}
+
+		.minicart__item {
+			grid-template-columns: 72px minmax(0, 1fr);
+			grid-template-areas:
+				"media main"
+				"qty price"
+				"remove remove";
+			column-gap: 12px;
+		}
+
+		.minicart__item-media {
+			width: 72px;
+			height: 72px;
+		}
+
+		.minicart__item-price {
+			grid-area: price;
+			justify-self: end;
+			align-self: center;
+		}
+
+		.minicart__item-remove {
+			justify-self: start;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.minicart__backdrop,
+		.minicart__dialog {
+			transition: none;
+		}
+	}
+
+	/* ---------- Animacion "el carrito se llena" ---------- */
+
+	/*
+	 * Capa que asciende dentro del cuerpo de la bolsa Lucide. Los
+	 * porcentajes replican el area interior del path (viewBox 0 0 24 24):
+	 * de x=4 a x=20 y de y=7.2 a y=21.8.
+	 */
+	.cart-button__fill {
+		position: absolute;
+		inset: 30% 17% 9% 17%;
+		border-radius: 1px 1px 3px 3px;
+		background: var(--color-orange);
+		transform: scaleY(0);
+		transform-origin: bottom center;
+		opacity: 0;
+		pointer-events: none;
+	}
+
+	.cart-button.is-cart-adding .cart-button__fill {
+		animation: cart-fill 560ms cubic-bezier(0.33, 1, 0.68, 1) forwards;
+	}
+
+	.cart-button.is-cart-adding .cart-button__icon {
+		animation: cart-lift 560ms cubic-bezier(0.33, 1, 0.68, 1);
+	}
+
+	.cart-button.is-cart-adding .cart-count {
+		animation: cart-badge-pulse 460ms cubic-bezier(0.33, 1, 0.68, 1);
+	}
+
+	@keyframes cart-fill {
+		0% {
+			transform: scaleY(0);
+			opacity: 0;
+		}
+
+		18% {
+			opacity: 1;
+		}
+
+		62% {
+			transform: scaleY(1);
+			opacity: 1;
+		}
+
+		100% {
+			transform: scaleY(1);
+			opacity: 0;
+		}
+	}
+
+	@keyframes cart-lift {
+		0%,
+		100% {
+			transform: translateY(0) scale(1);
+		}
+
+		42% {
+			transform: translateY(-2px) scale(1.06);
+		}
+	}
+
+	@keyframes cart-badge-pulse {
+		0%,
+		100% {
+			transform: scale(1);
+		}
+
+		45% {
+			transform: scale(1.18);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.cart-button.is-cart-adding .cart-button__fill,
+		.cart-button.is-cart-adding .cart-button__icon,
+		.cart-button.is-cart-adding .cart-count {
+			animation: none;
+		}
+	}
+
+	/*
+	 * El atributo `hidden` debe ganar siempre. Una regla `display` de
+	 * autor sobre la misma clase lo anulaba (ese era el origen del
+	 * "carrito vacio" mostrado junto a un producto). Va al final del
+	 * bloque para imponerse por orden, sin recurrir a !important.
+	 */
+	.minicart [hidden] {
+		display: none;
 	}
 </style>

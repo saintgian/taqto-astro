@@ -7,6 +7,7 @@ import ProductCard from "../../components/ProductCard.astro";
 import { sanityClient } from "../../lib/sanity";
 import { catalogQuery } from "../../lib/catalogQuery";
 import { getProductPriceRange, formatPEN } from "../../lib/productPricing";
+import { SlidersHorizontal, X } from "@lucide/astro";
 
 interface WoodRef {
 	title?: string;
@@ -217,14 +218,8 @@ const pageDescription =
 		/>
 
 		<div class="store-header">
-			<div>
-				<p class="section-label">Catálogo completo</p>
-				<h1>Todas las piezas TAQTO</h1>
-			</div>
-
-			<p class="store-header__note">
-				Grabado láser personalizado siempre gratuito.
-			</p>
+			<p class="section-label">Catálogo completo</p>
+			<h1>Todas las piezas TAQTO</h1>
 		</div>
 
 		<button
@@ -235,17 +230,7 @@ const pageDescription =
 			aria-controls="catalog-filters"
 			aria-expanded="false"
 		>
-			<svg
-				viewBox="0 0 24 24"
-				aria-hidden="true"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="1.8"
-			>
-				<path d="M4 7h16" />
-				<path d="M7 12h10" />
-				<path d="M10 17h4" />
-			</svg>
+			<SlidersHorizontal aria-hidden="true" stroke-width={1.75} />
 
 			<span>Filtros</span>
 
@@ -289,15 +274,7 @@ const pageDescription =
 							data-filters-close
 							aria-label="Cerrar filtros"
 						>
-							<svg
-								viewBox="0 0 24 24"
-								aria-hidden="true"
-								fill="none"
-								stroke="currentColor"
-								stroke-width="1.8"
-							>
-								<path d="M6 6l12 12M18 6 6 18" />
-							</svg>
+							<X aria-hidden="true" stroke-width={1.75} />
 						</button>
 					</div>
 
@@ -512,7 +489,10 @@ const pageDescription =
 								data-catalog-item
 								data-catalog-index={index}
 							>
-								<ProductCard product={product} />
+								<ProductCard
+									product={product}
+									hoverGallery
+								/>
 							</div>
 						))
 					}
@@ -1039,9 +1019,9 @@ const pageDescription =
 	.store-page {
 		min-height: 100vh;
 		padding-block:
-			clamp(24px, 3vw, 40px)
+			clamp(20px, 2.4vw, 32px)
 			clamp(80px, 9vw, 140px);
-		background: #fff6ed;
+		background: #ffffff;
 		color: #141414;
 	}
 
@@ -1064,27 +1044,14 @@ const pageDescription =
 		max-width: var(--container-comercial, 1520px);
 		margin: 24px auto 0;
 		padding-inline: var(--container-gutter, clamp(16px, 4vw, 64px));
-		display: flex;
-		align-items: end;
-		justify-content: space-between;
-		gap: 40px;
 	}
 
 	.store-header h1 {
 		margin: 0;
-		font-size: clamp(36px, 5vw, 62px);
+		font-size: clamp(28px, 3vw, 42px);
 		font-weight: 600;
-		line-height: 0.98;
-		letter-spacing: -0.04em;
-	}
-
-	.store-header__note {
-		max-width: 260px;
-		margin: 0;
-		color: rgba(20, 20, 20, 0.52);
-		font-size: 11px;
-		line-height: 1.55;
-		text-align: right;
+		line-height: 1.04;
+		letter-spacing: -0.03em;
 	}
 
 	.filters-trigger {
@@ -1155,9 +1122,9 @@ const pageDescription =
 		align-items: center;
 		gap: 6px;
 		padding: 6px 10px;
-		border: 1px solid rgba(20, 20, 20, 0.14);
+		border: 1px solid rgba(20, 20, 20, 0.16);
 		border-radius: 999px;
-		background: #fff6ed;
+		background: #ffffff;
 		color: #141414;
 		font-size: 11px;
 		font-weight: 600;
@@ -1285,12 +1252,8 @@ const pageDescription =
 
 	.product-grid {
 		display: grid;
-		grid-template-columns:
-			repeat(
-				auto-fill,
-				minmax(min(100%, 240px), 1fr)
-			);
-		gap: 36px 22px;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: clamp(20px, 2vw, 26px);
 	}
 
 	.catalog-empty {
@@ -1328,19 +1291,13 @@ const pageDescription =
 		.store-layout {
 			grid-template-columns: 240px minmax(0, 1fr);
 		}
+
+		.product-grid {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
 	}
 
 	@media (max-width: 900px) {
-		.store-header {
-			align-items: flex-start;
-			flex-direction: column;
-			gap: 14px;
-		}
-
-		.store-header__note {
-			text-align: left;
-		}
-
 		.filters-trigger {
 			position: relative;
 			margin-top: 20px;
@@ -1465,14 +1422,15 @@ const pageDescription =
 		}
 	}
 
+	@media (max-width: 800px) {
+		.product-grid {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+
 	@media (max-width: 560px) {
 		.store-page {
 			padding-block: 20px 75px;
-		}
-
-		.product-grid {
-			grid-template-columns: 1fr 1fr;
-			gap: 28px 14px;
 		}
 
 		.catalog-filters {
@@ -1481,9 +1439,10 @@ const pageDescription =
 		}
 	}
 
-	@media (max-width: 400px) {
+	@media (max-width: 480px) {
 		.product-grid {
 			grid-template-columns: 1fr;
+			gap: 20px 16px;
 		}
 	}
 

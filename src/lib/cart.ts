@@ -18,6 +18,14 @@ export interface CartItem {
 const STORAGE_KEY = "taqto_cart";
 const CART_UPDATED_EVENT = "cart:updated";
 
+/*
+ * Se emite solo cuando un alta termina correctamente. `cart:updated`
+ * cubre cualquier cambio (alta, baja, cantidad, rehidratacion desde otra
+ * pestaña), asi que no sirve para disparar la animacion de "carrito
+ * llenandose" sin animar tambien al quitar o al recargar.
+ */
+const CART_ITEM_ADDED_EVENT = "cart:item-added";
+
 function isValidCartItem(value: unknown): value is CartItem {
 	if (!value || typeof value !== "object") return false;
 
@@ -87,6 +95,29 @@ export function addItem(
 	}
 
 	writeStorage(items);
+
+	if (typeof window !== "undefined") {
+		window.dispatchEvent(
+			new CustomEvent(CART_ITEM_ADDED_EVENT, {
+				detail: { id: item.id, quantity },
+			}),
+		);
+	}
+}
+
+export function onCartItemAdded(
+	callback: () => void,
+): () => void {
+	if (typeof window === "undefined") return () => {};
+
+	window.addEventListener(CART_ITEM_ADDED_EVENT, callback);
+
+	return () => {
+		window.removeEventListener(
+			CART_ITEM_ADDED_EVENT,
+			callback,
+		);
+	};
 }
 
 export function updateQuantity(id: string, quantity: number) {

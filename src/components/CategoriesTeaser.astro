@@ -3,6 +3,7 @@ import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { sanityClient } from "../lib/sanity";
 import { categoryPathsQuery } from "../lib/categoryQueries";
+import { ArrowRight } from "@lucide/astro";
 
 interface Category {
 	_id: string;
@@ -58,6 +59,14 @@ const featured = categories.slice(0, 3).map((category) => ({
 					Cada categoría, una forma distinta de
 					crear.
 				</h2>
+
+				<a
+					class="categories-teaser__all"
+					href={`${base}categorias/`}
+				>
+					Ver todas las categorías
+					<ArrowRight aria-hidden="true" stroke-width={1.75} />
+				</a>
 			</div>
 
 			<div class="categories-teaser__grid">
@@ -111,16 +120,7 @@ const featured = categories.slice(0, 3).map((category) => ({
 
 							<span class="categories-teaser__link">
 								Ver colección
-								<svg
-									viewBox="0 0 24 24"
-									aria-hidden="true"
-									fill="none"
-									stroke="currentColor"
-									stroke-width="1.8"
-								>
-									<path d="M5 12h14" />
-									<path d="m14 7 5 5-5 5" />
-								</svg>
+								<ArrowRight aria-hidden="true" stroke-width={1.75} />
 							</span>
 						</div>
 					</a>
@@ -132,45 +132,68 @@ const featured = categories.slice(0, 3).map((category) => ({
 
 <style>
 	.categories-teaser {
-		padding-block: clamp(24px, 8vw, 34px);
-		padding-inline: var(--page-padding);
+		padding-block: var(--section-py);
+		padding-inline: var(--container-gutter);
 		background: var(--surface);
 	}
 
 	.categories-teaser__heading {
-		width: min(100%, var(--page-width));
-		margin: 0 auto clamp(28px, 3.6vw, 44px);
-		text-align: center;
+		display: flex;
+		align-items: flex-end;
+		justify-content: space-between;
+		gap: clamp(16px, 3vw, 32px);
+		width: min(100%, var(--container-comercial));
+		margin: 0 auto var(--header-gap);
 	}
 
 	.categories-teaser__heading h2 {
 		max-width: 620px;
-		margin: 0 auto;
-		font-size: clamp(1.8125rem, 1.5rem + 1.5vw, 2.875rem);
+		margin: 0;
+		font-size: var(--text-2xl);
 		font-weight: 600;
-		line-height: 1.1;
+		line-height: 1.15;
 		letter-spacing: -0.02em;
 		color: var(--color-black);
 	}
 
-	@media (min-width: 768px) {
-		.categories-teaser {
-			padding-block: clamp(32px, 5vw, 42px);
-		}
+	.categories-teaser__all {
+		display: inline-flex;
+		flex-shrink: 0;
+		align-items: center;
+		gap: 8px;
+		margin-bottom: 6px;
+		color: var(--color-brown);
+		font-size: 15px;
+		font-weight: 700;
+		letter-spacing: 0.02em;
+		text-decoration: none;
+		white-space: nowrap;
 	}
 
-	@media (min-width: 1024px) {
-		.categories-teaser {
-			padding-block: clamp(40px, 3.2vw, 52px);
+	.categories-teaser__all svg {
+		width: 16px;
+		height: 16px;
+		transition: transform 180ms ease;
+	}
+
+	.categories-teaser__all:focus-visible {
+		outline: 2px solid var(--color-orange);
+		outline-offset: 4px;
+		border-radius: var(--radius-sm);
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.categories-teaser__all:hover svg {
+			transform: translateX(4px);
 		}
 	}
 
 	.categories-teaser__grid {
-		width: min(100%, var(--page-width));
+		width: min(100%, var(--container-comercial));
 		margin: 0 auto;
 		display: grid;
 		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: 26px;
+		gap: clamp(20px, 2vw, 32px);
 	}
 
 	.categories-teaser__card {
@@ -249,42 +272,43 @@ const featured = categories.slice(0, 3).map((category) => ({
 		position: relative;
 		z-index: 2;
 		padding: clamp(20px, 3vw, 30px);
+		text-align: left;
 	}
 
 	.categories-teaser__card h3 {
 		margin: 0;
-		font-size: 22px;
-		font-weight: 600;
+		color: #fff;
+		font-size: clamp(21px, 1vw + 18px, 27px);
+		font-weight: 700;
 		letter-spacing: -0.01em;
 	}
 
 	.categories-teaser__card p {
-		max-width: 320px;
+		max-width: 340px;
 		margin: 8px 0 0;
 		color: inherit;
-		opacity: 0.88;
-		font-size: 14px;
-		line-height: 1.55;
+		opacity: 0.92;
+		font-size: clamp(16.5px, 0.4vw + 15.5px, 18px);
+		line-height: 1.5;
 	}
 
 	.categories-teaser__placeholder-note {
 		color: rgba(20, 20, 20, 0.4);
-		font-size: 11px;
+		font-size: 14px;
 		font-weight: 600;
-		letter-spacing: 0.06em;
+		letter-spacing: 0.04em;
 		text-transform: uppercase;
 	}
 
 	.categories-teaser__link {
-		margin-top: 16px;
+		margin-top: 12px;
 		display: inline-flex;
 		align-items: center;
 		gap: 8px;
 		color: inherit;
-		font-size: 11px;
+		font-size: 14px;
 		font-weight: 700;
-		letter-spacing: 0.06em;
-		text-transform: uppercase;
+		letter-spacing: 0.02em;
 	}
 
 	.categories-teaser__link svg {
@@ -297,10 +321,34 @@ const featured = categories.slice(0, 3).map((category) => ({
 		transform: translateX(4px);
 	}
 
-	@media (max-width: 900px) {
+	@media (max-width: 1024px) and (min-width: 769px) {
+		.categories-teaser__grid {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+
+		.categories-teaser__card:first-child {
+			grid-column: 1 / -1;
+			aspect-ratio: 16 / 9;
+		}
+	}
+
+	@media (max-width: 768px) {
+		.categories-teaser__heading {
+			align-items: flex-start;
+			flex-direction: column;
+			gap: 10px;
+		}
+
+		.categories-teaser__all {
+			margin-bottom: 0;
+		}
+
 		.categories-teaser__grid {
 			grid-template-columns: 1fr;
-			max-width: 420px;
+		}
+
+		.categories-teaser__card {
+			aspect-ratio: 4 / 3.1;
 		}
 	}
 

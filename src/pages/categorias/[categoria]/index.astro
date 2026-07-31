@@ -1,6 +1,4 @@
 ---
-import { existsSync } from "node:fs";
-import { resolve } from "node:path";
 import BaseLayout from "../../../layouts/BaseLayout.astro";
 import Header from "../../../components/Header.astro";
 import ProductCard from "../../../components/ProductCard.astro";
@@ -92,35 +90,6 @@ if (!category) {
 
 const base = import.meta.env.BASE_URL;
 
-// Imagenes de fondo por categoria, reutilizando los archivos ya
-// existentes en public/images/home/categorias/. "kits-y-regalos" no
-// tiene foto propia todavia: conserva el fondo decorativo actual.
-const categoryHeroImageFiles: Record<string, string> = {
-	parrilla: "parrilla.webp",
-	"cocina-y-mesa": "cocina-mesa.webp",
-	oficina: "oficina.webp",
-};
-
-function getCategoryHeroImage(slug: string): string | undefined {
-	const fileName = categoryHeroImageFiles[slug];
-	if (!fileName) return undefined;
-
-	const absolutePath = resolve(
-		process.cwd(),
-		"public",
-		"images",
-		"home",
-		"categorias",
-		fileName,
-	);
-
-	if (!existsSync(absolutePath)) return undefined;
-
-	return `${base}images/home/categorias/${fileName}`;
-}
-
-const heroImageSrc = getCategoryHeroImage(category.slug);
-
 const homeHref = base;
 const storeHref = `${base}tienda/`;
 
@@ -169,7 +138,6 @@ const pageDescription =
 			countLabel={
 				products.length === 1 ? "pieza" : "piezas"
 			}
-			imageSrc={heroImageSrc}
 		/>
 
 		{
@@ -203,20 +171,13 @@ const pageDescription =
 
 		<section class="category-products">
 			<div class="category-products__header">
-				<div>
-					<p class="section-label">
-						Catálogo
-					</p>
-
-					<h2>
-						Piezas de {category.title}
-					</h2>
-				</div>
-
-				<p>
-					Grabado láser personalizado siempre
-					gratuito.
+				<p class="section-label">
+					Catálogo
 				</p>
+
+				<h2>
+					Piezas de {category.title}
+				</h2>
 			</div>
 
 			{
@@ -226,6 +187,7 @@ const pageDescription =
 							products.map((product) => (
 								<ProductCard
 									product={product}
+									hoverGallery
 								/>
 							))
 						}
@@ -254,14 +216,14 @@ const pageDescription =
 			clamp(24px, 3vw, 40px)
 			clamp(20px, 5vw, 82px)
 			clamp(80px, 9vw, 140px);
-		background: #fff6ed;
+		background: #ffffff;
 		color: #141414;
 	}
 
 	.category-breadcrumbs,
 	.subcategory-navigation,
 	.category-products {
-		width: min(100%, 1450px);
+		width: min(100%, var(--container-comercial, 1520px));
 		margin-inline: auto;
 	}
 
@@ -293,7 +255,7 @@ const pageDescription =
 	}
 
 	.subcategory-navigation {
-		margin-top: clamp(20px, 2.5vw, 28px);
+		margin-top: clamp(36px, 4vw, 48px);
 		padding-top: 18px;
 		border-top: 1px solid rgba(20, 20, 20, 0.1);
 	}
@@ -305,13 +267,14 @@ const pageDescription =
 	}
 
 	.subcategory-link {
-		min-height: 42px;
-		padding: 0 16px;
+		min-height: 44px;
+		padding: 0 18px;
 		display: inline-flex;
 		align-items: center;
 		gap: 9px;
-		border: 1px solid rgba(20, 20, 20, 0.14);
-		border-radius: 999px;
+		border: 1px solid rgba(20, 20, 20, 0.16);
+		border-radius: 12px;
+		background: #ffffff;
 		color: #141414;
 		font-size: 14px;
 		font-weight: 600;
@@ -346,43 +309,25 @@ const pageDescription =
 	}
 
 	.category-products {
-		margin-top: clamp(32px, 4vw, 52px);
+		margin-top: clamp(36px, 4vw, 48px);
 	}
 
 	.category-products__header {
 		margin-bottom: 26px;
-		display: flex;
-		align-items: end;
-		justify-content: space-between;
-		gap: 40px;
 	}
 
 	.category-products__header h2 {
 		margin: 0;
-		font-size: clamp(36px, 5vw, 66px);
+		font-size: clamp(28px, 3vw, 40px);
 		font-weight: 600;
-		line-height: 0.96;
-		letter-spacing: -0.05em;
-	}
-
-	.category-products__header > p {
-		max-width: 260px;
-		margin: 0;
-		color: rgba(20, 20, 20, 0.52);
-		font-size: 11px;
-		line-height: 1.55;
-		text-align: right;
+		line-height: 1.05;
+		letter-spacing: -0.03em;
 	}
 
 	.product-grid {
 		display: grid;
-		grid-template-columns:
-			repeat(
-				auto-fill,
-				minmax(min(100%, 250px), 300px)
-			);
-		justify-content: start;
-		gap: 36px 24px;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: clamp(20px, 2vw, 26px);
 	}
 
 	.category-empty {
@@ -402,28 +347,30 @@ const pageDescription =
 		color: rgba(20, 20, 20, 0.58);
 	}
 
+	@media (max-width: 1100px) {
+		.product-grid {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+	}
+
+	@media (max-width: 800px) {
+		.product-grid {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+
 	@media (max-width: 760px) {
 		.category-page {
 			padding:
 				20px 14px
 				75px;
 		}
-
-		.category-products__header {
-			align-items: flex-start;
-			flex-direction: column;
-			gap: 16px;
-		}
-
-		.category-products__header > p {
-			text-align: left;
-		}
 	}
 
-	@media (max-width: 560px) {
+	@media (max-width: 480px) {
 		.product-grid {
 			grid-template-columns: 1fr;
-			gap: 50px;
+			gap: 20px;
 		}
 	}
 </style>

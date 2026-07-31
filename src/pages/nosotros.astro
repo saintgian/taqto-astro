@@ -1,256 +1,580 @@
 ---
 import PageLayout from "../layouts/PageLayout.astro";
+import PageHero from "../components/PageHero.astro";
+import InfoCard from "../components/InfoCard.astro";
 import { WHATSAPP_NUMBER } from "../lib/constants";
+import {
+	Clock,
+	MapPin,
+	Hammer,
+	Ruler,
+	ScanLine,
+	PenLine,
+	TreePine,
+	MessageCircle,
+} from "@lucide/astro";
 
 const base = import.meta.env.BASE_URL;
 const productos = `${base}categorias/`;
+
+const tallerImg = `${base}images/home/historia/origen-taqto-mobile.webp`;
+
+const legado = [
+	{
+		icon: Clock,
+		label: "Tradición familiar",
+		value: "+20 años",
+		hint: "De trabajo vinculado a la madera.",
+	},
+	{
+		icon: MapPin,
+		label: "Origen",
+		value: "Lima, Perú",
+		hint: "Diseñado y hecho en nuestro taller.",
+	},
+];
+
+const evolucion = [
+	{
+		icon: Hammer,
+		title: "Tradición",
+		text: "Conocimiento transmitido, sensibilidad por el material y respeto por el oficio.",
+	},
+	{
+		icon: Ruler,
+		title: "Diseño",
+		text: "Formas sobrias, proporciones funcionales y soluciones para el uso cotidiano.",
+	},
+	{
+		icon: ScanLine,
+		title: "Precisión",
+		text: "Medidas, espesores, acabados y procesos claramente definidos.",
+	},
+	{
+		icon: PenLine,
+		title: "Personalización",
+		text: "Grabados que convierten una pieza funcional en un objeto con significado.",
+	},
+];
+
+const principios = [
+	{
+		icon: TreePine,
+		title: "Materialidad honesta",
+		text: "La madera y el cuero son materiales naturales. Su veta, tono y textura pueden variar, y esas diferencias forman parte de su identidad.",
+	},
+	{
+		icon: Ruler,
+		title: "Diseño útil",
+		text: "Cada decisión debe tener una razón: mejorar el uso, la estabilidad, la comodidad, la organización o la presentación de la pieza.",
+	},
+	{
+		icon: ScanLine,
+		title: "Precisión visible",
+		text: "El valor también se encuentra en las medidas, el grosor, los bordes, el acabado y la construcción.",
+	},
+	{
+		icon: MessageCircle,
+		title: "Cercanía profesional",
+		text: "Acompañamos al cliente con información clara sobre productos, personalización, cuidados y condiciones del pedido.",
+	},
+	{
+		icon: Clock,
+		title: "Permanencia",
+		text: "Diseñamos objetos pensados para utilizarse, regalarse y formar parte de los rituales cotidianos durante el tiempo.",
+	},
+];
 ---
 
 <PageLayout
 	title="Nosotros: tradición y diseño en madera | TAQTO"
 	description="Conoce la historia de TAQTO, una marca peruana que transforma más de 20 años de tradición familiar en piezas de madera de diseño contemporáneo."
-	eyebrow="Nuestra historia"
-	heading="Tradición en madera, llevada hacia el presente"
 >
-	<div class="space-y-14">
-		<!-- Hero intro -->
-		<section class="space-y-4 text-base leading-relaxed text-black/70">
-			<p>
-				TAQTO nace de una historia familiar vinculada al taller, al oficio y al respeto por la madera.
-			</p>
-			<p>
-				Nuestra tradición comenzó hace más de 20 años con el trabajo de nuestro abuelo. Hoy recogemos ese conocimiento para crear piezas contemporáneas, precisas y funcionales, sin perder la calidez que define a un taller tradicional.
-			</p>
+	<PageHero
+		eyebrow="Nuestra historia"
+		title="Tradición en madera, llevada hacia el presente"
+		lede="TAQTO nace de una historia familiar vinculada al taller, al oficio y al respeto por la madera."
+		split="7-5"
+	>
+		<p class="lede measure-lede" style="margin-top:14px">
+			Nuestra tradición comenzó hace más de 20 años con el trabajo de
+			nuestro abuelo. Hoy recogemos ese conocimiento para crear piezas
+			contemporáneas, precisas y funcionales, sin perder la calidez que
+			define a un taller tradicional.
+		</p>
 
-			<div class="flex flex-wrap gap-3 pt-2">
-				<a href={productos} class="inline-flex items-center justify-center rounded-lg bg-orange px-5 py-3 text-sm font-semibold text-white">
-					Conoce nuestras piezas
-				</a>
-				<a href="#historia" class="inline-flex items-center justify-center rounded-lg border border-black/15 px-5 py-3 text-sm font-semibold text-black">
-					Descubre nuestra historia
-				</a>
+		<div class="actions">
+			<a href={productos} class="btn btn--primary">
+				Conoce nuestras piezas
+			</a>
+
+			<a href="#historia" class="sp-btn sp-btn--ghost">
+				Descubre nuestra historia
+			</a>
+		</div>
+
+		<div slot="aside">
+			<p class="facts-caption">De dónde venimos</p>
+
+			<ul class="facts">
+				{
+					legado.map((item) => {
+						const Icon = item.icon;
+
+						return (
+							<li>
+								<Icon
+									class="facts__icon"
+									aria-hidden="true"
+									size={20}
+									stroke-width={1.75}
+								/>
+
+								<div>
+									<p class="facts__label">{item.label}</p>
+									<p class="facts__value">{item.value}</p>
+									<p class="facts__hint">{item.hint}</p>
+								</div>
+							</li>
+						);
+					})
+				}
+			</ul>
+		</div>
+	</PageHero>
+
+	<!-- Diseño que nace con tradición: encabezado 5 + relato 7 -->
+	<section class="sect" id="historia">
+		<div class="wrap">
+			<div class="g12">
+				<div class="c5">
+					<h2>Diseño que nace con tradición</h2>
+				</div>
+
+				<div class="c7 flow measure" style="--flow:15px">
+					<p class="strong-line">
+						Antes de ser una marca, TAQTO fue una historia de
+						taller.
+					</p>
+
+					<p>
+						Una historia construida entre madera, herramientas,
+						aprendizaje y años de trabajo dedicado. Nuestro abuelo
+						inició una tradición familiar que nos enseñó a
+						observar el material, respetar sus tiempos y
+						comprender que una pieza bien hecha debe ser útil,
+						resistente y honesta.
+					</p>
+
+					<p>Más de 20 años después, ese legado continúa.</p>
+
+					<p>
+						TAQTO toma ese conocimiento y lo traslada hacia una
+						nueva etapa, donde el oficio tradicional se encuentra
+						con el diseño contemporáneo, la fabricación precisa y
+						nuevas formas de personalización.
+					</p>
+				</div>
 			</div>
-			<p class="text-sm text-black/50">Diseñado y hecho en Lima, Perú.</p>
-		</section>
+		</div>
+	</section>
 
-		<!-- Introducción -->
-		<section id="historia" class="space-y-4 text-base leading-relaxed text-black/70">
-			<h2 class="text-2xl font-semibold text-black">Diseño que nace con tradición</h2>
-			<p>Antes de ser una marca, TAQTO fue una historia de taller.</p>
-			<p>
-				Una historia construida entre madera, herramientas, aprendizaje y años de trabajo dedicado. Nuestro abuelo inició una tradición familiar que nos enseñó a observar el material, respetar sus tiempos y comprender que una pieza bien hecha debe ser útil, resistente y honesta.
-			</p>
-			<p>Más de 20 años después, ese legado continúa.</p>
-			<p>
-				TAQTO toma ese conocimiento y lo traslada hacia una nueva etapa, donde el oficio tradicional se encuentra con el diseño contemporáneo, la fabricación precisa y nuevas formas de personalización.
-			</p>
-		</section>
+	<!-- El origen: relato de 7 columnas + fotografía de 5 -->
+	<section class="sect">
+		<div class="wrap">
+			<div class="g12 origin">
+				<div class="c7 flow" style="--flow:15px">
+					<p class="eyebrow">El inicio</p>
 
-		<!-- El origen -->
-		<section class="space-y-4 text-base leading-relaxed text-black/70">
-			<p class="text-xs font-semibold uppercase tracking-widest text-orange">El inicio</p>
-			<h2 class="text-2xl font-semibold text-black">Todo comenzó en el taller de nuestro abuelo</h2>
-			<p>Nuestro vínculo con la madera nació mucho antes que TAQTO.</p>
-			<p>
-				Comenzó en el taller de nuestro abuelo, un espacio donde cada herramienta tenía una función, cada material era aprovechado con cuidado y cada pieza se construía a partir de la experiencia.
-			</p>
-			<p>
-				En ese taller aprendimos que trabajar la madera no consiste solamente en darle forma. También implica reconocer su veta, entender sus variaciones, respetar su naturaleza y pensar en la persona que utilizará el objeto terminado.
-			</p>
-			<p>Esa manera de trabajar permanece en la esencia de TAQTO.</p>
-			<p class="border-l-4 border-orange pl-4 text-lg font-medium text-black">
-				Nuestra historia no comienza con un producto. Comienza con una forma de entender el oficio.
-			</p>
-		</section>
+					<h2>Todo comenzó en el taller de nuestro abuelo</h2>
 
-		<!-- +20 años -->
-		<section class="space-y-4 text-base leading-relaxed text-black/70">
-			<h2 class="text-2xl font-semibold text-black">Una tradición que continúa transformándose</h2>
-			<p>
-				La tradición de nuestro taller reúne más de 20 años de experiencia vinculada al trabajo con madera.
-			</p>
-			<p>
-				Durante ese tiempo, las herramientas, los procesos y las posibilidades de diseño han evolucionado. Sin embargo, hay principios que permanecen: el cuidado por el material, la atención a los detalles y la intención de crear objetos que acompañen la vida cotidiana.
-			</p>
-			<p>TAQTO representa la continuidad de esa historia.</p>
-			<p>
-				No buscamos reproducir el pasado exactamente como era. Buscamos conservar su conocimiento y llevarlo hacia una propuesta actual, clara y funcional.
-			</p>
-			<div class="pt-2">
-				<p class="text-4xl font-semibold text-black">+20 años</p>
-				<p>de tradición familiar vinculada al trabajo en madera.</p>
-				<p class="pt-2 text-sm text-black/50">
-					Una experiencia que hoy se combina con diseño, precisión y nuevas tecnologías de fabricación.
-				</p>
+					<div class="flow measure" style="--flow:15px">
+						<p>
+							Nuestro vínculo con la madera nació mucho antes
+							que TAQTO.
+						</p>
+
+						<p>
+							Comenzó en el taller de nuestro abuelo, un espacio
+							donde cada herramienta tenía una función, cada
+							material era aprovechado con cuidado y cada pieza
+							se construía a partir de la experiencia.
+						</p>
+
+						<p>
+							En ese taller aprendimos que trabajar la madera no
+							consiste solamente en darle forma. También implica
+							reconocer su veta, entender sus variaciones,
+							respetar su naturaleza y pensar en la persona que
+							utilizará el objeto terminado.
+						</p>
+
+						<p>
+							Esa manera de trabajar permanece en la esencia de
+							TAQTO.
+						</p>
+
+						<p class="pull">
+							Nuestra historia no comienza con un producto.
+							Comienza con una forma de entender el oficio.
+						</p>
+					</div>
+				</div>
+
+				<div class="c5">
+					<img
+						class="origin__photo"
+						src={tallerImg}
+						alt="Artesano lijando una tabla de madera en el taller, entre virutas, herramientas y tablones apilados."
+						width="1086"
+						height="1448"
+						loading="lazy"
+						decoding="async"
+					/>
+				</div>
 			</div>
-		</section>
+		</div>
+	</section>
 
-		<!-- Tradición y modernidad -->
-		<section class="space-y-4 text-base leading-relaxed text-black/70">
-			<p class="text-xs font-semibold uppercase tracking-widest text-orange">Nuestra evolución</p>
-			<h2 class="text-2xl font-semibold text-black">El oficio tradicional se encuentra con el diseño contemporáneo</h2>
-			<p>TAQTO nace con la intención de conectar dos formas de crear.</p>
-			<p>
-				Por un lado, la experiencia del taller tradicional: el conocimiento del material, el trabajo cercano y el cuidado que requiere cada pieza.
-			</p>
-			<p>
-				Por otro, las posibilidades del diseño contemporáneo: medidas definidas, procesos más precisos, líneas limpias, personalización láser y soluciones pensadas para los rituales actuales.
-			</p>
-			<p>No entendemos la tradición y la modernidad como caminos opuestos.</p>
-			<p>
-				Para nosotros, la tecnología tiene sentido cuando ayuda a trabajar con mayor precisión, mejorar la funcionalidad y conservar la esencia humana del proceso.
-			</p>
+	<!-- Una tradición que continúa: relato centrado de 8 columnas -->
+	<section class="sect">
+		<div class="wrap wrap--narrow">
+			<div class="flow" style="--flow:15px">
+				<h2>Una tradición que continúa transformándose</h2>
 
-			<dl class="grid gap-6 pt-2 sm:grid-cols-2">
-				<div>
-					<dt class="font-semibold text-black">Tradición</dt>
-					<dd>Conocimiento transmitido, sensibilidad por el material y respeto por el oficio.</dd>
-				</div>
-				<div>
-					<dt class="font-semibold text-black">Diseño</dt>
-					<dd>Formas sobrias, proporciones funcionales y soluciones para el uso cotidiano.</dd>
-				</div>
-				<div>
-					<dt class="font-semibold text-black">Precisión</dt>
-					<dd>Medidas, espesores, acabados y procesos claramente definidos.</dd>
-				</div>
-				<div>
-					<dt class="font-semibold text-black">Personalización</dt>
-					<dd>Grabados que convierten una pieza funcional en un objeto con significado.</dd>
-				</div>
-			</dl>
+				<div class="flow measure" style="--flow:15px">
+					<p>
+						La tradición de nuestro taller reúne más de 20 años de
+						experiencia vinculada al trabajo con madera.
+					</p>
 
-			<div class="pt-2">
-				<a href={productos} class="inline-flex items-center justify-center rounded-lg border border-black/15 px-5 py-3 text-sm font-semibold text-black">
-					Explorar productos TAQTO
-				</a>
+					<p>
+						Durante ese tiempo, las herramientas, los procesos y
+						las posibilidades de diseño han evolucionado. Sin
+						embargo, hay principios que permanecen: el cuidado por
+						el material, la atención a los detalles y la intención
+						de crear objetos que acompañen la vida cotidiana.
+					</p>
+
+					<p>TAQTO representa la continuidad de esa historia.</p>
+
+					<p>
+						No buscamos reproducir el pasado exactamente como era.
+						Buscamos conservar su conocimiento y llevarlo hacia una
+						propuesta actual, clara y funcional.
+					</p>
+
+					<p class="note">
+						Una experiencia que hoy se combina con diseño,
+						precisión y nuevas tecnologías de fabricación.
+					</p>
+				</div>
 			</div>
-		</section>
+		</div>
+	</section>
 
-		<!-- Calidez del taller -->
-		<section class="space-y-4 text-base leading-relaxed text-black/70">
-			<h2 class="text-2xl font-semibold text-black">Crecer sin perder la cercanía</h2>
-			<p>
-				Nuestra proyección es seguir desarrollando TAQTO como una marca peruana contemporánea, capaz de crear piezas para hogares, oficinas, restaurantes y empresas.
-			</p>
-			<p>Pero crecer no significa alejarnos del origen.</p>
-			<p>
-				Queremos conservar la calidez del taller tradicional: el contacto cercano con los materiales, la atención individual a cada pedido y la intención de hacer las cosas con cuidado.
-			</p>
-			<p>
-				Incluso al incorporar nuevas herramientas, procesos y tecnologías, buscamos que cada pieza siga transmitiendo esa sensación de objeto trabajado con propósito.
-			</p>
-			<p class="border-l-4 border-orange pl-4 text-lg font-medium text-black">
-				Modernizar el taller no significa volverlo frío. Significa darle nuevas herramientas al mismo cuidado de siempre.
-			</p>
-		</section>
+	<!-- Evolución: encabezado 5 + cuatro tarjetas en 7 -->
+	<section class="sect sect--tint">
+		<div class="wrap">
+			<div class="g12">
+				<div class="c5 flow" style="--flow:15px">
+					<p class="eyebrow">Nuestra evolución</p>
 
-		<!-- Forma de trabajar -->
-		<section class="space-y-4 text-base leading-relaxed text-black/70">
-			<p class="text-xs font-semibold uppercase tracking-widest text-orange">Lo que permanece</p>
-			<h2 class="text-2xl font-semibold text-black">Principios que acompañan cada pieza</h2>
-			<dl class="grid gap-6 pt-2 sm:grid-cols-2">
-				<div>
-					<dt class="font-semibold text-black">Materialidad honesta</dt>
-					<dd>La madera y el cuero son materiales naturales. Su veta, tono y textura pueden variar, y esas diferencias forman parte de su identidad.</dd>
-				</div>
-				<div>
-					<dt class="font-semibold text-black">Diseño útil</dt>
-					<dd>Cada decisión debe tener una razón: mejorar el uso, la estabilidad, la comodidad, la organización o la presentación de la pieza.</dd>
-				</div>
-				<div>
-					<dt class="font-semibold text-black">Precisión visible</dt>
-					<dd>El valor también se encuentra en las medidas, el grosor, los bordes, el acabado y la construcción.</dd>
-				</div>
-				<div>
-					<dt class="font-semibold text-black">Cercanía profesional</dt>
-					<dd>Acompañamos al cliente con información clara sobre productos, personalización, cuidados y condiciones del pedido.</dd>
-				</div>
-				<div>
-					<dt class="font-semibold text-black">Permanencia</dt>
-					<dd>Diseñamos objetos pensados para utilizarse, regalarse y formar parte de los rituales cotidianos durante el tiempo.</dd>
-				</div>
-			</dl>
-		</section>
+					<h2>
+						El oficio tradicional se encuentra con el diseño
+						contemporáneo
+					</h2>
 
-		<!-- Diseño con alma de madera -->
-		<section class="space-y-4 text-base leading-relaxed text-black/70">
-			<h2 class="text-2xl font-semibold text-black">Más que una frase, una forma de crear</h2>
-			<p>“Diseño con alma de madera” expresa la intención que existe detrás de TAQTO.</p>
-			<p>
-				El diseño aporta claridad, proporción y función. La madera aporta carácter, calidez y una identidad que no puede repetirse exactamente de una pieza a otra.
-			</p>
-			<p>El alma aparece cuando ambas dimensiones se encuentran.</p>
-			<p>
-				Por eso buscamos crear objetos que no solamente cumplan una función, sino que también acompañen momentos: preparar una parrilla, compartir una mesa, organizar un escritorio o entregar un regalo con significado.
-			</p>
-			<p class="border-l-4 border-orange pl-4 text-lg font-medium text-black">
-				Cada pieza comienza con una función y adquiere identidad a través del diseño, el material y la personalización.
-			</p>
-		</section>
+					<div class="flow measure-tight" style="--flow:14px">
+						<p>
+							TAQTO nace con la intención de conectar dos formas
+							de crear: la experiencia del taller tradicional y
+							las posibilidades del diseño contemporáneo.
+						</p>
 
-		<!-- Hecho en Lima -->
-		<section class="space-y-4 text-base leading-relaxed text-black/70">
-			<p class="text-xs font-semibold uppercase tracking-widest text-orange">Nuestro lugar</p>
-			<h2 class="text-2xl font-semibold text-black">Diseñado y hecho en Lima, Perú</h2>
-			<p>
-				TAQTO se desarrolla desde Lima, conectando una tradición familiar de taller con una mirada contemporánea del diseño peruano.
-			</p>
-			<p>
-				Nuestra identidad no busca representar al Perú mediante adornos o estereotipos. Se expresa a través del material, el trabajo, los usos cotidianos y una manera cercana de relacionarnos con quienes eligen nuestras piezas.
-			</p>
-			<p>
-				Creamos productos para parrilla, mesa, cocina, oficina, hogar y regalo, pensados para integrarse naturalmente en espacios actuales.
-			</p>
-			<div class="flex flex-wrap gap-3 pt-2">
-				<a href={productos} class="inline-flex items-center justify-center rounded-lg bg-orange px-5 py-3 text-sm font-semibold text-white">
-					Conocer nuestras colecciones
-				</a>
-				<a href={productos} class="inline-flex items-center justify-center rounded-lg border border-black/15 px-5 py-3 text-sm font-semibold text-black">
-					Ver productos personalizados
-				</a>
+						<p>
+							Por un lado, el conocimiento del material, el
+							trabajo cercano y el cuidado que requiere cada
+							pieza. Por otro, medidas definidas, procesos más
+							precisos, líneas limpias, personalización láser y
+							soluciones pensadas para los rituales actuales.
+						</p>
+
+						<p>
+							No entendemos la tradición y la modernidad como
+							caminos opuestos. Para nosotros, la tecnología
+							tiene sentido cuando ayuda a trabajar con mayor
+							precisión, mejorar la funcionalidad y conservar la
+							esencia humana del proceso.
+						</p>
+					</div>
+
+					<div class="actions">
+						<a href={productos} class="sp-btn sp-btn--ghost">
+							Explorar productos TAQTO
+						</a>
+					</div>
+				</div>
+
+				<ul class="cards c7" style="--cols:2">
+					{
+						evolucion.map((item) => (
+							<li>
+								<InfoCard
+									icon={item.icon}
+									title={item.title}
+									compactTitle
+								>
+									<p>{item.text}</p>
+								</InfoCard>
+							</li>
+						))
+					}
+				</ul>
 			</div>
-		</section>
+		</div>
+	</section>
 
-		<!-- Hacia dónde vamos -->
-		<section class="space-y-4 text-base leading-relaxed text-black/70">
-			<h2 class="text-2xl font-semibold text-black">Una tradición con mirada de futuro</h2>
-			<p>
-				Queremos que TAQTO se convierta en una referencia peruana de objetos contemporáneos en madera y cuero.
-			</p>
-			<p>
-				Una marca reconocida por su diseño preciso, su materialidad honesta y su capacidad de transformar objetos cotidianos en piezas significativas.
-			</p>
-			<p>
-				Nuestra proyección incluye nuevos productos, procesos más eficientes y relaciones de largo plazo con hogares, empresas y espacios profesionales.
-			</p>
-			<p>
-				En cada nueva etapa existe un compromiso que no cambia: avanzar sin perder la calidez, el conocimiento y la cercanía que dieron origen al taller.
-			</p>
-			<p class="border-l-4 border-orange pl-4 text-lg font-medium text-black">
-				El futuro de TAQTO se construye sobre una tradición que sigue viva.
-			</p>
-		</section>
+	<!-- Crecer sin perder la cercanía: relato 7 + cita 5 -->
+	<section class="sect">
+		<div class="wrap">
+			<div class="g12">
+				<div class="c7 flow" style="--flow:15px">
+					<h2>Crecer sin perder la cercanía</h2>
 
-		<!-- CTA final -->
-		<section class="space-y-4 rounded-2xl bg-black/5 p-8 text-base leading-relaxed text-black/70">
-			<p class="text-xs font-semibold uppercase tracking-widest text-orange">Conoce lo que hacemos</p>
-			<h2 class="text-2xl font-semibold text-black">Piezas que conectan historia, diseño y función</h2>
-			<p>
-				Descubre objetos de madera y cuero creados para acompañar rituales de parrilla, mesa, hogar, oficina y regalo.
-			</p>
-			<p>
-				Cada pieza reúne una tradición familiar de taller, una mirada contemporánea y la posibilidad de hacerla más personal.
-			</p>
-			<div class="flex flex-wrap gap-3 pt-2">
-				<a href={productos} class="inline-flex items-center justify-center rounded-lg bg-orange px-5 py-3 text-sm font-semibold text-white">
-					Explorar productos
-				</a>
-				<a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center rounded-lg border border-black/15 px-5 py-3 text-sm font-semibold text-black">
-					Personalizar una pieza
-				</a>
+					<div class="flow measure" style="--flow:15px">
+						<p>
+							Nuestra proyección es seguir desarrollando TAQTO
+							como una marca peruana contemporánea, capaz de
+							crear piezas para hogares, oficinas, restaurantes y
+							empresas.
+						</p>
+
+						<p>Pero crecer no significa alejarnos del origen.</p>
+
+						<p>
+							Queremos conservar la calidez del taller
+							tradicional: el contacto cercano con los
+							materiales, la atención individual a cada pedido y
+							la intención de hacer las cosas con cuidado.
+						</p>
+
+						<p>
+							Incluso al incorporar nuevas herramientas, procesos
+							y tecnologías, buscamos que cada pieza siga
+							transmitiendo esa sensación de objeto trabajado con
+							propósito.
+						</p>
+					</div>
+				</div>
+
+				<div class="c5">
+					<p class="pull">
+						Modernizar el taller no significa volverlo frío.
+						Significa darle nuevas herramientas al mismo cuidado de
+						siempre.
+					</p>
+				</div>
 			</div>
-			<p class="text-sm text-black/50">Diseño con alma de madera, hecho en Lima.</p>
-		</section>
-	</div>
+		</div>
+	</section>
+
+	<!-- Principios: tres columnas -->
+	<section class="sect">
+		<div class="wrap">
+			<div class="sect__head">
+				<p class="eyebrow">Lo que permanece</p>
+
+				<h2>Principios que acompañan cada pieza</h2>
+			</div>
+
+			<ul class="cards" style="--cols:3">
+				{
+					principios.map((item) => (
+						<li>
+							<InfoCard
+								icon={item.icon}
+								title={item.title}
+								compactTitle
+							>
+								<p>{item.text}</p>
+							</InfoCard>
+						</li>
+					))
+				}
+			</ul>
+		</div>
+	</section>
+
+	<!-- Alma de madera: encabezado 6 + relato 6 -->
+	<section class="sect">
+		<div class="wrap">
+			<div class="g12">
+				<div class="c6 flow" style="--flow:15px">
+					<h2>Más que una frase, una forma de crear</h2>
+
+					<p class="pull">
+						Cada pieza comienza con una función y adquiere
+						identidad a través del diseño, el material y la
+						personalización.
+					</p>
+				</div>
+
+				<div class="c6 flow measure" style="--flow:15px">
+					<p>
+						“Diseño con alma de madera” expresa la intención que
+						existe detrás de TAQTO.
+					</p>
+
+					<p>
+						El diseño aporta claridad, proporción y función. La
+						madera aporta carácter, calidez y una identidad que no
+						puede repetirse exactamente de una pieza a otra.
+					</p>
+
+					<p>El alma aparece cuando ambas dimensiones se encuentran.</p>
+
+					<p>
+						Por eso buscamos crear objetos que no solamente cumplan
+						una función, sino que también acompañen momentos:
+						preparar una parrilla, compartir una mesa, organizar un
+						escritorio o entregar un regalo con significado.
+					</p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Hecho en Lima: relato 7 + acción 5 -->
+	<section class="sect">
+		<div class="wrap">
+			<div class="g12">
+				<div class="c7 flow" style="--flow:15px">
+					<p class="eyebrow">Nuestro lugar</p>
+
+					<h2>Diseñado y hecho en Lima, Perú</h2>
+
+					<div class="flow measure" style="--flow:15px">
+						<p>
+							TAQTO se desarrolla desde Lima, conectando una
+							tradición familiar de taller con una mirada
+							contemporánea del diseño peruano.
+						</p>
+
+						<p>
+							Nuestra identidad no busca representar al Perú
+							mediante adornos o estereotipos. Se expresa a
+							través del material, el trabajo, los usos
+							cotidianos y una manera cercana de relacionarnos
+							con quienes eligen nuestras piezas.
+						</p>
+
+						<p>
+							Creamos productos para parrilla, mesa, cocina,
+							oficina, hogar y regalo, pensados para integrarse
+							naturalmente en espacios actuales.
+						</p>
+					</div>
+
+					<div class="actions">
+						<a href={productos} class="sp-btn sp-btn--ghost">
+							Conocer nuestras colecciones
+						</a>
+					</div>
+				</div>
+
+				<div class="c5 flow" style="--flow:15px">
+					<h3>Una tradición con mirada de futuro</h3>
+
+					<div class="flow measure-tight" style="--flow:14px">
+						<p>
+							Queremos que TAQTO se convierta en una referencia
+							peruana de objetos contemporáneos en madera y
+							cuero, reconocida por su diseño preciso, su
+							materialidad honesta y su capacidad de transformar
+							objetos cotidianos en piezas significativas.
+						</p>
+
+						<p>
+							Nuestra proyección incluye nuevos productos,
+							procesos más eficientes y relaciones de largo plazo
+							con hogares, empresas y espacios profesionales.
+						</p>
+
+						<p>
+							En cada nueva etapa existe un compromiso que no
+							cambia: avanzar sin perder la calidez, el
+							conocimiento y la cercanía que dieron origen al
+							taller.
+						</p>
+
+						<p class="pull">
+							El futuro de TAQTO se construye sobre una tradición
+							que sigue viva.
+						</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- CTA final -->
+	<section class="sect sect--last">
+		<div class="wrap">
+			<div class="page-cta page-cta--split">
+				<div class="page-cta__text">
+					<p class="eyebrow">Conoce lo que hacemos</p>
+
+					<h2>Piezas que conectan historia, diseño y función</h2>
+
+					<p class="measure">
+						Descubre objetos de madera y cuero creados para
+						acompañar rituales de parrilla, mesa, hogar, oficina y
+						regalo. Cada pieza reúne una tradición familiar de
+						taller, una mirada contemporánea y la posibilidad de
+						hacerla más personal.
+					</p>
+
+					<p class="note">
+						Diseño con alma de madera, hecho en Lima.
+					</p>
+				</div>
+
+				<div class="actions">
+					<a href={productos} class="btn btn--primary">
+						Explorar productos
+					</a>
+
+					<a
+						href={`https://wa.me/${WHATSAPP_NUMBER}`}
+						target="_blank"
+						rel="noopener noreferrer"
+						class="sp-btn sp-btn--ghost"
+					>
+						Personalizar una pieza
+					</a>
+				</div>
+			</div>
+		</div>
+	</section>
 </PageLayout>
+
+<style>
+	.origin__photo {
+		width: 100%;
+		height: auto;
+		border-radius: var(--sp-radius);
+	}
+
+	@media (min-width: 901px) {
+		/* La fotografía acompaña al relato desde su primera línea */
+		.origin {
+			align-items: stretch;
+		}
+
+		.origin__photo {
+			position: sticky;
+			top: clamp(24px, 4vw, 56px);
+		}
+	}
+</style>

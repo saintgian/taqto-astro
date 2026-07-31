@@ -2,6 +2,7 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import Header from "../../components/Header.astro";
 import ProductCard from "../../components/ProductCard.astro";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
 import { PortableText } from "astro-portabletext";
 import {
 	sanityClient,
@@ -9,6 +10,14 @@ import {
 } from "../../lib/sanity";
 
 import { productDetailQuery } from "../../lib/productDetailQuery";
+import {
+	PenLine,
+	ArrowRight,
+	Truck,
+	Sparkles,
+	Ruler,
+	TreePine,
+} from "@lucide/astro";
 
 interface Wood {
 	title?: string;
@@ -141,7 +150,14 @@ const categoryHref = product.category?.slug
 	? `${base}categorias/${product.category.slug}/`
 	: `${base}categorias/`;
 
-const contactHref = `${base}contactanos/`;
+const breadcrumbItems = [
+	{ label: "Inicio", href: base },
+	{
+		label: product.category?.title || "Tienda",
+		href: categoryHref,
+	},
+	{ label: product.title },
+];
 
 const activeVariants = (product.variants || []).filter(
 	(variant) => variant.active !== false,
@@ -231,6 +247,25 @@ const initialSku =
 		? product.sku
 		: (firstVariant as Variant)?.sku || product.sku;
 
+const initialDimensions =
+	product.dimensions ||
+	firstVariant?.size?.dimensionsLabel ||
+	"";
+
+const initialWoodTitle =
+	firstVariant?.wood?.title || "";
+
+const benefitRows = [
+	product.engravingIncluded && {
+		icon: PenLine,
+		text: "Grabado láser personalizado sin costo adicional.",
+	},
+	{
+		icon: Truck,
+		text: "Entrega estimada: 2 días hábiles en Lima Metropolitana. Envíos a provincias por agencia.",
+	},
+].filter(Boolean) as { icon: typeof PenLine; text: string }[];
+
 const formatPrice = (value: number) =>
 	new Intl.NumberFormat("es-PE", {
 		style: "currency",
@@ -299,24 +334,51 @@ const descriptionBlocks = Array.isArray(product.description)
 	? product.description
 	: [];
 
-const descriptionIntroBlocks = descriptionBlocks.filter(
-	(block) => !block?.listItem,
+const editorialRows = [
+	{
+		title: "Material y fabricación",
+		icon: TreePine,
+		kind: "portableText" as const,
+		content: descriptionBlocks,
+	},
+	{
+		title: "Personalización",
+		icon: PenLine,
+		kind: "text" as const,
+		content: product.personalizationNotes,
+	},
+	{
+		title: "Uso y cuidado",
+		icon: Sparkles,
+		kind: "text" as const,
+		content: product.careInstructions,
+	},
+].filter((row) =>
+	row.kind === "portableText"
+		? row.content.length > 0
+		: Boolean(row.content),
 );
 
-const descriptionStoryItems = descriptionBlocks
-	.filter(
-		(block) =>
-			block?._type === "block" &&
-			Boolean(block.listItem),
-	)
-	.map((block, index) => ({
-		block: {
-			...block,
-			listItem: undefined,
-			level: undefined,
-		},
-		number: String(index + 1).padStart(2, "0"),
-	}));
+const isColumnEligible = (row: (typeof editorialRows)[number]) =>
+	row.kind === "portableText" &&
+	plainTextFromBlocks(row.content).length > 480;
+
+const truncateText = (
+	text: string,
+	max: number,
+): string => {
+	if (!text || text.length <= max) return text || "";
+
+	const cut = text.slice(0, max);
+	const lastSpace = cut.lastIndexOf(" ");
+
+	return `${cut.slice(0, lastSpace > 40 ? lastSpace : max)}…`;
+};
+
+const careSummary = truncateText(
+	product.careInstructions || "",
+	130,
+);
 
 const pageTitle =
 	product.metaTitle ||
@@ -405,21 +467,7 @@ const safeVariantJson = JSON.stringify({
 	<Header />
 
 	<main class="product-page">
-		<nav
-			class="product-breadcrumbs"
-			aria-label="Migas de pan"
-		>
-			<a href={base}>Inicio</a>
-			<span aria-hidden="true">/</span>
-
-			<a href={categoryHref}>
-				{product.category?.title || "Tienda"}
-			</a>
-
-			<span aria-hidden="true">/</span>
-
-			<span>{product.title}</span>
-		</nav>
+		<Breadcrumbs items={breadcrumbItems} />
 
 		<section class="product-hero">
 			<div class="product-gallery">
@@ -550,6 +598,28 @@ const safeVariantJson = JSON.stringify({
 					}
 				</div>
 
+				{
+					benefitRows.length > 0 && (
+						<div class="product-benefits">
+							{benefitRows.map((benefit) => {
+								const BenefitIcon = benefit.icon;
+
+								return (
+									<div class="product-benefits__row">
+										<BenefitIcon
+											aria-hidden="true"
+											size={15}
+											stroke-width={1.75}
+										/>
+
+										<span>{benefit.text}</span>
+									</div>
+								);
+							})}
+						</div>
+					)
+				}
+
 				<div class="product-status">
 					<span
 						class:list={[
@@ -570,6 +640,44 @@ const safeVariantJson = JSON.stringify({
 						}
 					</span>
 				</div>
+
+				{
+					(initialDimensions || initialWoodTitle) && (
+						<dl class="product-specs">
+							{initialDimensions && (
+								<div class="product-specs__row">
+									<dt>
+										<Ruler
+											aria-hidden="true"
+											size={16}
+											stroke-width={1.75}
+										/>
+										Dimensiones
+									</dt>
+									<dd id="product-spec-dimensions">
+										{initialDimensions}
+									</dd>
+								</div>
+							)}
+
+							{initialWoodTitle && (
+								<div class="product-specs__row">
+									<dt>
+										<TreePine
+											aria-hidden="true"
+											size={16}
+											stroke-width={1.75}
+										/>
+										Madera
+									</dt>
+									<dd id="product-spec-wood">
+										{initialWoodTitle}
+									</dd>
+								</div>
+							)}
+						</dl>
+					)
+				}
 
 				<div class="product-meta">
 					<div class="product-meta__row">
@@ -671,13 +779,7 @@ const safeVariantJson = JSON.stringify({
 						<div class="product-personalization">
 							<div class="product-personalization__header">
 								<div class="product-personalization__icon">
-									<svg
-										viewBox="0 0 24 24"
-										aria-hidden="true"
-									>
-										<path d="M12 3 5 7v5c0 4.4 2.8 7.7 7 9 4.2-1.3 7-4.6 7-9V7l-7-4Z"></path>
-										<path d="m9 12 2 2 4-5"></path>
-									</svg>
+									<PenLine aria-hidden="true" stroke-width={1.75} />
 								</div>
 
 								<div>
@@ -789,6 +891,8 @@ const safeVariantJson = JSON.stringify({
 					<button
 						type="button"
 						class:list={[
+							"btn",
+							"btn--primary",
 							"product-add-to-cart",
 							{
 								"is-disabled":
@@ -803,259 +907,114 @@ const safeVariantJson = JSON.stringify({
 					</button>
 				</div>
 
-				<a
-					class:list={[
-						"product-contact-button",
-						{
-							"is-disabled":
-								initialStock <= 0,
-						},
-					]}
-					id="product-contact-button"
-					href={contactHref}
-				>
-					<span>Consultar este producto</span>
-					<span aria-hidden="true">→</span>
-				</a>
+				{
+					product.careInstructions && (
+						<div class="product-secondary">
+							<Sparkles
+								aria-hidden="true"
+								size={16}
+								stroke-width={1.75}
+							/>
 
-				<p class="product-delivery-note">
-					Entrega estimada: 2 días hábiles en Lima
-					Metropolitana. Envíos a provincias por
-					agencia.
-				</p>
+							<div class="product-secondary__body">
+								<strong>Cuidados</strong>
 
-				<div class="product-accordions">
-					{
-						(product.materials &&
-							product.materials.length > 0) ||
-						product.dimensions ? (
-							<details
-								class="product-accordion"
-								open
-							>
-								<summary>
-									Especificaciones técnicas
-									<span
-										class="product-accordion__chevron"
-										aria-hidden="true"
-									>
-										⌄
-									</span>
-								</summary>
-
-								<div class="product-accordion__content">
-									<dl class="product-specs">
-										{product.materials &&
-											product.materials
-												.length > 0 && (
-												<div class="product-specs__row">
-													<dt>
-														Material
-													</dt>
-													<dd>
-														{product.materials.join(
-															", ",
-														)}
-													</dd>
-												</div>
-											)}
-
-										{product.dimensions && (
-											<div class="product-specs__row">
-												<dt>
-													Dimensiones
-												</dt>
-												<dd>
-													{
-														product.dimensions
-													}
-												</dd>
-											</div>
-										)}
-									</dl>
-								</div>
-							</details>
-						) : null
-					}
-
-					{
-						product.careInstructions && (
-							<details class="product-accordion">
-								<summary>
-									Cuidados
-									<span
-										class="product-accordion__chevron"
-										aria-hidden="true"
-									>
-										⌄
-									</span>
-								</summary>
-
-								<div class="product-accordion__content">
-									<p>
-										{
-											product.careInstructions
-										}
-									</p>
-								</div>
-							</details>
-						)
-					}
-				</div>
+								<p>
+									{careSummary}{" "}
+									<a href={`${base}cuidados/`}>
+										Ver más
+									</a>
+								</p>
+							</div>
+						</div>
+					)
+				}
 			</div>
 		</section>
 
 		{
-			product.description &&
-				product.description.length > 0 && (
-					<section class="product-longdesc">
-						<details
-							class="product-longdesc__details"
-							open
-						>
-							<summary>
-								<span class="product-longdesc__title">
-									Descripción
-								</span>
+			editorialRows.length > 0 && (
+				<section class="product-longdesc">
+					<h2 class="product-longdesc__title">
+						Descripción
+					</h2>
 
-								<span
-									class="product-longdesc__toggle"
-									aria-hidden="true"
+					{
+						hasEditorialImage && (
+							<figure class="product-longdesc__figure">
+								<img
+									src={editorialImageUrl}
+									alt={editorialImage?.alt || ""}
+									width={editorialImageWidth}
+									height={editorialImageHeight}
+									style={`aspect-ratio: ${editorialImageAspectRatio};`}
+									loading="lazy"
+									decoding="async"
+								/>
+
+								{editorialImage?.caption && (
+									<figcaption>
+										{editorialImage.caption}
+									</figcaption>
+								)}
+							</figure>
+						)
+					}
+
+					<div class="product-longdesc__rows">
+						{editorialRows.map((row) => {
+							const RowIcon = row.icon;
+
+							return (
+								<article
+									class:list={[
+										"product-longdesc__row",
+										{
+											"product-longdesc__row--columns":
+												isColumnEligible(row),
+										},
+									]}
 								>
-									<span class="product-longdesc__toggle-open">Ver más</span>
-									<span class="product-longdesc__toggle-close">Retraer</span>
-									<span class="product-accordion__chevron">
-										⌄
-									</span>
-								</span>
-							</summary>
+									<div class="product-longdesc__row-head">
+										<RowIcon
+											aria-hidden="true"
+											size={18}
+											stroke-width={1.75}
+										/>
 
-							<div class="product-longdesc__content">
-								{
-									hasEditorialImage ? (
-										<div class="product-longdesc__editorial">
-											<div class="product-longdesc__editorial-text">
-												{
-													descriptionIntroBlocks.length > 0 && (
-														<PortableText
-															value={
-																descriptionStoryItems.length > 0
-																	? descriptionIntroBlocks
-																	: product.description
-															}
-														/>
-													)
-												}
+										<h3 class="product-longdesc__row-title">
+											{row.title}
+										</h3>
+									</div>
 
-												{
-													descriptionStoryItems.length > 0 && (
-														<div class="product-longdesc__story">
-															{descriptionStoryItems.map(
-																(item) => (
-																	<article class="product-longdesc__story-item">
-																		<div class="product-longdesc__copy">
-																			<span class="product-longdesc__index">
-																				{item.number}
-																			</span>
+									<div class="product-longdesc__row-text">
+										{row.kind === "portableText" ? (
+											<PortableText
+												value={row.content}
+											/>
+										) : (
+											<p>{row.content}</p>
+										)}
+									</div>
+								</article>
+							);
+						})}
+					</div>
 
-																			<div class="product-longdesc__story-text">
-																				<PortableText
-																					value={[item.block]}
-																				/>
-																			</div>
-																		</div>
-																	</article>
-																),
-															)}
-														</div>
-													)
-												}
-											</div>
-
-											<figure class="product-longdesc__editorial-figure">
-												<img
-													src={editorialImageUrl}
-													alt={editorialImage?.alt || ""}
-													width={editorialImageWidth}
-													height={editorialImageHeight}
-													style={`aspect-ratio: ${editorialImageAspectRatio};`}
-													loading="lazy"
-													decoding="async"
-												/>
-
-												{editorialImage?.caption && (
-													<figcaption>
-														{editorialImage.caption}
-													</figcaption>
-												)}
-											</figure>
-										</div>
-									) : (
-										<>
-											{
-												descriptionStoryItems.length > 0 &&
-												descriptionIntroBlocks.length > 0 && (
-													<div class="product-longdesc__intro">
-														<PortableText
-															value={descriptionIntroBlocks}
-														/>
-													</div>
-												)
-											}
-
-											{
-												descriptionStoryItems.length === 0 && (
-													<div class="product-longdesc__body">
-														<PortableText
-															value={product.description}
-														/>
-													</div>
-												)
-											}
-
-											{
-												descriptionStoryItems.length > 0 && (
-													<div class="product-longdesc__story">
-														{descriptionStoryItems.map(
-															(item) => (
-																<article class="product-longdesc__story-item">
-																	<div class="product-longdesc__copy">
-																		<span class="product-longdesc__index">
-																			{item.number}
-																		</span>
-
-																		<div class="product-longdesc__story-text">
-																			<PortableText
-																				value={[item.block]}
-																			/>
-																		</div>
-																	</div>
-																</article>
-															),
-														)}
-													</div>
-												)
-											}
-										</>
-									)
-								}
-
-								{product.materials &&
-									product.materials.length > 0 && (
-										<div class="product-materials product-longdesc__materials">
-											<ul>
-												{product.materials.map(
-													(material) => (
-														<li>{material}</li>
-													),
-												)}
-											</ul>
-										</div>
+					{product.materials &&
+						product.materials.length > 0 && (
+							<div class="product-materials product-longdesc__materials">
+								<ul>
+									{product.materials.map(
+										(material) => (
+											<li>{material}</li>
+										),
 									)}
+								</ul>
 							</div>
-						</details>
-					</section>
-				)
+						)}
+				</section>
+			)
 		}
 
 		{
@@ -1066,13 +1025,16 @@ const safeVariantJson = JSON.stringify({
 
 						<a href={categoryHref}>
 							Ver toda la categoría
-							<span aria-hidden="true">→</span>
+							<ArrowRight aria-hidden="true" size={16} stroke-width={1.75} />
 						</a>
 					</div>
 
 					<div class="product-crosssell__grid">
 						{crossSell.map((related) => (
-							<ProductCard product={related} />
+							<ProductCard
+								product={related}
+								hoverGallery
+							/>
 						))}
 					</div>
 				</section>
@@ -1138,6 +1100,16 @@ const safeVariantJson = JSON.stringify({
 				"#product-sku",
 			);
 
+		const specDimensionsElement =
+			document.querySelector<HTMLElement>(
+				"#product-spec-dimensions",
+			);
+
+		const specWoodElement =
+			document.querySelector<HTMLElement>(
+				"#product-spec-wood",
+			);
+
 		const stockLabel =
 			document.querySelector<HTMLElement>(
 				"#product-stock-label",
@@ -1151,11 +1123,6 @@ const safeVariantJson = JSON.stringify({
 		const messageElement =
 			document.querySelector<HTMLElement>(
 				"#product-variation-message",
-			);
-
-		const contactButton =
-			document.querySelector<HTMLAnchorElement>(
-				"#product-contact-button",
 			);
 
 		const addToCartButton =
@@ -1290,10 +1257,6 @@ const safeVariantJson = JSON.stringify({
 						"Esta combinación no está disponible.";
 				}
 
-				contactButton?.classList.add(
-					"is-disabled",
-				);
-
 				addToCartButton?.classList.add(
 					"is-disabled",
 				);
@@ -1332,6 +1295,16 @@ const safeVariantJson = JSON.stringify({
 					variant.sku || "Sin SKU";
 			}
 
+			if (specDimensionsElement && variant.dimensions) {
+				specDimensionsElement.textContent =
+					variant.dimensions;
+			}
+
+			if (specWoodElement && variant.woodTitle) {
+				specWoodElement.textContent =
+					variant.woodTitle;
+			}
+
 			const stock = Number(variant.stock || 0);
 
 			if (stockLabel) {
@@ -1343,11 +1316,6 @@ const safeVariantJson = JSON.stringify({
 
 			stockDot?.classList.toggle(
 				"is-out",
-				stock <= 0,
-			);
-
-			contactButton?.classList.toggle(
-				"is-disabled",
 				stock <= 0,
 			);
 
@@ -1570,46 +1538,29 @@ const safeVariantJson = JSON.stringify({
 <style>
 	.product-page {
 		min-height: 100vh;
-		padding:
-			clamp(24px, 3vw, 40px)
-			clamp(20px, 5vw, 82px)
+		padding-block:
+			clamp(20px, 2.4vw, 32px)
 			clamp(80px, 9vw, 140px);
-		background: #fff6ed;
-		color: #141414;
+		background: var(--surface, #ffffff);
+		color: var(--color-black, #141414);
 	}
 
-	.product-breadcrumbs {
-		width: min(100%, 1450px);
+	.product-page > :global(nav.breadcrumbs) {
+		max-width: var(--container-comercial, 1520px);
 		margin: 0 auto 24px;
-		display: flex;
-		align-items: center;
-		flex-wrap: wrap;
-		gap: 9px;
-		color: rgba(20, 20, 20, 0.52);
-		font-size: 12px;
-		font-weight: 600;
-		letter-spacing: 0.06em;
-		text-transform: uppercase;
-	}
-
-	.product-breadcrumbs a {
-		color: inherit;
-		text-decoration: none;
-	}
-
-	.product-breadcrumbs a:hover {
-		color: #141414;
+		padding-inline: var(--container-gutter, clamp(16px, 4vw, 64px));
 	}
 
 	.product-hero {
-		width: min(100%, 1450px);
+		max-width: var(--container-comercial, 1520px);
 		margin-inline: auto;
+		padding-inline: var(--container-gutter, clamp(16px, 4vw, 64px));
 		display: grid;
 		grid-template-columns:
 			minmax(0, 1.15fr)
 			minmax(320px, 0.85fr);
 		align-items: start;
-		gap: clamp(28px, 3.5vw, 56px);
+		gap: clamp(48px, 5vw, 64px);
 	}
 
 	.product-gallery {
@@ -1617,17 +1568,13 @@ const safeVariantJson = JSON.stringify({
 		display: flex;
 		align-items: stretch;
 		gap: 14px;
-		height: auto;
 	}
 
 	.product-main-image {
 		flex: 1;
 		min-width: 0;
-		height: auto;
-		aspect-ratio: 4 / 5;
+		height: clamp(500px, 62vh, 640px);
 		overflow: hidden;
-		border: 0;
-		border-radius: 18px;
 		background: transparent;
 	}
 
@@ -1635,9 +1582,9 @@ const safeVariantJson = JSON.stringify({
 		display: block;
 		width: 100%;
 		height: 100%;
-		padding: 0;
+		padding: clamp(8px, 1vw, 16px);
 		background: transparent;
-		object-fit: cover;
+		object-fit: contain;
 		object-position: center;
 	}
 
@@ -1654,7 +1601,7 @@ const safeVariantJson = JSON.stringify({
 
 	.product-thumbnails {
 		flex-shrink: 0;
-		width: 88px;
+		width: 72px;
 		display: flex;
 		flex-direction: column;
 		gap: 10px;
@@ -1669,47 +1616,70 @@ const safeVariantJson = JSON.stringify({
 	}
 
 	.product-thumbnail {
+		appearance: none;
 		flex-shrink: 0;
 		width: 100%;
 		aspect-ratio: 4 / 5;
 		padding: 0;
 		overflow: hidden;
 		border: 0;
-		border-radius: 10px;
+		border-radius: 0;
 		background: transparent;
 		cursor: pointer;
-		opacity: 0.58;
+		opacity: 0.55;
+		box-shadow: 0 2px 0 0 transparent;
 		transition:
 			opacity 180ms ease,
-			transform 180ms ease;
+			box-shadow 180ms ease;
 	}
 
 	.product-thumbnail.is-active,
 	.product-thumbnail:hover {
 		opacity: 1;
-		transform: scale(1.025);
+	}
+
+	.product-thumbnail.is-active {
+		box-shadow: 0 2px 0 0 var(--color-black, #141414);
+	}
+
+	.product-thumbnail:focus-visible {
+		outline: 2px solid var(--color-orange, #ff4d2a);
+		outline-offset: 2px;
 	}
 
 	.product-thumbnail img {
 		display: block;
 		width: 100%;
 		height: 100%;
-		padding: 0;
+		padding: 4px;
 		background: transparent;
-		object-fit: cover;
+		object-fit: contain;
 		object-position: center;
+	}
+
+	@media (min-width: 981px) {
+		.product-gallery {
+			position: sticky;
+			top: clamp(120px, 12vw, 142px);
+		}
+	}
+
+	@media (min-width: 981px) and (max-height: 699px) {
+		.product-gallery {
+			position: static;
+		}
 	}
 
 	.product-information {
 		position: sticky;
-		top: 155px;
+		top: clamp(120px, 12vw, 142px);
 	}
 
 	.product-category,
 	.section-eyebrow {
-		margin: 0 0 8px;
+		margin: 0 0 5px;
 		color: #ff4d2a;
-		font-size: 11px;
+		font-size: 10.5px;
 		font-weight: 700;
 		letter-spacing: 0.15em;
 		text-transform: uppercase;
@@ -1717,25 +1687,26 @@ const safeVariantJson = JSON.stringify({
 
 	.product-information h1 {
 		margin: 0;
-		font-size: clamp(22px, 1.8vw, 30px);
+		font-size: clamp(27px, 2.4vw, 32px);
 		font-weight: 600;
-		line-height: 1.15;
+		line-height: 1.2;
 		letter-spacing: -0.02em;
 	}
 
 	.product-price-wrapper {
-		margin-top: 10px;
+		margin-top: 6px;
 		display: flex;
 		align-items: baseline;
 		flex-wrap: wrap;
-		gap: 12px;
+		gap: 10px;
 	}
 
 	.product-short-description {
-		margin: 10px 0 0;
+		max-width: 50ch;
+		margin: 9px 0 0;
 		color: rgba(20, 20, 20, 0.72);
-		font-size: 15px;
-		line-height: 1.65;
+		font-size: clamp(13px, 0.2vw + 12.6px, 14px);
+		line-height: 1.48;
 	}
 
 	.product-short-description :global(p) {
@@ -1761,7 +1732,7 @@ const safeVariantJson = JSON.stringify({
 
 	.product-price {
 		margin: 0;
-		font-size: 21px;
+		font-size: clamp(21px, 0.25vw + 20px, 24px);
 		font-weight: 700;
 		letter-spacing: -0.02em;
 	}
@@ -1769,7 +1740,7 @@ const safeVariantJson = JSON.stringify({
 	.product-regular-price {
 		margin: 0;
 		color: rgba(20, 20, 20, 0.42);
-		font-size: 14px;
+		font-size: 12.5px;
 		text-decoration: line-through;
 	}
 
@@ -1784,6 +1755,7 @@ const safeVariantJson = JSON.stringify({
 		gap: 8px;
 		color: rgba(20, 20, 20, 0.62);
 		font-size: 12px;
+		line-height: 1.4;
 	}
 
 	.product-status__dot {
@@ -1798,14 +1770,14 @@ const safeVariantJson = JSON.stringify({
 	}
 
 	.product-meta {
-		margin-top: 10px;
-		padding-block: 8px;
+		margin-top: 8px;
+		padding-block: 7px;
 		display: flex;
 		flex-direction: column;
 		gap: 6px;
 		border-top: 1px solid rgba(20, 20, 20, 0.1);
 		border-bottom: 1px solid rgba(20, 20, 20, 0.1);
-		font-size: 11px;
+		font-size: 10.5px;
 		text-transform: uppercase;
 	}
 
@@ -1821,13 +1793,13 @@ const safeVariantJson = JSON.stringify({
 	}
 
 	.product-option-group {
-		margin: 16px 0 0;
+		margin: clamp(8px, 0.8vw, 12px) 0 0;
 		padding: 0;
 		border: 0;
 	}
 
 	.product-option-group legend {
-		margin-bottom: 10px;
+		margin-bottom: 7px;
 		font-size: 12px;
 		font-weight: 700;
 	}
@@ -1839,8 +1811,8 @@ const safeVariantJson = JSON.stringify({
 	}
 
 	.product-option {
-		min-height: 38px;
-		padding: 7px 14px;
+		min-height: 44px;
+		padding: 7px 16px;
 		display: flex;
 		align-items: flex-start;
 		justify-content: center;
@@ -1850,7 +1822,8 @@ const safeVariantJson = JSON.stringify({
 		border-radius: 12px;
 		background: transparent;
 		color: #141414;
-		font: inherit;
+		font-size: 13px;
+		font-family: inherit;
 		cursor: pointer;
 		transition:
 			background-color 180ms ease,
@@ -1869,13 +1842,13 @@ const safeVariantJson = JSON.stringify({
 	}
 
 	.product-option strong {
-		font-size: 12px;
+		font-size: 13px;
 		font-weight: 600;
 	}
 
 	.product-option small {
 		color: inherit;
-		font-size: 11px;
+		font-size: 11.5px;
 		opacity: 0.65;
 	}
 
@@ -1888,8 +1861,8 @@ const safeVariantJson = JSON.stringify({
 	}
 
 	.product-personalization {
-		margin-top: 10px;
-		padding: 12px;
+		margin-top: clamp(10px, 0.8vw, 14px);
+		padding: 13px 14px;
 		display: flex;
 		flex-direction: column;
 		gap: 10px;
@@ -1932,8 +1905,8 @@ const safeVariantJson = JSON.stringify({
 	.product-personalization p {
 		margin: 3px 0 0;
 		color: rgba(20, 20, 20, 0.6);
-		font-size: 11px;
-		line-height: 1.4;
+		font-size: 11.5px;
+		line-height: 1.45;
 	}
 
 	.product-engraving {
@@ -1954,6 +1927,7 @@ const safeVariantJson = JSON.stringify({
 
 	.product-engraving__counter {
 		color: rgba(20, 20, 20, 0.42);
+		font-size: 11px;
 		font-weight: 500;
 		font-variant-numeric: tabular-nums;
 	}
@@ -1967,7 +1941,7 @@ const safeVariantJson = JSON.stringify({
 		background: transparent;
 		color: #141414;
 		font: inherit;
-		font-size: 14px;
+		font-size: 13px;
 		line-height: 1.4;
 		transition: border-color 180ms ease;
 	}
@@ -1984,12 +1958,12 @@ const safeVariantJson = JSON.stringify({
 	.product-engraving__hint {
 		margin: 0;
 		color: rgba(20, 20, 20, 0.5);
-		font-size: 11px;
+		font-size: 11.5px;
 		line-height: 1.5;
 	}
 
 	.product-quantity-row {
-		margin-top: 10px;
+		margin-top: clamp(12px, 1vw, 16px);
 		display: flex;
 		align-items: stretch;
 		gap: 10px;
@@ -2000,12 +1974,13 @@ const safeVariantJson = JSON.stringify({
 		display: flex;
 		align-items: stretch;
 		border: 1px solid rgba(20, 20, 20, 0.16);
-		border-radius: 13px;
+		border-radius: 12px;
 		overflow: hidden;
 	}
 
 	.product-quantity__button {
-		width: 38px;
+		width: 44px;
+		min-height: 44px;
 		border: 0;
 		background: transparent;
 		color: #141414;
@@ -2018,13 +1993,19 @@ const safeVariantJson = JSON.stringify({
 		background: rgba(20, 20, 20, 0.06);
 	}
 
+	.product-quantity__button:focus-visible,
+	.product-engraving__input:focus-visible {
+		outline: 2px solid var(--color-orange, #ff4d2a);
+		outline-offset: 2px;
+	}
+
 	.product-quantity__input {
-		width: 44px;
+		width: 48px;
 		border: 0;
 		border-inline: 1px solid rgba(20, 20, 20, 0.16);
 		background: transparent;
 		color: #141414;
-		font-size: 14px;
+		font-size: 13px;
 		font-weight: 600;
 		text-align: center;
 		-moz-appearance: textfield;
@@ -2036,28 +2017,16 @@ const safeVariantJson = JSON.stringify({
 		-webkit-appearance: none;
 	}
 
+	/*
+	 * Solo posicion y voz tipografica de la ficha: color, geometria y
+	 * estados vienen de `.btn--primary`.
+	 */
 	.product-add-to-cart {
 		flex: 1;
-		min-height: 50px;
-		padding-inline: 20px;
-		border: 0;
-		border-radius: 13px;
-		background: #ff4d2a;
-		color: #fff6ed;
-		font-size: 11px;
+		font-size: 13px;
 		font-weight: 700;
-		letter-spacing: 0.08em;
+		letter-spacing: 0.04em;
 		text-transform: uppercase;
-		cursor: pointer;
-		transition:
-			background-color 180ms ease,
-			transform 180ms ease,
-			opacity 180ms ease;
-	}
-
-	.product-add-to-cart:hover {
-		background: #e5431f;
-		transform: translateY(-2px);
 	}
 
 	.product-add-to-cart.is-disabled {
@@ -2065,114 +2034,57 @@ const safeVariantJson = JSON.stringify({
 		opacity: 0.42;
 	}
 
-	.product-contact-button {
-		margin-top: 8px;
-		min-height: 46px;
-		padding-inline: 20px;
+	.product-benefits {
+		margin-top: clamp(10px, 1vw, 14px);
 		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		border-radius: 15px;
-		background: #141414;
-		color: #fff6ed;
-		font-size: 11px;
-		font-weight: 700;
-		letter-spacing: 0.08em;
-		text-decoration: none;
-		text-transform: uppercase;
-		transition:
-			background-color 180ms ease,
-			transform 180ms ease,
-			opacity 180ms ease;
+		flex-direction: column;
+		gap: 7px;
 	}
 
-	.product-contact-button:hover {
-		background: #5b312a;
-		transform: translateY(-2px);
-	}
-
-	.product-contact-button.is-disabled {
-		pointer-events: none;
-		opacity: 0.42;
-	}
-
-	.product-delivery-note {
-		margin: 6px 0 0;
-		color: rgba(20, 20, 20, 0.48);
-		font-size: 11px;
-		line-height: 1.4;
-		text-align: center;
-	}
-
-	.product-accordions {
-		margin-top: 10px;
-		border-top: 1px solid rgba(20, 20, 20, 0.12);
-	}
-
-	.product-accordion {
-		border-bottom: 1px solid rgba(20, 20, 20, 0.12);
-	}
-
-	.product-accordion summary {
-		padding: 10px 0;
+	.product-benefits__row {
 		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 12px;
-		color: #141414;
-		font-size: 12px;
-		font-weight: 700;
-		letter-spacing: 0.02em;
-		text-transform: uppercase;
-		cursor: pointer;
-		list-style: none;
-	}
-
-	.product-accordion summary::-webkit-details-marker {
-		display: none;
-	}
-
-	.product-accordion__chevron {
-		font-size: 16px;
-		transition: transform 220ms ease;
-	}
-
-	.product-accordion[open]
-		.product-accordion__chevron {
-		transform: rotate(180deg);
-	}
-
-	.product-accordion__content {
-		padding: 0 0 12px;
-		color: rgba(20, 20, 20, 0.72);
+		align-items: flex-start;
+		gap: 8px;
+		color: rgba(20, 20, 20, 0.68);
 		font-size: 13px;
-		line-height: 1.6;
+		line-height: 1.45;
+	}
+
+	.product-benefits__row :global(svg) {
+		flex-shrink: 0;
+		margin-top: 1px;
+		color: #5b312a;
 	}
 
 	.product-specs {
-		margin: 0;
-		display: flex;
-		flex-direction: column;
+		margin: clamp(12px, 1vw, 16px) 0 0;
+		padding: 0;
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 0 24px;
 	}
 
 	.product-specs__row {
 		display: flex;
-		justify-content: space-between;
-		gap: 16px;
-		padding: 7px 0;
+		flex-direction: column;
+		gap: 3px;
+		padding: 9px 0;
 		border-bottom: 1px solid rgba(20, 20, 20, 0.08);
 	}
 
-	.product-specs__row:last-child {
-		border-bottom: 0;
-		padding-bottom: 0;
-	}
-
 	.product-specs dt {
+		display: flex;
+		align-items: center;
+		gap: 6px;
 		color: rgba(20, 20, 20, 0.48);
 		font-size: 11px;
 		letter-spacing: 0.04em;
 		text-transform: uppercase;
+	}
+
+	.product-specs dt :global(svg) {
+		flex-shrink: 0;
+		color: rgba(20, 20, 20, 0.48);
 	}
 
 	.product-specs dd {
@@ -2180,22 +2092,51 @@ const safeVariantJson = JSON.stringify({
 		color: #141414;
 		font-size: 12.5px;
 		font-weight: 600;
-		text-align: right;
+		text-align: left;
 	}
 
-	.product-accordion__content :global(p) {
-		margin: 0 0 16px;
+	@media (max-width: 600px) {
+		.product-specs {
+			grid-template-columns: 1fr;
+		}
 	}
 
-	.product-accordion__content :global(p:last-child) {
-		margin-bottom: 0;
+	.product-secondary {
+		margin-top: clamp(8px, 0.6vw, 10px);
+		padding-top: clamp(6px, 0.5vw, 8px);
+		display: flex;
+		align-items: flex-start;
+		gap: 8px;
+		border-top: 1px solid rgba(20, 20, 20, 0.12);
+		color: #5b312a;
 	}
 
-	.product-accordion__content :global(h2),
-	.product-accordion__content :global(h3) {
-		margin: 24px 0 10px;
+	.product-secondary__body {
+		min-width: 0;
 		color: #141414;
-		font-size: 15px;
+	}
+
+	.product-secondary__body strong {
+		display: block;
+		font-size: 12.5px;
+	}
+
+	.product-secondary__body p {
+		margin: 3px 0 0;
+		color: rgba(20, 20, 20, 0.62);
+		font-size: 12.5px;
+		line-height: 1.5;
+	}
+
+	.product-secondary__body a {
+		color: #ff4d2a;
+		font-weight: 600;
+		text-decoration: none;
+		white-space: nowrap;
+	}
+
+	.product-secondary__body a:hover {
+		text-decoration: underline;
 	}
 
 	.product-materials {
@@ -2227,185 +2168,106 @@ const safeVariantJson = JSON.stringify({
 	}
 
 	.product-longdesc {
-		width: min(100%, 1450px);
-		margin: clamp(56px, 7vw, 104px) auto 0;
-		padding-top: clamp(30px, 4vw, 48px);
+		max-width: var(--container-comercial, 1520px);
+		margin: clamp(20px, 2vw, 28px) auto 0;
+		padding-inline: var(--container-gutter, clamp(16px, 4vw, 64px));
+		padding-top: clamp(12px, 1vw, 20px);
 		border-top: 1px solid rgba(20, 20, 20, 0.12);
 	}
 
-	.product-longdesc__details summary {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 20px;
-		cursor: pointer;
-		list-style: none;
-		text-align: left;
-	}
-
-	.product-longdesc__details
-		summary::-webkit-details-marker {
-		display: none;
-	}
-
 	.product-longdesc__title {
+		margin: 0;
 		color: #141414;
-		font-size: clamp(30px, 4vw, 52px);
+		font-size: clamp(25px, 0.8vw + 22px, 29px);
 		font-weight: 600;
-		line-height: 1;
-		letter-spacing: -0.045em;
+		line-height: 1.15;
+		letter-spacing: -0.02em;
 	}
 
-	.product-longdesc__toggle {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-		color: rgba(20, 20, 20, 0.5);
-		font-size: 11px;
-		font-weight: 700;
-		letter-spacing: 0.08em;
-		text-transform: uppercase;
-		white-space: nowrap;
+	.product-longdesc__figure {
+		margin: clamp(24px, 3vw, 32px) 0 0;
 	}
 
-	.product-longdesc__toggle-close {
-		display: none;
-	}
-
-	.product-longdesc__details[open]
-		.product-longdesc__toggle-open {
-		display: none;
-	}
-
-	.product-longdesc__details[open]
-		.product-longdesc__toggle-close {
-		display: inline;
-	}
-
-	.product-longdesc__details[open]
-		.product-accordion__chevron {
-		transform: rotate(180deg);
-	}
-
-	.product-longdesc__content {
-		margin-top: clamp(34px, 5vw, 68px);
-		color: rgba(20, 20, 20, 0.72);
-		font-size: 15px;
-		line-height: 1.65;
-		text-align: left;
-	}
-
-	.product-longdesc__intro,
-	.product-longdesc__body {
-		width: 100%;
-		margin: 0;
-	}
-
-	.product-longdesc__intro {
-		margin-bottom: clamp(32px, 4vw, 48px);
-	}
-
-	.product-longdesc__intro :global(p),
-	.product-longdesc__body :global(p) {
-		margin: 0 0 20px;
-	}
-
-	.product-longdesc__intro :global(p:last-child),
-	.product-longdesc__body :global(p:last-child) {
-		margin-bottom: 0;
-	}
-
-	.product-longdesc__editorial {
-		display: grid;
-		grid-template-columns: minmax(0, 45fr) minmax(0, 55fr);
-		align-items: start;
-		gap: clamp(28px, 4vw, 56px);
-		margin-bottom: clamp(32px, 4vw, 48px);
-	}
-
-	.product-longdesc__editorial-text {
-		min-width: 0;
-		display: flex;
-		flex-direction: column;
-	}
-
-	.product-longdesc__editorial-text :global(p) {
-		margin: 0 0 20px;
-	}
-
-	.product-longdesc__editorial-text > :global(p:last-child) {
-		margin-bottom: 0;
-	}
-
-	.product-longdesc__editorial-text .product-longdesc__story {
-		margin-top: clamp(28px, 3.5vw, 40px);
-	}
-
-	.product-longdesc__editorial-figure {
-		margin: 0;
-		min-width: 0;
-		width: 100%;
-		max-width: 604px;
-		justify-self: end;
-	}
-
-	.product-longdesc__editorial-figure img {
+	.product-longdesc__figure img {
 		display: block;
 		width: 100%;
+		max-width: 720px;
 		height: auto;
-		max-height: 70vh;
-		border-radius: 18px;
+		max-height: 60vh;
 		object-fit: contain;
 		object-position: center;
 	}
 
-	.product-longdesc__editorial-figure figcaption {
+	.product-longdesc__figure figcaption {
 		margin-top: 10px;
 		color: rgba(20, 20, 20, 0.5);
 		font-size: 12px;
 		line-height: 1.5;
 	}
 
-	.product-longdesc__story {
-		width: 100%;
+	.product-longdesc__rows {
+		margin-top: clamp(14px, 1.6vw, 20px);
 		display: flex;
 		flex-direction: column;
-		gap: clamp(32px, 4vw, 52px);
 	}
 
-	.product-longdesc__story-item {
-		width: 100%;
+	.product-longdesc__row {
+		display: flex;
+		flex-direction: column;
+		gap: 14px;
+		padding-block: clamp(22px, 2.6vw, 28px);
+		border-top: 1px solid rgba(20, 20, 20, 0.14);
 	}
 
-	.product-longdesc__copy {
-		display: grid;
-		grid-template-columns: 46px minmax(0, 1fr);
-		align-items: start;
-		gap: 18px;
-		width: 100%;
+	.product-longdesc__row-head {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		color: #5b312a;
 	}
 
-	.product-longdesc__index {
-		padding-top: 5px;
-		color: #ff4d2a;
-		font-size: 11px;
-		font-weight: 700;
-		letter-spacing: 0.12em;
+	.product-longdesc__row-head :global(svg) {
+		flex-shrink: 0;
 	}
 
-	.product-longdesc__story-text {
-		color: rgba(20, 20, 20, 0.72);
-		font-size: 15px;
-		line-height: 1.65;
-		width: 100%;
-	}
-
-	.product-longdesc__story-text :global(p) {
+	.product-longdesc__row-title {
 		margin: 0;
+		color: #141414;
+		font-size: clamp(15.5px, 0.2vw + 15px, 17px);
+		font-weight: 600;
+		line-height: 1.25;
+		letter-spacing: -0.01em;
+	}
+
+	.product-longdesc__row-text {
+		max-width: 76ch;
+		color: rgba(20, 20, 20, 0.72);
+		font-size: clamp(13.5px, 0.12vw + 13.3px, 14.5px);
+		line-height: 1.65;
+	}
+
+	.product-longdesc__row-text :global(p) {
+		margin: 0 0 14px;
+	}
+
+	.product-longdesc__row-text :global(p:last-child) {
+		margin-bottom: 0;
+	}
+
+	@media (min-width: 981px) {
+		.product-longdesc__row--columns .product-longdesc__row-text {
+			max-width: 1040px;
+			column-count: 2;
+			column-gap: 48px;
+		}
+
+		.product-longdesc__row--columns .product-longdesc__row-text :global(p) {
+			break-inside: avoid-column;
+		}
 	}
 
 	.product-longdesc__materials {
-		margin-top: clamp(40px, 6vw, 72px);
+		margin-top: clamp(32px, 4vw, 48px);
 		display: flex;
 		justify-content: flex-start;
 	}
@@ -2415,9 +2277,10 @@ const safeVariantJson = JSON.stringify({
 	}
 
 	.product-crosssell {
-		width: min(100%, 1450px);
-		margin: clamp(60px, 8vw, 110px) auto 0;
-		padding-top: clamp(32px, 4vw, 48px);
+		max-width: var(--container-comercial, 1520px);
+		margin: clamp(48px, 4vw, 64px) auto 0;
+		padding-inline: var(--container-gutter, clamp(16px, 4vw, 64px));
+		padding-top: clamp(32px, 4vw, 44px);
 		border-top: 1px solid rgba(20, 20, 20, 0.12);
 	}
 
@@ -2431,10 +2294,10 @@ const safeVariantJson = JSON.stringify({
 
 	.product-crosssell__heading h2 {
 		margin: 0;
-		font-size: clamp(28px, 3.2vw, 42px);
+		font-size: clamp(25px, 1.4vw + 20px, 32px);
 		font-weight: 600;
-		line-height: 1;
-		letter-spacing: -0.04em;
+		line-height: 1.1;
+		letter-spacing: -0.03em;
 	}
 
 	.product-crosssell__heading a {
@@ -2467,6 +2330,7 @@ const safeVariantJson = JSON.stringify({
 		}
 
 		.product-gallery {
+			position: static;
 			flex-direction: column-reverse;
 			height: auto;
 			min-height: 0;
@@ -2486,7 +2350,7 @@ const safeVariantJson = JSON.stringify({
 		}
 
 		.product-thumbnail {
-			width: 76px;
+			width: 72px;
 		}
 
 		.product-information {
@@ -2498,46 +2362,24 @@ const safeVariantJson = JSON.stringify({
 			grid-template-columns: repeat(2, minmax(0, 1fr));
 		}
 
-		.product-longdesc__copy {
-			grid-template-columns: 36px minmax(0, 1fr);
-			gap: 12px;
+		.product-longdesc {
+			margin-top: clamp(18px, 2.2vw, 26px);
+			padding-top: clamp(10px, 1.2vw, 14px);
 		}
 
-		.product-longdesc__editorial {
-			grid-template-columns: minmax(0, 1fr) minmax(0, 340px);
-			gap: 24px;
-		}
-
-		.product-longdesc__editorial-figure {
-			max-width: 340px;
-		}
-	}
-
-	@media (max-width: 700px) {
-		.product-longdesc__editorial {
-			grid-template-columns: 1fr;
-			gap: 20px;
-		}
-
-		.product-longdesc__editorial-figure {
-			max-width: 100%;
-			justify-self: stretch;
-		}
-
-		.product-longdesc__editorial-figure img {
-			max-height: none;
+		.product-longdesc__row {
+			gap: 10px;
+			padding-block: clamp(20px, 3vw, 26px);
 		}
 	}
 
 	@media (max-width: 600px) {
 		.product-page {
-			padding:
-				20px 14px
-				75px;
+			padding-block: 20px 75px;
 		}
 
-		.product-main-image {
-			border-radius: 18px;
+		.product-thumbnail {
+			width: 62px;
 		}
 
 		.product-option-list {
@@ -2551,30 +2393,16 @@ const safeVariantJson = JSON.stringify({
 		}
 
 		.product-longdesc {
-			margin-top: 40px;
-			padding-top: 26px;
+			margin-top: clamp(16px, 3vw, 20px);
+			padding-top: clamp(8px, 2vw, 12px);
 		}
 
-		.product-longdesc__details summary {
-			align-items: flex-start;
+		.product-longdesc__rows {
+			margin-top: 14px;
 		}
 
-		.product-longdesc__content {
-			margin-top: 30px;
-		}
-
-		.product-longdesc__story {
-			gap: 32px;
-		}
-
-		.product-longdesc__copy {
-			grid-template-columns: 28px minmax(0, 1fr);
-			gap: 10px;
-		}
-
-		.product-longdesc__story-text {
-			font-size: 15px;
-			line-height: 1.65;
+		.product-longdesc__row {
+			padding-block: 20px;
 		}
 
 		.product-crosssell {

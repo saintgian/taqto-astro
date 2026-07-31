@@ -12,6 +12,8 @@ interface BusinessLink {
 	description: string;
 }
 
+import { ArrowRight } from "@lucide/astro";
+
 interface Props {
 	image?: BusinessImage;
 	mainHref: string;
@@ -101,7 +103,7 @@ const businessLinks: BusinessLink[] = [
 									class="business-gateway__link-arrow"
 									aria-hidden="true"
 								>
-									→
+									<ArrowRight stroke-width={1.75} />
 								</span>
 							</a>
 						</li>
@@ -109,9 +111,9 @@ const businessLinks: BusinessLink[] = [
 				}
 			</ul>
 
-			<a class="business-gateway__cta" href={mainHref}>
+			<a class="btn btn--primary business-gateway__cta" href={mainHref}>
 				Conoce las soluciones para empresas
-				<span aria-hidden="true">→</span>
+				<ArrowRight aria-hidden="true" stroke-width={1.75} />
 			</a>
 		</div>
 	</div>
@@ -119,20 +121,8 @@ const businessLinks: BusinessLink[] = [
 
 <style>
 	.business-gateway {
-		padding-block: clamp(28px, 8.5vw, 36px);
-		padding-inline: var(--page-padding);
-	}
-
-	@media (min-width: 768px) {
-		.business-gateway {
-			padding-block: clamp(36px, 5.2vw, 44px);
-		}
-	}
-
-	@media (min-width: 1024px) {
-		.business-gateway {
-			padding-block: clamp(48px, 3.4vw, 56px);
-		}
+		padding-block: clamp(64px, 5vw, 80px);
+		padding-inline: var(--container-gutter);
 	}
 
 	.business-gateway--dark {
@@ -162,20 +152,21 @@ const businessLinks: BusinessLink[] = [
 
 	.business-gateway__container {
 		display: grid;
-		width: min(100%, var(--page-width));
+		width: min(100%, var(--container-comercial));
 		grid-template-columns:
-			minmax(0, 1.08fr)
-			minmax(320px, 0.92fr);
-		align-items: stretch;
-		gap: clamp(36px, 6vw, 96px);
+			minmax(0, 0.92fr)
+			minmax(320px, 1fr);
+		align-items: center;
+		gap: clamp(56px, 5vw, 72px);
 		margin-inline: auto;
 	}
 
 	.business-gateway__media {
 		position: relative;
-		min-height: clamp(420px, 50vw, 640px);
+		aspect-ratio: 4 / 3;
+		max-height: 520px;
 		overflow: hidden;
-		border-radius: 24px;
+		border-radius: var(--radius-md);
 		background: rgba(20, 20, 20, 0.04);
 	}
 
@@ -184,7 +175,7 @@ const businessLinks: BusinessLink[] = [
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
-		object-position: center;
+		object-position: 50% 58%;
 	}
 
 	.business-gateway__placeholder {
@@ -210,44 +201,28 @@ const businessLinks: BusinessLink[] = [
 		display: flex;
 		align-self: center;
 		flex-direction: column;
-		padding-block: clamp(8px, 2vw, 20px);
-	}
-
-	.business-gateway__eyebrow {
-		margin: 0 0 14px;
-		color: var(--color-orange);
-		font-size: 11px;
-		font-weight: 700;
-		letter-spacing: 0.17em;
-		text-transform: uppercase;
 	}
 
 	.business-gateway__content h2 {
 		max-width: 600px;
 		margin: 0;
 		color: var(--business-foreground);
-		font-size: clamp(1.8125rem, 1.5rem + 1.5vw, 2.875rem);
+		font-size: clamp(36px, 0.9vw + 26.8px, 44px);
 		font-weight: 600;
-		line-height: 1.1;
+		line-height: 1.15;
 		letter-spacing: -0.02em;
 	}
 
 	.business-gateway__description {
 		max-width: 520px;
-		margin: 18px 0 0;
+		margin: 12px 0 0;
 		color: var(--business-muted);
-		font-size: 16px;
+		font-size: clamp(17px, 0.3vw + 16.4px, 18px);
 		line-height: 1.6;
 	}
 
-	@media (min-width: 768px) {
-		.business-gateway__description {
-			font-size: 17px;
-		}
-	}
-
 	.business-gateway__links {
-		margin: clamp(28px, 4vw, 44px) 0 0;
+		margin: clamp(16px, 2vw, 24px) 0 0;
 		padding: 0;
 		border-top: 1px solid var(--business-line);
 		list-style: none;
@@ -259,11 +234,11 @@ const businessLinks: BusinessLink[] = [
 
 	.business-gateway__links a {
 		display: flex;
-		min-height: 92px;
+		min-height: 70px;
 		align-items: center;
 		justify-content: space-between;
 		gap: 20px;
-		padding: 18px 4px;
+		padding: 12px 4px;
 		color: var(--business-foreground);
 		text-decoration: none;
 		transition:
@@ -273,11 +248,11 @@ const businessLinks: BusinessLink[] = [
 
 	.business-gateway__link-copy {
 		display: grid;
-		gap: 7px;
+		gap: 5px;
 	}
 
 	.business-gateway__link-copy strong {
-		font-size: clamp(16px, 1.6vw, 21px);
+		font-size: clamp(19px, 1vw + 16px, 22px);
 		font-weight: 600;
 		letter-spacing: -0.02em;
 	}
@@ -285,7 +260,7 @@ const businessLinks: BusinessLink[] = [
 	.business-gateway__link-copy small {
 		max-width: 420px;
 		color: var(--business-muted);
-		font-size: 14px;
+		font-size: clamp(15.5px, 0.5vw + 15px, 17px);
 		font-weight: 400;
 		line-height: 1.5;
 	}
@@ -298,43 +273,27 @@ const businessLinks: BusinessLink[] = [
 		place-items: center;
 		border: 1px solid var(--business-line);
 		border-radius: 50%;
-		font-size: 15px;
 		transition:
 			transform 180ms ease,
 			border-color 180ms ease;
 	}
 
-	.business-gateway__cta {
-		display: inline-flex;
-		width: fit-content;
-		min-height: 48px;
-		align-items: center;
-		justify-content: center;
-		gap: 12px;
-		margin-top: clamp(28px, 4vw, 40px);
-		padding: 0 20px;
-		border: 1px solid transparent;
-		border-radius: 999px;
-		background: var(--business-button-background);
-		color: var(--business-button-foreground);
-		font-size: 11px;
-		font-weight: 700;
-		letter-spacing: 0.08em;
-		text-decoration: none;
-		text-transform: uppercase;
-		transition:
-			background-color 180ms ease,
-			border-color 180ms ease,
-			color 180ms ease;
+	.business-gateway__link-arrow svg {
+		width: 17px;
+		height: 17px;
 	}
 
-	.business-gateway__cta span {
-		font-size: 15px;
+	/* Solo posicion: color, geometria y estados vienen de `.btn--primary`. */
+	.business-gateway__cta {
+		width: fit-content;
+		margin-top: clamp(14px, 1.8vw, 20px);
+	}
+
+	.business-gateway__cta svg {
 		transition: transform 180ms ease;
 	}
 
-	.business-gateway__links a:focus-visible,
-	.business-gateway__cta:focus-visible {
+	.business-gateway__links a:focus-visible {
 		outline: 2px solid var(--color-orange);
 		outline-offset: 4px;
 	}
@@ -350,31 +309,23 @@ const businessLinks: BusinessLink[] = [
 			transform: translateX(4px);
 		}
 
-		.business-gateway__cta:hover span {
+		.business-gateway__cta:hover svg {
 			transform: translateX(4px);
-		}
-
-		.business-gateway--dark .business-gateway__cta:hover {
-			border-color: var(--color-orange);
-			background: var(--color-orange);
-			color: var(--color-black);
-		}
-
-		.business-gateway--light .business-gateway__cta:hover {
-			border-color: var(--color-black);
-			background: var(--color-black);
 		}
 	}
 
 	@media (max-width: 980px) {
+		.business-gateway {
+			padding-block: clamp(52px, 6vw, 68px);
+		}
+
 		.business-gateway__container {
 			grid-template-columns: 1fr;
 			gap: 36px;
 		}
 
 		.business-gateway__media {
-			min-height: 0;
-			aspect-ratio: 16 / 10;
+			max-height: none;
 		}
 
 		.business-gateway__content {
@@ -386,6 +337,7 @@ const businessLinks: BusinessLink[] = [
 	@media (max-width: 680px) {
 		.business-gateway {
 			padding-inline: 18px;
+			padding-block: clamp(40px, 8vw, 56px);
 		}
 
 		.business-gateway__container {
@@ -394,7 +346,6 @@ const businessLinks: BusinessLink[] = [
 
 		.business-gateway__media,
 		.business-gateway__placeholder {
-			aspect-ratio: 4 / 5;
 			border-radius: 18px;
 		}
 

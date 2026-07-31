@@ -1,0 +1,38 @@
+---
+/*
+ * Proceso numerado de 3 a 5 pasos.
+ *
+ * Se compone como <ol> para que el orden sea real para lectores de
+ * pantalla; el número visible queda oculto a la asistencia técnica
+ * porque la lista ya lo comunica.
+ */
+
+interface Step {
+	title: string;
+	text: string;
+}
+
+interface Props {
+	steps: Step[];
+	/* Columnas en desktop; en tablet siempre son dos */
+	cols?: 3 | 4 | 5;
+}
+
+const { steps, cols = 3 } = Astro.props;
+---
+
+<ol class="steps" style={`--steps-cols:${cols}`}>
+	{
+		steps.map((step, index) => (
+			<li class="steps__item">
+				<span class="steps__num" aria-hidden="true">
+					{String(index + 1).padStart(2, "0")}
+				</span>
+
+				<h3>{step.title}</h3>
+
+				<p class="steps__text">{step.text}</p>
+			</li>
+		))
+	}
+</ol>

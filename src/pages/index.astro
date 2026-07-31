@@ -266,28 +266,16 @@ const customerProofProjects = (
 
 <style>
 	.campaign-section {
-		padding-block: clamp(28px, 8.5vw, 36px);
-		padding-inline: var(--page-padding);
+		padding-block: var(--section-py);
+		padding-inline: var(--container-gutter);
 		background: var(--surface);
 	}
 
 	.campaign-section__container {
-		width: min(100%, var(--page-width));
+		width: min(100%, var(--container-comercial));
 		margin-inline: auto;
 		overflow: hidden;
 		border-radius: var(--radius-lg);
-	}
-
-	@media (min-width: 768px) {
-		.campaign-section {
-			padding-block: clamp(36px, 5.2vw, 44px);
-		}
-	}
-
-	@media (min-width: 1024px) {
-		.campaign-section {
-			padding-block: clamp(48px, 3.4vw, 56px);
-		}
 	}
 
 	@media (max-width: 760px) {

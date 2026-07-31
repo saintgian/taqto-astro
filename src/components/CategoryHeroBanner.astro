@@ -1,4 +1,7 @@
 ---
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
+
 interface Props {
 	categorySlug: string;
 	eyebrow?: string;
@@ -6,7 +9,6 @@ interface Props {
 	description?: string;
 	count: number;
 	countLabel: string;
-	imageSrc?: string;
 }
 
 const {
@@ -16,21 +18,132 @@ const {
 	description,
 	count,
 	countLabel,
-	imageSrc,
 } = Astro.props;
+
+const base = import.meta.env.BASE_URL;
+
+interface CategoryHeroTheme {
+	/**
+	 * Nombre de archivo dentro de public/images/banner categories/.
+	 * Si existe en disco, tiene prioridad absoluta sobre `fallbackFile`.
+	 */
+	independentImage?: string;
+	/** Ruta relativa a public/images/home/, usada como fallback (imagen ya vista en la home). */
+	fallbackFile: string;
+	/** object-position del <img> en desktop. */
+	objectPosition: string;
+	/** object-position del <img> en mobile (opcional, si el encuadre necesita ajustarse). */
+	objectPositionMobile?: string;
+	alt: string;
+	/** Variante de overlay: cada una tiene su propio gradiente/filtro definido en <style>. */
+	overlay: "warm-dark" | "warm-light" | "cool-dark" | "neutral-dark";
+	/** Intensidad del overlay central, 0-1. 1 = valores base de la variante. */
+	overlayIntensity?: number;
+}
+
+// Una identidad visual por categoria. "parrilla" usa su fotografia
+// independiente (public/images/banner categories/parrilla-banner.webp);
+// las demas conservan la fotografia ya usada en la home como fallback
+// hasta que existan imagenes propias en esa carpeta. No se inventan rutas.
+const categoryHeroThemes: Record<string, CategoryHeroTheme> = {
+	parrilla: {
+		independentImage: "parrilla-banner.webp",
+		fallbackFile: "categorias/parrilla.webp",
+		objectPosition: "50% 32%",
+		objectPositionMobile: "50% 28%",
+		alt: "Brasas encendidas y carne a la parrilla junto a una tabla TAQTO",
+		overlay: "warm-dark",
+		overlayIntensity: 1,
+	},
+	"cocina-y-mesa": {
+		fallbackFile: "categorias/cocina-mesa.webp",
+		objectPosition: "50% 68%",
+		alt: "Tabla TAQTO servida con quesos y fiambres sobre una mesa luminosa",
+		overlay: "warm-light",
+		overlayIntensity: 1,
+	},
+	oficina: {
+		fallbackFile: "categorias/oficina.webp",
+		objectPosition: "50% 55%",
+		alt: "Escritorio de madera organizado con un soporte para celular TAQTO",
+		overlay: "cool-dark",
+		overlayIntensity: 1,
+	},
+	empresas: {
+		fallbackFile: "empresas-regalos-corporativos.webp",
+		objectPosition: "45% 55%",
+		alt: "Pedido corporativo de tablas TAQTO personalizadas y envueltas para regalo",
+		overlay: "neutral-dark",
+		overlayIntensity: 1,
+	},
+};
+
+function getCategoryHeroImage(
+	slug: string,
+): { src: string; theme: CategoryHeroTheme } | null {
+	const theme = categoryHeroThemes[slug];
+	if (!theme) return null;
+
+	if (theme.independentImage) {
+		const independentAbsolutePath = resolve(
+			process.cwd(),
+			"public",
+			"images",
+			"banner categories",
+			theme.independentImage,
+		);
+
+		if (existsSync(independentAbsolutePath)) {
+			return {
+				src: `${base}images/${encodeURI("banner categories")}/${theme.independentImage}`,
+				theme,
+			};
+		}
+	}
+
+	const fallbackAbsolutePath = resolve(
+		process.cwd(),
+		"public",
+		"images",
+		"home",
+		theme.fallbackFile,
+	);
+
+	if (!existsSync(fallbackAbsolutePath)) return null;
+
+	return {
+		src: `${base}images/home/${theme.fallbackFile}`,
+		theme,
+	};
+}
+
+const hero = getCategoryHeroImage(categorySlug);
+const overlayIntensity = hero?.theme.overlayIntensity ?? 1;
 ---
 
 <header
 	class:list={[
 		"theme-hero",
 		`theme-hero--${categorySlug}`,
-		{ "theme-hero--has-image": Boolean(imageSrc) },
+		{ "theme-hero--has-image": Boolean(hero) },
+		hero ? `theme-hero--overlay-${hero.theme.overlay}` : undefined,
 	]}
-	style={imageSrc ? `--hero-image: url('${imageSrc}');` : undefined}
+	style={`--hero-overlay-intensity: ${overlayIntensity};`}
 >
 	{
-		imageSrc && (
-			<div class="theme-hero__image" aria-hidden="true" />
+		hero && (
+			<div class="theme-hero__image">
+				<img
+					src={hero.src}
+					alt=""
+					aria-hidden="true"
+					width="1600"
+					height="900"
+					loading="eager"
+					decoding="async"
+					style={`object-position: ${hero.theme.objectPosition}; --hero-object-position-mobile: ${hero.theme.objectPositionMobile || hero.theme.objectPosition};`}
+				/>
+			</div>
 		)
 	}
 
@@ -51,10 +164,10 @@ const {
 			)
 		}
 
-		<div class="theme-hero__count">
+		<p class="theme-hero__count">
 			<strong>{count}</strong>
 			<span>{countLabel}</span>
-		</div>
+		</p>
 	</div>
 </header>
 
@@ -62,10 +175,14 @@ const {
 	.theme-hero {
 		position: relative;
 		width: min(100%, 1450px);
+		height: clamp(320px, 26vw, 400px);
 		margin-inline: auto;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 		overflow: hidden;
-		padding: clamp(26px, 3.5vw, 42px) clamp(20px, 5vw, 60px);
-		border-radius: 26px;
+		padding-inline: clamp(24px, 4vw, 60px);
+		border-radius: 18px 22px;
 		background:
 			radial-gradient(
 				circle at 50% 0%,
@@ -82,11 +199,30 @@ const {
 		inset: 0;
 		z-index: 0;
 		overflow: hidden;
-		background-image: var(--hero-image);
-		background-size: cover;
-		background-position: center;
+	}
+
+	.theme-hero__image img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
 		transform: scale(1.045);
 		animation: theme-hero-zoom 12s ease-out forwards;
+	}
+
+	/* Vinieta suave en bordes + oscurecimiento central detras del texto,
+	   la fotografia permanece visible. */
+	.theme-hero__image::before {
+		content: "";
+		position: absolute;
+		inset: 0;
+		z-index: 1;
+		background: radial-gradient(
+			ellipse 70% 65% at 50% 50%,
+			rgba(8, 6, 5, calc(0.4 * var(--hero-overlay-intensity, 1))) 0%,
+			rgba(8, 6, 5, calc(0.12 * var(--hero-overlay-intensity, 1))) 55%,
+			transparent 80%
+		);
 	}
 
 	.theme-hero__image::after {
@@ -95,9 +231,9 @@ const {
 		inset: 0;
 		background: linear-gradient(
 			180deg,
-			rgba(10, 8, 7, 0.5) 0%,
-			rgba(10, 8, 7, 0.32) 45%,
-			rgba(10, 8, 7, 0.78) 100%
+			rgba(10, 8, 7, calc(0.42 * var(--hero-overlay-intensity, 1))) 0%,
+			rgba(10, 8, 7, calc(0.22 * var(--hero-overlay-intensity, 1))) 40%,
+			rgba(10, 8, 7, calc(0.72 * var(--hero-overlay-intensity, 1))) 100%
 		);
 	}
 
@@ -114,58 +250,69 @@ const {
 	.theme-hero__content {
 		position: relative;
 		z-index: 2;
-		max-width: 760px;
+		max-width: 780px;
 		margin-inline: auto;
 	}
 
+	/* Frase superior: elemento editorial dominante, sin capsula ni fondo. */
 	.theme-hero__eyebrow {
-		margin: 0 0 14px;
-		color: #ff8a5c;
-		font-size: 12px;
+		width: min(88%, 1050px);
+		margin: 0 auto 16px;
+		color: #fff6ed;
+		font-size: clamp(16px, 1.55vw, 24px);
 		font-weight: 700;
-		letter-spacing: 0.15em;
+		line-height: 1.2;
+		letter-spacing: clamp(0.12em, 0.35vw, 0.24em);
 		text-transform: uppercase;
+		text-wrap: balance;
+		text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45);
 	}
 
 	.theme-hero h1 {
 		margin: 0;
-		font-size: clamp(32px, 5vw, 56px);
-		font-weight: 600;
-		line-height: 1;
+		font-size: clamp(50px, 5.4vw, 76px);
+		font-weight: 650;
+		line-height: 0.98;
 		letter-spacing: -0.03em;
+		color: #fff6ed;
+		text-wrap: balance;
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+		overflow: hidden;
 	}
 
 	.theme-hero__description {
-		max-width: 560px;
-		margin: 12px auto 0;
-		color: rgba(255, 246, 237, 0.72);
-		font-size: 15px;
-		line-height: 1.55;
+		max-width: min(100%, 700px);
+		margin: 14px auto 0;
+		color: rgba(255, 246, 237, 0.82);
+		font-size: clamp(16px, 1.25vw, 19px);
+		line-height: 1.5;
+		text-wrap: balance;
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 3;
+		overflow: hidden;
 	}
 
 	.theme-hero__count {
-		margin: 18px auto 0;
-		width: fit-content;
-		padding: 10px 22px;
-		display: inline-flex;
+		margin: 12px 0 0;
+		display: flex;
 		align-items: baseline;
-		gap: 8px;
-		border: 1px solid rgba(255, 255, 255, 0.16);
-		border-radius: 999px;
-		background: rgba(255, 255, 255, 0.06);
+		justify-content: center;
+		gap: 6px;
+		color: rgba(255, 246, 237, 0.56);
+		font-size: 12.5px;
 	}
 
 	.theme-hero__count strong {
-		font-size: 20px;
+		color: rgba(255, 246, 237, 0.85);
 		font-weight: 700;
 	}
 
 	.theme-hero__count span {
-		color: rgba(255, 246, 237, 0.6);
-		font-size: 11px;
-		font-weight: 600;
-		letter-spacing: 0.06em;
-		text-transform: uppercase;
+		font-weight: 500;
+		letter-spacing: 0.02em;
 	}
 
 	/* ---------- PARRILLA ---------- */
@@ -180,6 +327,25 @@ const {
 			#161311;
 	}
 
+	.theme-hero--overlay-warm-dark .theme-hero__image img {
+		filter: saturate(1.12) contrast(1.08) brightness(1.02);
+	}
+
+	.theme-hero--overlay-warm-dark .theme-hero__image::after {
+		background:
+			radial-gradient(
+				circle at 50% 78%,
+				rgba(255, 130, 45, calc(0.3 * var(--hero-overlay-intensity, 1))),
+				transparent 55%
+			),
+			linear-gradient(
+				180deg,
+				rgba(12, 8, 6, calc(0.42 * var(--hero-overlay-intensity, 1))) 0%,
+				rgba(12, 8, 6, calc(0.24 * var(--hero-overlay-intensity, 1))) 40%,
+				rgba(12, 8, 6, calc(0.76 * var(--hero-overlay-intensity, 1))) 100%
+			);
+	}
+
 	/* ---------- COCINA Y MESA ---------- */
 
 	.theme-hero--cocina-y-mesa {
@@ -192,15 +358,54 @@ const {
 			#181410;
 	}
 
+	.theme-hero--overlay-warm-light .theme-hero__image::after {
+		background: linear-gradient(
+			180deg,
+			rgba(20, 15, 10, calc(0.22 * var(--hero-overlay-intensity, 1))) 0%,
+			rgba(20, 15, 10, calc(0.3 * var(--hero-overlay-intensity, 1))) 42%,
+			rgba(20, 15, 10, calc(0.72 * var(--hero-overlay-intensity, 1))) 100%
+		);
+	}
+
 	/* ---------- OFICINA ---------- */
 
 	.theme-hero--oficina {
 		background: #131417;
 	}
 
-	/* ---------- Default (kits y regalos, empresas, etc.) ---------- */
+	.theme-hero--overlay-cool-dark .theme-hero__image::after {
+		background: linear-gradient(
+			180deg,
+			rgba(10, 10, 13, calc(0.48 * var(--hero-overlay-intensity, 1))) 0%,
+			rgba(10, 10, 13, calc(0.36 * var(--hero-overlay-intensity, 1))) 42%,
+			rgba(10, 10, 13, calc(0.8 * var(--hero-overlay-intensity, 1))) 100%
+		);
+	}
 
-	.theme-hero:not(.theme-hero--parrilla):not(.theme-hero--cocina-y-mesa):not(.theme-hero--oficina) {
+	/* ---------- EMPRESAS ---------- */
+
+	.theme-hero--empresas {
+		background:
+			radial-gradient(
+				circle at 50% 0%,
+				rgba(255, 77, 42, 0.14),
+				transparent 65%
+			),
+			#141414;
+	}
+
+	.theme-hero--overlay-neutral-dark .theme-hero__image::after {
+		background: linear-gradient(
+			180deg,
+			rgba(12, 10, 8, calc(0.44 * var(--hero-overlay-intensity, 1))) 0%,
+			rgba(12, 10, 8, calc(0.32 * var(--hero-overlay-intensity, 1))) 42%,
+			rgba(12, 10, 8, calc(0.76 * var(--hero-overlay-intensity, 1))) 100%
+		);
+	}
+
+	/* ---------- Default (kits y regalos, y otras sin foto propia) ---------- */
+
+	.theme-hero:not(.theme-hero--parrilla):not(.theme-hero--cocina-y-mesa):not(.theme-hero--oficina):not(.theme-hero--empresas) {
 		background:
 			radial-gradient(
 				circle at 50% 0%,
@@ -210,18 +415,12 @@ const {
 			#141414;
 	}
 
-	/*
-	 * Con imagen de fondo, la foto reemplaza el fondo decorativo del
-	 * tema; se mantiene un fondo solido como respaldo si la imagen
-	 * tarda en cargar. Los efectos (brasas, vapor, grid) siguen
-	 * renderizando encima, como una capa adicional sutil.
-	 */
 	.theme-hero--has-image {
 		background: #141414;
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.theme-hero__image {
+		.theme-hero__image img {
 			animation: none;
 			transform: scale(1);
 		}
@@ -229,8 +428,28 @@ const {
 
 	@media (max-width: 640px) {
 		.theme-hero {
-			padding: 32px 18px;
-			border-radius: 20px;
+			height: clamp(250px, 62vw, 310px);
+			padding-inline: clamp(20px, 6vw, 26px);
+			border-radius: 14px 18px;
+		}
+
+		.theme-hero__image img {
+			object-position: var(--hero-object-position-mobile, center);
+		}
+
+		.theme-hero__eyebrow {
+			width: 100%;
+			margin-bottom: 12px;
+			letter-spacing: clamp(0.08em, 1.6vw, 0.14em);
+			-webkit-line-clamp: 2;
+			display: -webkit-box;
+			-webkit-box-orient: vertical;
+			overflow: hidden;
+		}
+
+		.theme-hero__description {
+			margin-top: 10px;
+			-webkit-line-clamp: 4;
 		}
 	}
 </style>

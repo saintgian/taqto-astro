@@ -5,6 +5,7 @@ import {
 	WHATSAPP_NUMBER,
 	EMPRESAS_CATEGORY_SLUG,
 } from "../lib/constants";
+import { ChevronDown, ArrowUp } from "@lucide/astro";
 
 interface Props {
 	whatsappNumber?: string;
@@ -147,13 +148,11 @@ const currentYear = new Date().getFullYear();
 							<summary>
 								{group.title}
 
-								<svg
+								<ChevronDown
 									class="footer-accordion__chevron"
-									viewBox="0 0 16 16"
 									aria-hidden="true"
-								>
-									<path d="M4 6l4 4 4-4"></path>
-								</svg>
+									stroke-width={1.75}
+								/>
 							</summary>
 
 							<ul>
@@ -300,13 +299,11 @@ const currentYear = new Date().getFullYear();
 
 			<a class="footer-back-top" href="#top">
 				<span>Volver arriba</span>
-				<svg
+				<ArrowUp
 					class="footer-back-top__arrow"
-					viewBox="0 0 16 16"
 					aria-hidden="true"
-				>
-					<path d="M8 13V3M3.5 7.5 8 3l4.5 4.5"></path>
-				</svg>
+					stroke-width={1.75}
+				/>
 			</a>
 		</div>
 	</div>

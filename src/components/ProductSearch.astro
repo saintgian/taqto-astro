@@ -1,110 +1,210 @@
 ---
+import {
+	Search,
+	X,
+	ArrowRight,
+	SearchX,
+	LoaderCircle,
+	TriangleAlert,
+	RotateCcw,
+	LayoutGrid,
+} from "@lucide/astro";
+
+interface SearchCategory {
+	title: string;
+	slug: string;
+}
+
+interface Props {
+	categories?: SearchCategory[];
+}
+
+const { categories = [] } = Astro.props;
+
+const base = import.meta.env.BASE_URL;
+
+const categoryHref = (slug: string) =>
+	`${base}categorias/${slug}/`;
 ---
 
+<!--
+	Mega panel de busqueda anclado bajo el Header. Los cinco estados
+	(idle / loading / success / empty / error) son nodos hermanos
+	mutuamente excluyentes: el script solo deja uno sin `hidden`.
+-->
 <div
-	class="product-search"
+	class="megasearch"
 	id="product-search-panel"
 	data-search-panel
+	data-state="idle"
 	aria-hidden="true"
 >
-	<div class="product-search__backdrop" data-search-backdrop></div>
+	<div class="megasearch__backdrop" data-search-backdrop></div>
 
 	<div
-		class="product-search__box"
+		class="megasearch__panel"
 		role="dialog"
 		aria-modal="true"
-		aria-label="Buscar productos"
+		aria-labelledby="megasearch-title"
+		data-search-dialog
 	>
-		<div class="product-search__field">
-			<svg
-				class="product-search__field-icon"
-				viewBox="0 0 24 24"
-				aria-hidden="true"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="1.8"
-			>
-				<circle cx="11" cy="11" r="6.5"></circle>
-				<path d="m16 16 4 4"></path>
-			</svg>
+		<p class="sr-only" id="megasearch-title">Buscar productos</p>
 
-			<label class="sr-only" for="product-search-input">
-				Buscar productos
-			</label>
+		<div class="megasearch__head">
+			<div class="megasearch__field">
+				<Search
+					class="megasearch__field-icon"
+					aria-hidden="true"
+					stroke-width={1.75}
+				/>
 
-			<input
-				id="product-search-input"
-				type="text"
-				inputmode="search"
-				autocomplete="off"
-				spellcheck="false"
-				placeholder="Buscar productos, categorías, madera..."
-				data-search-input
-			/>
+				<label class="sr-only" for="product-search-input">
+					Buscar productos
+				</label>
+
+				<input
+					id="product-search-input"
+					type="text"
+					inputmode="search"
+					autocomplete="off"
+					spellcheck="false"
+					placeholder="Buscar productos, categorías, madera..."
+					data-search-input
+				/>
+
+				<button
+					type="button"
+					class="megasearch__clear"
+					aria-label="Limpiar búsqueda"
+					title="Limpiar búsqueda"
+					data-search-clear
+					hidden
+				>
+					<X aria-hidden="true" stroke-width={1.75} />
+				</button>
+			</div>
 
 			<button
 				type="button"
-				class="product-search__close"
-				aria-label="Cerrar búsqueda"
+				class="megasearch__close"
+				aria-label="Cerrar buscador"
+				title="Cerrar buscador"
 				data-search-close
 			>
-				<svg
-					viewBox="0 0 24 24"
-					aria-hidden="true"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="1.8"
-				>
-					<path d="M6 6l12 12M18 6 6 18"></path>
-				</svg>
+				<X aria-hidden="true" stroke-width={1.75} />
 			</button>
 		</div>
 
 		<p class="sr-only" role="status" aria-live="polite" data-search-status>
 		</p>
 
-		<div class="product-search__panel-body">
-			<p class="product-search__hint" data-search-initial>
-				Escribe al menos 2 letras para buscar.
-			</p>
+		<div class="megasearch__body">
+			<div class="megasearch__state" data-search-state="idle">
+				<p class="megasearch__idle-text">
+					Escribe al menos 2 letras para buscar entre nuestras
+					piezas.
+				</p>
 
-			<p class="product-search__hint" data-search-loading hidden>
-				Buscando…
-			</p>
+				{
+					categories.length > 0 && (
+						<div class="megasearch__categories">
+							<p class="megasearch__categories-label">
+								<LayoutGrid aria-hidden="true" stroke-width={1.75} />
+								Explora por categoría
+							</p>
 
-			<p class="product-search__hint" data-search-empty hidden>
-				No encontramos productos con esa búsqueda.
-			</p>
+							<ul class="megasearch__categories-list">
+								{categories.map((category) => (
+									<li>
+										<a href={categoryHref(category.slug)}>
+											{category.title}
+										</a>
+									</li>
+								))}
+							</ul>
+						</div>
+					)
+				}
+			</div>
 
-			<p class="product-search__hint product-search__hint--error" data-search-error hidden>
-				No se pudo cargar el buscador. Intenta de nuevo.
-			</p>
+			<div class="megasearch__state" data-search-state="loading" hidden>
+				<p class="megasearch__feedback">
+					<LoaderCircle
+						class="megasearch__spinner"
+						aria-hidden="true"
+						stroke-width={1.75}
+					/>
+					Buscando…
+				</p>
+			</div>
 
-			<ul
-				class="product-search__results"
-				role="listbox"
-				aria-label="Resultados de búsqueda"
-				data-search-results
-			></ul>
+			<div class="megasearch__state" data-search-state="success" hidden>
+				<ul
+					class="megasearch__grid"
+					aria-label="Resultados de búsqueda"
+					data-search-results
+				></ul>
+			</div>
+
+			<div class="megasearch__state" data-search-state="empty" hidden>
+				<p class="megasearch__feedback">
+					<SearchX
+						class="megasearch__feedback-icon"
+						aria-hidden="true"
+						stroke-width={1.75}
+					/>
+					No encontramos productos con esa búsqueda.
+				</p>
+
+				<p class="megasearch__feedback-hint">
+					Prueba con el nombre de la pieza, una categoría o un
+					tipo de madera.
+				</p>
+			</div>
+
+			<div class="megasearch__state" data-search-state="error" hidden>
+				<p class="megasearch__feedback megasearch__feedback--error">
+					<TriangleAlert
+						class="megasearch__feedback-icon"
+						aria-hidden="true"
+						stroke-width={1.75}
+					/>
+					No se pudo cargar el buscador.
+				</p>
+
+				<button
+					type="button"
+					class="btn btn--primary megasearch__retry"
+					data-search-retry
+				>
+					<RotateCcw aria-hidden="true" stroke-width={1.75} />
+					Intentar de nuevo
+				</button>
+			</div>
 		</div>
 	</div>
 </div>
 
 <template data-search-result-template>
-	<li class="product-search__result" role="presentation">
-		<a class="product-search__result-link" role="option">
-			<span class="product-search__result-media">
+	<li class="megasearch__result">
+		<a class="megasearch__result-link">
+			<span class="megasearch__result-media">
 				<img data-role="image" alt="" loading="lazy" />
-				<span class="product-search__result-placeholder" data-role="placeholder">TAQTO</span>
+				<span class="megasearch__result-placeholder" data-role="placeholder">
+					TAQTO
+				</span>
 			</span>
 
-			<span class="product-search__result-content">
-				<span class="product-search__result-category" data-role="category"></span>
-				<span class="product-search__result-title" data-role="title"></span>
-				<span class="product-search__result-price" data-role="price"></span>
+			<span class="megasearch__result-content">
+				<span class="megasearch__result-category" data-role="category"></span>
+				<span class="megasearch__result-title" data-role="title"></span>
+				<span class="megasearch__result-wood" data-role="wood"></span>
+				<span class="megasearch__result-price" data-role="price"></span>
 			</span>
 
-			<span class="product-search__result-arrow" aria-hidden="true">→</span>
+			<span class="megasearch__result-arrow" aria-hidden="true">
+				<ArrowRight stroke-width={1.75} />
+			</span>
 		</a>
 	</li>
 </template>
@@ -122,192 +222,348 @@
 		border: 0;
 	}
 
-	.product-search {
+	.megasearch {
 		position: fixed;
 		inset: 0;
 		z-index: 320;
 		visibility: hidden;
+
+		/*
+		 * Distancia real hasta el borde inferior del Header. El script la
+		 * recalcula al abrir y al redimensionar; este valor es el del
+		 * header completo en escritorio, para que el primer render
+		 * coincida con el estado posterior a load.
+		 */
+		--megasearch-top: 106px;
 	}
 
-	.product-search.is-open {
+	.megasearch.is-open {
 		visibility: visible;
 	}
 
-	.product-search__backdrop {
+	.megasearch__backdrop {
 		position: absolute;
 		inset: 0;
-		background: rgba(20, 16, 14, 0.32);
+		background: rgba(20, 20, 20, 0.22);
 		opacity: 0;
-		transition: opacity 200ms ease;
+		transition: opacity 190ms ease;
 	}
 
-	.product-search.is-open .product-search__backdrop {
+	.megasearch.is-open .megasearch__backdrop {
 		opacity: 1;
 	}
 
-	.product-search__box {
+	.megasearch__panel {
 		position: absolute;
-		top: 104px;
-		right: max(14px, calc((100vw - 1540px) / 2 + 14px));
-		width: min(420px, calc(100vw - 28px));
-		max-height: min(72vh, 620px);
+		top: calc(var(--megasearch-top) + 12px);
+		left: 50%;
+		width: min(calc(100% - 48px), 1320px);
+		max-height: min(74vh, 720px);
 		display: flex;
 		flex-direction: column;
-		overflow: hidden;
-		border: 1px solid rgba(20, 16, 14, 0.1);
-		border-radius: 20px;
-		background: #fffaf3;
-		box-shadow:
-			0 24px 60px rgba(20, 16, 14, 0.18),
-			0 2px 8px rgba(20, 16, 14, 0.08);
+		padding: 26px;
+		border: 1px solid var(--ink-15);
+		border-radius: var(--radius-md);
+		background: var(--surface);
+		box-shadow: 0 18px 44px rgba(20, 20, 20, 0.14);
 		opacity: 0;
-		transform: translateY(-10px);
+		transform: translate(-50%, -8px);
 		pointer-events: none;
 		transition:
-			opacity 200ms ease,
-			transform 200ms ease;
+			opacity 190ms ease,
+			transform 190ms ease;
 	}
 
-	.product-search.is-open .product-search__box {
+	.megasearch.is-open .megasearch__panel {
 		opacity: 1;
-		transform: translateY(0);
+		transform: translate(-50%, 0);
 		pointer-events: auto;
 	}
 
-	.product-search__field {
-		position: relative;
+	.megasearch__head {
+		flex: 0 0 auto;
 		display: flex;
 		align-items: center;
-		flex: 0 0 auto;
-		gap: 10px;
-		padding: 14px 14px;
-		border-bottom: 1px solid rgba(20, 16, 14, 0.08);
+		gap: var(--space-xs);
 	}
 
-	.product-search__field-icon {
+	.megasearch__field {
+		position: relative;
+		flex: 1;
+		min-width: 0;
+		height: 50px;
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		padding-inline: 14px;
+		border: 1px solid var(--ink-15);
+		border-radius: var(--button-radius);
+		background: var(--surface);
+		transition: border-color 160ms ease;
+	}
+
+	.megasearch__field:focus-within {
+		border-color: var(--ink-35);
+	}
+
+	.megasearch__field-icon {
 		flex: 0 0 20px;
 		width: 20px;
 		height: 20px;
-		color: #5b312a;
+		color: var(--ink-55);
 	}
 
-	.product-search__field input {
+	.megasearch__field input {
 		flex: 1;
 		min-width: 0;
+		height: 100%;
 		border: 0;
 		background: transparent;
-		color: #141414;
-		font-size: 15px;
-		font-family: inherit;
+		color: var(--color-black);
+		font-size: var(--text-sm);
 	}
 
-	.product-search__field input::placeholder {
-		color: rgba(20, 16, 14, 0.4);
+	.megasearch__field input::placeholder {
+		color: var(--ink-35);
 	}
 
-	.product-search__field input:focus {
+	.megasearch__field input:focus {
 		outline: none;
+		box-shadow: none;
 	}
 
-	.product-search__close {
-		flex: 0 0 32px;
-		width: 32px;
-		height: 32px;
+	.megasearch__clear,
+	.megasearch__close {
+		flex: 0 0 auto;
 		display: grid;
 		place-items: center;
 		border: 0;
-		border-radius: 50%;
-		background: rgba(20, 16, 14, 0.06);
-		color: #5b312a;
+		background: transparent;
+		color: var(--ink-55);
 		cursor: pointer;
-		transition: background-color 160ms ease;
+		transition:
+			background-color 160ms ease,
+			color 160ms ease;
 	}
 
-	.product-search__close:hover {
-		background: rgba(20, 16, 14, 0.12);
+	.megasearch__clear {
+		width: 44px;
+		height: 44px;
+		margin-right: -12px;
+		border-radius: var(--radius-full);
 	}
 
-	.product-search__close svg {
-		width: 15px;
-		height: 15px;
+	.megasearch__close {
+		width: 44px;
+		height: 44px;
+		border: 1px solid var(--ink-15);
+		border-radius: var(--radius-sm);
+		color: var(--color-black);
 	}
 
-	.product-search__panel-body {
+	.megasearch__clear:hover,
+	.megasearch__close:hover {
+		background: var(--ink-08);
+		color: var(--color-black);
+	}
+
+	.megasearch__clear svg {
+		width: 16px;
+		height: 16px;
+	}
+
+	.megasearch__close svg {
+		width: 18px;
+		height: 18px;
+	}
+
+	.megasearch__body {
+		flex: 1 1 auto;
+		min-height: 0;
+		margin-top: 20px;
 		overflow-y: auto;
+		overscroll-behavior: contain;
 	}
 
-	.product-search__hint {
+	.megasearch__idle-text {
 		margin: 0;
-		padding: 28px 20px;
-		color: rgba(20, 16, 14, 0.55);
-		font-size: 13.5px;
-		text-align: center;
+		color: var(--ink-55);
+		font-size: var(--text-sm);
 	}
 
-	.product-search__hint--error {
-		color: #c23b1e;
+	.megasearch__categories {
+		margin-top: 22px;
+		padding-top: 20px;
+		border-top: 1px solid var(--ink-15);
 	}
 
-	.product-search__results {
+	.megasearch__categories-label {
+		margin: 0 0 12px;
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		color: var(--ink-55);
+		font-size: var(--text-xs);
+		font-weight: 600;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+	}
+
+	.megasearch__categories-label svg {
+		width: 16px;
+		height: 16px;
+	}
+
+	.megasearch__categories-list {
 		margin: 0;
-		padding: 6px;
+		padding: 0;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
 		list-style: none;
 	}
 
-	.product-search__result-link {
+	.megasearch__categories-list a {
+		min-height: 44px;
+		padding-inline: 16px;
+		display: inline-flex;
+		align-items: center;
+		border: 1px solid var(--ink-15);
+		border-radius: var(--radius-sm);
+		color: var(--color-black);
+		font-size: var(--text-sm);
+		text-decoration: none;
+		transition: background-color 160ms ease;
+	}
+
+	.megasearch__categories-list a:hover {
+		background: var(--ink-08);
+	}
+
+	.megasearch__feedback {
+		margin: 0;
 		display: flex;
 		align-items: center;
-		min-height: 44px;
-		gap: 12px;
-		padding: 8px;
-		border-radius: 14px;
+		gap: 10px;
+		padding: 26px 0 0;
+		color: var(--ink-55);
+		font-size: var(--text-sm);
+	}
+
+	.megasearch__feedback--error {
+		color: var(--color-black);
+	}
+
+	.megasearch__feedback-icon {
+		width: 28px;
+		height: 28px;
+		flex: 0 0 28px;
+		color: var(--ink-35);
+	}
+
+	.megasearch__feedback--error .megasearch__feedback-icon {
+		color: var(--color-orange);
+	}
+
+	.megasearch__feedback-hint {
+		margin: 8px 0 0;
+		padding-left: 38px;
+		color: var(--ink-35);
+		font-size: var(--text-sm);
+	}
+
+	.megasearch__spinner {
+		width: 20px;
+		height: 20px;
+		flex: 0 0 20px;
+		color: var(--ink-35);
+		animation: megasearch-spin 900ms linear infinite;
+	}
+
+	@keyframes megasearch-spin {
+		to {
+			transform: rotate(360deg);
+		}
+	}
+
+	/* Solo posicion: color y estados vienen de `.btn--primary`. */
+	.megasearch__retry {
+		margin: 16px 0 0 38px;
+	}
+
+	.megasearch__grid {
+		margin: 0;
+		padding: 0;
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 10px;
+		list-style: none;
+	}
+
+	@media (min-width: 1000px) {
+		.megasearch__grid {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+	}
+
+	@media (min-width: 1320px) {
+		.megasearch__grid {
+			grid-template-columns: repeat(4, minmax(0, 1fr));
+		}
+	}
+
+	.megasearch__result-link {
+		height: 100%;
+		display: flex;
+		align-items: center;
+		gap: 14px;
+		padding: 10px;
+		border: 1px solid var(--ink-15);
+		border-radius: var(--radius-sm);
 		color: inherit;
 		text-decoration: none;
-		transition: background-color 140ms ease;
+		transition:
+			background-color 150ms ease,
+			border-color 150ms ease;
 	}
 
-	.product-search__result-link:hover,
-	.product-search__result-link:focus-visible,
-	.product-search__result-link.is-active {
-		background: rgba(91, 49, 42, 0.07);
+	.megasearch__result-link:hover,
+	.megasearch__result-link.is-active {
+		background: var(--ink-08);
+		border-color: var(--ink-35);
 	}
 
-	.product-search__result-link:focus-visible {
-		outline: 2px solid #ff4d2a;
-		outline-offset: 2px;
-	}
-
-	.product-search__result-media {
+	.megasearch__result-media {
 		position: relative;
-		flex: 0 0 52px;
-		width: 52px;
-		height: 52px;
+		flex: 0 0 80px;
+		width: 80px;
+		height: 80px;
+		aspect-ratio: 1 / 1;
 		overflow: hidden;
-		border: 1px solid rgba(20, 16, 14, 0.08);
-		border-radius: 12px;
-		background: #ffffff;
+		border: 1px solid var(--ink-15);
+		border-radius: 10px;
+		background: var(--surface);
 	}
 
-	.product-search__result-media img {
-		display: block;
+	.megasearch__result-media img {
 		width: 100%;
 		height: 100%;
 		padding: 5px;
 		object-fit: contain;
 	}
 
-	.product-search__result-placeholder {
+	.megasearch__result-placeholder {
 		position: absolute;
 		inset: 0;
 		display: grid;
 		place-items: center;
-		color: #5b312a;
-		font-size: 8px;
+		color: var(--color-brown);
+		font-size: 9px;
 		font-weight: 700;
 		letter-spacing: 0.08em;
 	}
 
-	.product-search__result-content {
+	.megasearch__result-content {
 		display: flex;
 		min-width: 0;
 		flex: 1;
@@ -315,89 +571,135 @@
 		gap: 2px;
 	}
 
-	.product-search__result-category {
-		color: #ff4d2a;
-		font-size: 10px;
-		font-weight: 700;
-		letter-spacing: 0.08em;
+	.megasearch__result-category {
+		color: var(--ink-55);
+		font-size: var(--text-xs);
+		font-weight: 600;
+		letter-spacing: 0.06em;
 		text-transform: uppercase;
 	}
 
-	.product-search__result-category:empty {
-		display: none;
+	.megasearch__result-title {
+		display: -webkit-box;
+		overflow: hidden;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+		color: var(--color-black);
+		font-size: var(--text-sm);
+		font-weight: 600;
+		line-height: var(--leading-snug);
 	}
 
-	.product-search__result-title {
+	.megasearch__result-wood {
 		overflow: hidden;
-		color: #141414;
+		color: var(--ink-55);
 		font-size: 14px;
-		font-weight: 600;
 		white-space: nowrap;
 		text-overflow: ellipsis;
 	}
 
-	.product-search__result-price {
-		color: rgba(20, 16, 14, 0.6);
-		font-size: 12.5px;
-		font-weight: 600;
+	.megasearch__result-price {
+		margin-top: 2px;
+		color: var(--color-black);
+		font-size: var(--text-sm);
+		font-weight: 700;
 	}
 
-	.product-search__result-price:empty {
-		display: none;
-	}
-
-	.product-search__result-arrow {
+	.megasearch__result-arrow {
 		flex: 0 0 auto;
-		color: rgba(20, 16, 14, 0.3);
-		font-size: 14px;
+		display: grid;
+		place-items: center;
+		color: var(--ink-35);
+	}
+
+	.megasearch__result-arrow svg {
+		width: 16px;
+		height: 16px;
 	}
 
 	@media (max-width: 1180px) {
-		.product-search__box {
-			top: 76px;
-			right: 10px;
-			left: 10px;
-			width: auto;
+		.megasearch {
+			--megasearch-top: 96px;
+		}
+
+		.megasearch__panel {
+			width: calc(100% - 24px);
+			padding: 20px;
 		}
 	}
 
 	@media (max-width: 680px) {
-		.product-search__close {
-			flex-basis: 44px;
-			width: 44px;
-			height: 44px;
-		}
-
-		.product-search__box {
-			top: auto;
-			bottom: 0;
-			right: 0;
+		.megasearch__panel {
+			inset: 0;
+			top: 0;
 			left: 0;
 			width: 100%;
-			max-height: 82vh;
-			border-radius: 20px 20px 0 0;
-			transform: translateY(16px);
+			max-height: none;
+			height: 100dvh;
+			padding: 14px 16px 20px;
+			border: 0;
+			border-radius: 0;
+			box-shadow: none;
+			transform: none;
 		}
 
-		.product-search.is-open .product-search__box {
-			transform: translateY(0);
+		.megasearch.is-open .megasearch__panel {
+			transform: none;
 		}
 
-		.product-search__result-title {
-			white-space: normal;
+		.megasearch__head {
+			position: sticky;
+			top: 0;
+			z-index: 1;
+			padding-block: 6px;
+			background: var(--surface);
+		}
+
+		.megasearch__body {
+			margin-top: 16px;
+		}
+
+		.megasearch__grid {
+			grid-template-columns: minmax(0, 1fr);
+			gap: 8px;
+		}
+
+		.megasearch__result-media {
+			flex-basis: 68px;
+			width: 68px;
+			height: 68px;
+		}
+
+		.megasearch__result-title {
+			-webkit-line-clamp: 2;
 		}
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.product-search__backdrop,
-		.product-search__box,
-		.product-search__result-link {
+		.megasearch__backdrop,
+		.megasearch__panel,
+		.megasearch__result-link {
 			transition: none;
 		}
+
+		.megasearch__spinner {
+			animation: none;
+		}
+	}
+
+	/*
+	 * `hidden` debe ganar siempre sobre las reglas de layout de arriba.
+	 * Sin esto, un `display` de autor en el mismo elemento anulaba el
+	 * atributo y los cinco estados se pintaban a la vez.
+	 */
+	.megasearch [hidden] {
+		display: none;
 	}
 </style>
 
 <script>
+	import { openOverlay, closeOverlay } from "../lib/overlay";
+
 	interface SearchItem {
 		id: string;
 		title: string;
@@ -415,18 +717,24 @@
 		score: number;
 	}
 
+	type SearchState =
+		| "idle"
+		| "loading"
+		| "success"
+		| "empty"
+		| "error";
+
 	const base = import.meta.env.BASE_URL;
 	const searchIndexUrl = `${base}search-index.json`;
 	const productHrefFor = (slug: string) => `${base}productos/${slug}/`;
 
-	const MAX_RESULTS = 6;
+	const OVERLAY_ID = "megasearch";
+	const MAX_RESULTS = 12;
 	const MIN_QUERY_LENGTH = 2;
-	const DEBOUNCE_MS = 200;
+	const DEBOUNCE_MS = 220;
 
 	let cachedIndex: SearchItem[] | null = null;
 	let indexPromise: Promise<SearchItem[]> | null = null;
-	let debounceTimer: ReturnType<typeof setTimeout> | undefined;
-	let lastFocusedTrigger: HTMLElement | null = null;
 
 	const normalize = (value: string) =>
 		value
@@ -443,21 +751,39 @@
 				.join(" "),
 		);
 
+	/*
+	 * El indice es un JSON estatico compartido por todas las consultas:
+	 * se descarga una vez y se cachea. Deliberadamente no recibe el
+	 * `signal` de una consulta concreta — si lo hiciera, cancelar una
+	 * busqueda abortaria la descarga que la siguiente ya esta esperando
+	 * y el panel se quedaria en "loading" para siempre. La cancelacion
+	 * vive un nivel mas arriba (signal + token de la consulta).
+	 *
+	 * Si falla, `indexPromise` se limpia para que "Intentar de nuevo"
+	 * pueda reintentar de verdad; antes quedaba una promesa rechazada en
+	 * cache y el buscador se quedaba en error de forma permanente.
+	 */
 	async function loadIndex(): Promise<SearchItem[]> {
 		if (cachedIndex) return cachedIndex;
-		if (indexPromise) return indexPromise;
 
-		indexPromise = fetch(searchIndexUrl)
-			.then((response) => {
-				if (!response.ok) {
-					throw new Error(`search index ${response.status}`);
-				}
-				return response.json();
-			})
-			.then((data: SearchItem[]) => {
-				cachedIndex = data;
-				return data;
-			});
+		if (!indexPromise) {
+			indexPromise = fetch(searchIndexUrl)
+				.then((response) => {
+					if (!response.ok) {
+						throw new Error(`search index ${response.status}`);
+					}
+
+					return response.json();
+				})
+				.then((data: SearchItem[]) => {
+					cachedIndex = data;
+					return data;
+				})
+				.catch((error) => {
+					indexPromise = null;
+					throw error;
+				});
+		}
 
 		return indexPromise;
 	}
@@ -505,12 +831,20 @@
 		const backdrop = panel.querySelector<HTMLElement>(
 			"[data-search-backdrop]",
 		);
-		const box = panel.querySelector<HTMLElement>(".product-search__box");
+		const dialog = panel.querySelector<HTMLElement>(
+			"[data-search-dialog]",
+		);
 		const input = panel.querySelector<HTMLInputElement>(
 			"[data-search-input]",
 		);
+		const clearButton = panel.querySelector<HTMLButtonElement>(
+			"[data-search-clear]",
+		);
 		const closeButton = panel.querySelector<HTMLButtonElement>(
 			"[data-search-close]",
+		);
+		const retryButton = panel.querySelector<HTMLButtonElement>(
+			"[data-search-retry]",
 		);
 		const resultsList = panel.querySelector<HTMLElement>(
 			"[data-search-results]",
@@ -518,37 +852,34 @@
 		const status = panel.querySelector<HTMLElement>(
 			"[data-search-status]",
 		);
-		const initialHint = panel.querySelector<HTMLElement>(
-			"[data-search-initial]",
-		);
-		const loadingHint = panel.querySelector<HTMLElement>(
-			"[data-search-loading]",
-		);
-		const emptyHint = panel.querySelector<HTMLElement>(
-			"[data-search-empty]",
-		);
-		const errorHint = panel.querySelector<HTMLElement>(
-			"[data-search-error]",
-		);
 		const template = document.querySelector<HTMLTemplateElement>(
 			"[data-search-result-template]",
 		);
 
 		if (
 			!backdrop ||
-			!box ||
+			!dialog ||
 			!input ||
+			!clearButton ||
 			!closeButton ||
+			!retryButton ||
 			!resultsList ||
 			!status ||
-			!initialHint ||
-			!loadingHint ||
-			!emptyHint ||
-			!errorHint ||
 			!template
 		) {
 			return;
 		}
+
+		const stateNodes = new Map<SearchState, HTMLElement>();
+
+		panel
+			.querySelectorAll<HTMLElement>("[data-search-state]")
+			.forEach((node) => {
+				stateNodes.set(
+					node.dataset.searchState as SearchState,
+					node,
+				);
+			});
 
 		const triggers = () =>
 			Array.from(
@@ -557,88 +888,98 @@
 				),
 			);
 
-		const setHint = (
-			target: "initial" | "loading" | "empty" | "error" | "none",
-		) => {
-			initialHint.hidden = target !== "initial";
-			loadingHint.hidden = target !== "loading";
-			emptyHint.hidden = target !== "empty";
-			errorHint.hidden = target !== "error";
-		};
+		let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+		let inFlight: AbortController | null = null;
+		let requestToken = 0;
 
-		const clearResults = () => {
-			resultsList.innerHTML = "";
+		/*
+		 * Unico punto que cambia de estado. Solo un nodo queda sin
+		 * `hidden`, asi que es imposible ver "Buscando…", "sin
+		 * resultados", el error y la rejilla a la vez.
+		 */
+		const setState = (next: SearchState) => {
+			panel.dataset.state = next;
+
+			stateNodes.forEach((node, name) => {
+				node.hidden = name !== next;
+			});
+
+			if (next !== "success") {
+				resultsList.replaceChildren();
+			}
 		};
 
 		const renderResults = (items: SearchItem[]) => {
-			clearResults();
+			const fragment = document.createDocumentFragment();
 
 			items.forEach((item) => {
-				const node = template.content.firstElementChild?.cloneNode(
+				const node = template.content.firstElementChild!.cloneNode(
 					true,
 				) as HTMLElement;
 
+				const pick = <T extends HTMLElement>(role: string) =>
+					node.querySelector<T>(`[data-role="${role}"]`);
+
 				const link = node.querySelector<HTMLAnchorElement>(
-					".product-search__result-link",
-				);
-				const image = node.querySelector<HTMLImageElement>(
-					'[data-role="image"]',
-				);
-				const placeholder = node.querySelector<HTMLElement>(
-					'[data-role="placeholder"]',
-				);
-				const category = node.querySelector<HTMLElement>(
-					'[data-role="category"]',
-				);
-				const title = node.querySelector<HTMLElement>(
-					'[data-role="title"]',
-				);
-				const price = node.querySelector<HTMLElement>(
-					'[data-role="price"]',
+					".megasearch__result-link",
 				);
 
 				if (link) {
 					link.href = productHrefFor(item.slug);
-					link.setAttribute("aria-label", `Ver ${item.title}`);
 				}
 
-				if (image) {
-					if (item.image) {
-						image.src = item.image;
-						image.alt = item.imageAlt || item.title;
+				const image = pick<HTMLImageElement>("image");
+				const placeholder = pick("placeholder");
+
+				if (item.image && image) {
+					image.src = item.image;
+					image.alt = item.imageAlt || item.title;
+					placeholder?.remove();
+				} else {
+					image?.remove();
+				}
+
+				const category = pick("category");
+				const categoryText = item.subcategory || item.category;
+
+				if (category) {
+					if (categoryText) {
+						category.textContent = categoryText;
 					} else {
-						image.remove();
+						category.remove();
 					}
 				}
 
-				if (placeholder && item.image) {
-					placeholder.remove();
+				const title = pick("title");
+				if (title) title.textContent = item.title;
+
+				const wood = pick("wood");
+
+				if (wood) {
+					if (item.wood) {
+						wood.textContent = item.wood;
+					} else {
+						wood.remove();
+					}
 				}
 
-				if (category) {
-					category.textContent = item.subcategory || item.category;
-				}
-
-				if (title) {
-					title.textContent = item.title;
-				}
+				const price = pick("price");
 
 				if (price) {
-					price.textContent = item.price;
+					if (item.price) {
+						price.textContent = item.price;
+					} else {
+						price.remove();
+					}
 				}
 
-				resultsList.appendChild(node);
+				fragment.appendChild(node);
 			});
 
-			resultsList.hidden = items.length === 0;
+			resultsList.replaceChildren(fragment);
 		};
 
 		const announce = (count: number, query: string) => {
-			if (query.length < MIN_QUERY_LENGTH) {
-				status.textContent = "";
-				return;
-			}
-
 			status.textContent =
 				count === 0
 					? `Sin resultados para "${query}"`
@@ -647,44 +988,67 @@
 						} para "${query}"`;
 		};
 
-		const runSearch = async (query: string) => {
-			const trimmed = query.trim();
+		const cancelInFlight = () => {
+			inFlight?.abort();
+			inFlight = null;
+		};
 
-			if (trimmed.length < MIN_QUERY_LENGTH) {
-				clearResults();
-				resultsList.hidden = true;
-				setHint("initial");
-				announce(0, trimmed);
+		const runSearch = async (rawQuery: string) => {
+			const query = rawQuery.trim();
+
+			cancelInFlight();
+
+			if (query.length < MIN_QUERY_LENGTH) {
+				setState("idle");
+				status.textContent = "";
 				return;
 			}
 
-			setHint("loading");
-			resultsList.hidden = true;
+			const token = ++requestToken;
+			const controller = new AbortController();
+			inFlight = controller;
+
+			setState("loading");
 
 			try {
 				const items = await loadIndex();
-				const results = search(items, trimmed);
 
-				if (input.value.trim() !== trimmed) return;
-
-				if (results.length === 0) {
-					clearResults();
-					resultsList.hidden = true;
-					setHint("empty");
-				} else {
-					setHint("none");
-					renderResults(results);
+				// Cancelada (se cerro el panel o llego otra consulta) u
+				// obsoleta: no debe pintar nada.
+				if (controller.signal.aborted || token !== requestToken) {
+					return;
 				}
 
-				announce(results.length, trimmed);
-			} catch {
-				clearResults();
-				resultsList.hidden = true;
-				setHint("error");
+				const results = search(items, query);
+
+				if (results.length === 0) {
+					setState("empty");
+				} else {
+					renderResults(results);
+					setState("success");
+				}
+
+				announce(results.length, query);
+			} catch (error) {
+				// Un abort no es un fallo: no debe pintar el estado error.
+				if (
+					controller.signal.aborted ||
+					(error as Error)?.name === "AbortError" ||
+					token !== requestToken
+				) {
+					return;
+				}
+
+				setState("error");
+				status.textContent = "No se pudo cargar el buscador.";
+			} finally {
+				if (inFlight === controller) inFlight = null;
 			}
 		};
 
 		const onInput = () => {
+			clearButton.hidden = input.value.length === 0;
+
 			if (debounceTimer) clearTimeout(debounceTimer);
 
 			debounceTimer = setTimeout(() => {
@@ -694,30 +1058,39 @@
 
 		const isOpen = () => panel.classList.contains("is-open");
 
-		const openPanel = (trigger: HTMLElement) => {
-			if (isOpen()) return;
+		/*
+		 * El panel se ancla al borde inferior real del Header en lugar de
+		 * a una constante: el anuncio superior cambia de alto por
+		 * breakpoint.
+		 */
+		const anchorToHeader = () => {
+			const header = document.querySelector<HTMLElement>(
+				"[data-site-header]",
+			);
 
-			lastFocusedTrigger = trigger;
+			if (!header) return;
 
-			panel.classList.add("is-open");
-			panel.setAttribute("aria-hidden", "false");
+			const bottom = Math.round(
+				header.getBoundingClientRect().bottom,
+			);
 
-			triggers().forEach((element) => {
-				element.setAttribute("aria-expanded", "true");
-			});
-
-			setHint("initial");
-			clearResults();
-			input.value = "";
-			status.textContent = "";
-
-			input.focus();
-
-			loadIndex().catch(() => {});
+			if (bottom > 0) {
+				panel.style.setProperty(
+					"--megasearch-top",
+					`${bottom}px`,
+				);
+			}
 		};
 
 		const closePanel = () => {
 			if (!isOpen()) return;
+
+			cancelInFlight();
+
+			if (debounceTimer) {
+				clearTimeout(debounceTimer);
+				debounceTimer = undefined;
+			}
 
 			panel.classList.remove("is-open");
 			panel.setAttribute("aria-hidden", "true");
@@ -726,8 +1099,34 @@
 				element.setAttribute("aria-expanded", "false");
 			});
 
-			lastFocusedTrigger?.focus();
-			lastFocusedTrigger = null;
+			closeOverlay(OVERLAY_ID);
+		};
+
+		const openPanel = (trigger: HTMLElement) => {
+			if (isOpen()) return;
+
+			anchorToHeader();
+
+			panel.classList.add("is-open");
+			panel.setAttribute("aria-hidden", "false");
+
+			triggers().forEach((element) => {
+				element.setAttribute("aria-expanded", "true");
+			});
+
+			input.value = "";
+			clearButton.hidden = true;
+			status.textContent = "";
+			requestToken += 1;
+			setState("idle");
+
+			openOverlay({
+				id: OVERLAY_ID,
+				container: dialog,
+				trigger,
+				close: closePanel,
+				initialFocus: input,
+			});
 		};
 
 		triggers().forEach((trigger) => {
@@ -745,66 +1144,60 @@
 		closeButton.addEventListener("click", closePanel);
 		backdrop.addEventListener("click", closePanel);
 
-		input.addEventListener("input", onInput);
-
-		input.addEventListener("keydown", (event) => {
-			const links = Array.from(
-				resultsList.querySelectorAll<HTMLAnchorElement>(
-					".product-search__result-link",
-				),
-			);
-
-			if (event.key === "ArrowDown" && links.length > 0) {
-				event.preventDefault();
-				links[0].focus();
-			}
+		clearButton.addEventListener("click", () => {
+			input.value = "";
+			clearButton.hidden = true;
+			input.focus();
+			runSearch("");
 		});
 
-		resultsList.addEventListener("keydown", (event) => {
-			const links = Array.from(
+		retryButton.addEventListener("click", () => {
+			runSearch(input.value);
+		});
+
+		input.addEventListener("input", onInput);
+
+		const resultLinks = () =>
+			Array.from(
 				resultsList.querySelectorAll<HTMLAnchorElement>(
-					".product-search__result-link",
+					".megasearch__result-link",
 				),
 			);
+
+		const moveFocus = (delta: number) => {
+			const links = resultLinks();
+			if (links.length === 0) return;
 
 			const currentIndex = links.findIndex(
 				(link) => link === document.activeElement,
 			);
 
+			if (currentIndex === -1) {
+				links[delta > 0 ? 0 : links.length - 1].focus();
+				return;
+			}
+
+			const nextIndex = currentIndex + delta;
+
+			if (nextIndex < 0) {
+				input.focus();
+			} else if (nextIndex < links.length) {
+				links[nextIndex].focus();
+			}
+		};
+
+		dialog.addEventListener("keydown", (event) => {
 			if (event.key === "ArrowDown") {
 				event.preventDefault();
-				const next = links[currentIndex + 1];
-				if (next) next.focus();
+				moveFocus(1);
 			} else if (event.key === "ArrowUp") {
 				event.preventDefault();
-				if (currentIndex <= 0) {
-					input.focus();
-				} else {
-					links[currentIndex - 1].focus();
-				}
+				moveFocus(-1);
 			}
 		});
 
-		document.addEventListener("keydown", (event) => {
-			if (event.key === "Escape" && isOpen()) {
-				closePanel();
-			}
-		});
-
-		document.addEventListener("click", (event) => {
-			if (!isOpen()) return;
-			if (!(event.target instanceof Node)) return;
-
-			const clickedTrigger = triggers().some((trigger) =>
-				trigger.contains(event.target as Node),
-			);
-
-			if (
-				!box.contains(event.target) &&
-				!clickedTrigger
-			) {
-				closePanel();
-			}
+		window.addEventListener("resize", () => {
+			if (isOpen()) anchorToHeader();
 		});
 	}
 

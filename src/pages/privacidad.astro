@@ -1,14 +1,54 @@
 ---
 import PageLayout from "../layouts/PageLayout.astro";
+import PageHero from "../components/PageHero.astro";
+
+const base = import.meta.env.BASE_URL;
+const contacto = `${base}contactanos/`;
+
+const mail = "mailto:ventas@taqto.com.pe";
 ---
 
 <PageLayout
 	title="Política de privacidad | TAQTO"
 	description="Cómo TAQTO recopila, usa y protege tus datos personales."
-	eyebrow="Legal"
-	heading="Política de privacidad"
 >
-	<div class="space-y-4 text-base leading-relaxed text-black/70">
-		<p>Contenido pendiente.</p>
-	</div>
+	<PageHero
+		eyebrow="Legal"
+		title="Política de privacidad"
+		lede="Cómo TAQTO recopila, usa y protege tus datos personales."
+		split="8-4"
+	/>
+
+	<!--
+		El texto legal todavía no existe. La página se mantiene
+		publicada porque el Footer enlaza a esta ruta, pero no se
+		inventa contenido: se declara el estado real y se ofrece un
+		canal para consultar.
+	-->
+	<section class="sect sect--last">
+		<div class="wrap">
+			<div class="g12">
+				<div class="c7 flow" style="--flow:16px">
+					<h2>Contenido pendiente</h2>
+
+					<p class="measure">
+						Estamos preparando el texto completo de nuestra política
+						de privacidad. Mientras tanto, si tienes una consulta
+						sobre el tratamiento de tus datos personales, puedes
+						escribirnos y te responderemos directamente.
+					</p>
+
+					<div class="actions">
+						<a href={mail} class="btn btn--primary">
+							Escribir a ventas@taqto.com.pe
+						</a>
+
+						<a href={contacto} class="sp-btn sp-btn--ghost">
+							Ver todos los canales
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
 </PageLayout>

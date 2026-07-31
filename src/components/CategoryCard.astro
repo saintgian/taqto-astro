@@ -1,4 +1,6 @@
 ---
+import { ArrowRight } from "@lucide/astro";
+
 interface Props {
 	title: string;
 	description?: string;
@@ -35,16 +37,7 @@ const {
 		</span>
 
 		<span class="category-card__arrow">
-			<svg
-				viewBox="0 0 24 24"
-				aria-hidden="true"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="1.6"
-			>
-				<path d="M5 19 19 5"></path>
-				<path d="M9 5h10v10"></path>
-			</svg>
+			<ArrowRight aria-hidden="true" stroke-width={1.75} />
 		</span>
 	</div>
 

@@ -1,56 +1,391 @@
 ---
 import PageLayout from "../layouts/PageLayout.astro";
+import PageHero from "../components/PageHero.astro";
+import {
+	Gift,
+	TreePine,
+	ScanLine,
+	ListChecks,
+	Truck,
+	Boxes,
+	BadgeCheck,
+} from "@lucide/astro";
 
 const mail = "mailto:ventas@taqto.com.pe";
 const wa = "https://wa.me/51977600400";
 
-const faqs = [
-	{ q: "¿Qué es un regalo corporativo de madera?", a: ["Es una pieza elaborada en madera que una empresa entrega a colaboradores, clientes, socios o invitados como reconocimiento, agradecimiento o recuerdo institucional.", "Puede personalizarse con el logo de la empresa, el nombre del destinatario, una fecha, una frase breve o una composición de co-branding."] },
-	{ q: "¿Por qué elegir un regalo corporativo de madera?", a: ["La madera aporta calidez, presencia y variaciones naturales que hacen que cada pieza tenga una apariencia propia.", "Además, puede convertirse en un objeto funcional para la oficina, la mesa, el hogar o la parrilla, permitiendo que el regalo continúe utilizándose después de la campaña o evento."] },
-	{ q: "¿Un regalo de madera es mejor que una agenda o una taza?", a: ["No existe una opción universalmente mejor.", "Las agendas y tazas pueden funcionar en campañas amplias o entregas masivas. Una pieza de madera puede ser más adecuada cuando se busca comunicar reconocimiento, permanencia, personalización y mayor atención al detalle.", "La elección debe depender del objetivo, el destinatario, la cantidad y el presupuesto."] },
-	{ q: "¿Qué productos de madera pueden utilizarse como regalos corporativos?", a: ["Algunas alternativas son: organizadores de escritorio, soportes para celular, soportes para laptop, tablas parrilleras, tablas para quesos, bandejas, posavasos y posatazas, kits de madera y cuero, y piezas personalizadas para eventos o reconocimientos.", "La mejor opción depende del perfil de la persona que recibirá el regalo y del contexto de la entrega."] },
-	{ q: "¿Se puede grabar el logo de una empresa?", a: ["Sí. El logo puede aplicarse mediante grabado láser siempre que el diseño sea técnicamente viable según el tamaño disponible, el material y la legibilidad.", "Antes de iniciar la producción, la empresa debe revisar y aprobar la propuesta de grabado."] },
-	{ q: "¿Se puede personalizar cada pieza con un nombre diferente?", a: ["Sí, dependiendo del producto, la cantidad y las características del pedido.", "La personalización individual puede incluir nombres, cargos, fechas, frases o reconocimientos específicos. Esta información debe entregarse de forma ordenada y revisarse antes de la producción."] },
-	{ q: "¿Qué es el co-branding en un regalo corporativo?", a: ["El co-branding es la convivencia visible entre la identidad de la empresa cliente y la marca que fabrica el producto.", "En los pedidos corporativos de TAQTO, el logo del cliente se integra con el sello TAQTO, evitando que la pieza se convierta en un producto genérico de marca blanca."] },
-	{ q: "¿Cuál es el pedido mínimo para regalos corporativos?", a: ["TAQTO trabaja pedidos por volumen desde 12 unidades.", "La disponibilidad, el precio y las condiciones pueden variar según el producto, la especie de madera, la personalización, el empaque y el plazo solicitado."] },
-	{ q: "¿Cuánto tiempo demora un pedido corporativo?", a: ["El plazo depende de la cantidad de unidades, el producto seleccionado, la disponibilidad del material, la complejidad del grabado, la aprobación del diseño, el tipo de empaque y la ciudad de entrega.", "El tiempo estimado debe confirmarse antes de aprobar la cotización."] },
-	{ q: "¿Qué información se necesita para solicitar una cotización?", a: ["Se recomienda proporcionar: nombre de la empresa, persona de contacto, producto de interés, cantidad aproximada, tipo de destinatario, logo o elementos gráficos, personalización solicitada, ciudad de entrega, fecha requerida, necesidades de empaque y presupuesto referencial, cuando esté definido."] },
-	{ q: "¿Los productos pueden entregarse con empaque corporativo?", a: ["La presentación puede evaluarse según el producto, la cantidad y las necesidades del pedido.", "Para recibir una propuesta precisa, la empresa debe indicar si necesita cajas individuales, tarjetas, mensajes, identificadores por destinatario u otros elementos de presentación."] },
-	{ q: "¿Todos los productos de un pedido serán exactamente iguales?", a: ["El diseño, las medidas y la personalización pueden mantenerse uniformes, pero la veta, el tono y algunos detalles naturales pueden variar de una pieza a otra.", "Estas diferencias son propias de la madera real y hacen que cada unidad tenga una expresión particular."] },
-	{ q: "¿Los regalos de madera necesitan cuidados?", a: ["Sí. Los cuidados dependen del producto, el material y el acabado.", "Como recomendación general, las piezas de madera deben mantenerse alejadas del lavavajillas, el remojo prolongado, el sol directo y las fuentes intensas de calor. Cada pedido puede incluir indicaciones específicas de uso y mantenimiento."] },
-	{ q: "¿TAQTO realiza envíos corporativos a provincias?", a: ["Sí. Los pedidos pueden enviarse a provincias mediante la agencia coordinada con el cliente.", "El costo y el tiempo de traslado dependen del destino, el tamaño del pedido y la modalidad seleccionada."] },
-	{ q: "¿Cómo puedo solicitar una cotización de regalos corporativos?", a: ["Puedes escribir a ventas@taqto.com.pe o comunicarte por WhatsApp al +51 977 600 400.", "Para recibir una orientación más precisa, incluye la cantidad aproximada, el producto de interés, el tipo de personalización, la ciudad de entrega y la fecha requerida."] },
+const claves = [
+	{
+		icon: Boxes,
+		label: "Pedido mínimo",
+		value: "12 unidades",
+		hint: "TAQTO trabaja pedidos por volumen desde 12 unidades.",
+	},
+	{
+		icon: BadgeCheck,
+		label: "Marca",
+		value: "Co-branding",
+		hint: "El logo del cliente se integra con el sello TAQTO.",
+	},
+];
+
+/*
+ * Las preguntas son las mismas de siempre; el único cambio es que
+ * ahora están agrupadas por el tema que realmente tratan, en lugar
+ * de formar una única lista de quince acordeones.
+ */
+const grupos = [
+	{
+		id: "conceptos",
+		icon: Gift,
+		title: "Conceptos y decisión",
+		faqs: [
+			{
+				q: "¿Qué es un regalo corporativo de madera?",
+				a: [
+					"Es una pieza elaborada en madera que una empresa entrega a colaboradores, clientes, socios o invitados como reconocimiento, agradecimiento o recuerdo institucional.",
+					"Puede personalizarse con el logo de la empresa, el nombre del destinatario, una fecha, una frase breve o una composición de co-branding.",
+				],
+			},
+			{
+				q: "¿Por qué elegir un regalo corporativo de madera?",
+				a: [
+					"La madera aporta calidez, presencia y variaciones naturales que hacen que cada pieza tenga una apariencia propia.",
+					"Además, puede convertirse en un objeto funcional para la oficina, la mesa, el hogar o la parrilla, permitiendo que el regalo continúe utilizándose después de la campaña o evento.",
+				],
+			},
+			{
+				q: "¿Un regalo de madera es mejor que una agenda o una taza?",
+				a: [
+					"No existe una opción universalmente mejor.",
+					"Las agendas y tazas pueden funcionar en campañas amplias o entregas masivas. Una pieza de madera puede ser más adecuada cuando se busca comunicar reconocimiento, permanencia, personalización y mayor atención al detalle.",
+					"La elección debe depender del objetivo, el destinatario, la cantidad y el presupuesto.",
+				],
+			},
+		],
+	},
+	{
+		id: "productos",
+		icon: TreePine,
+		title: "Productos y materialidad",
+		faqs: [
+			{
+				q: "¿Qué productos de madera pueden utilizarse como regalos corporativos?",
+				a: [
+					"Algunas alternativas son: organizadores de escritorio, soportes para celular, soportes para laptop, tablas parrilleras, tablas para quesos, bandejas, posavasos y posatazas, kits de madera y cuero, y piezas personalizadas para eventos o reconocimientos.",
+					"La mejor opción depende del perfil de la persona que recibirá el regalo y del contexto de la entrega.",
+				],
+			},
+			{
+				q: "¿Todos los productos de un pedido serán exactamente iguales?",
+				a: [
+					"El diseño, las medidas y la personalización pueden mantenerse uniformes, pero la veta, el tono y algunos detalles naturales pueden variar de una pieza a otra.",
+					"Estas diferencias son propias de la madera real y hacen que cada unidad tenga una expresión particular.",
+				],
+			},
+		],
+	},
+	{
+		id: "personalizacion",
+		icon: ScanLine,
+		title: "Personalización y co-branding",
+		faqs: [
+			{
+				q: "¿Se puede grabar el logo de una empresa?",
+				a: [
+					"Sí. El logo puede aplicarse mediante grabado láser siempre que el diseño sea técnicamente viable según el tamaño disponible, el material y la legibilidad.",
+					"Antes de iniciar la producción, la empresa debe revisar y aprobar la propuesta de grabado.",
+				],
+			},
+			{
+				q: "¿Se puede personalizar cada pieza con un nombre diferente?",
+				a: [
+					"Sí, dependiendo del producto, la cantidad y las características del pedido.",
+					"La personalización individual puede incluir nombres, cargos, fechas, frases o reconocimientos específicos. Esta información debe entregarse de forma ordenada y revisarse antes de la producción.",
+				],
+			},
+			{
+				q: "¿Qué es el co-branding en un regalo corporativo?",
+				a: [
+					"El co-branding es la convivencia visible entre la identidad de la empresa cliente y la marca que fabrica el producto.",
+					"En los pedidos corporativos de TAQTO, el logo del cliente se integra con el sello TAQTO, evitando que la pieza se convierta en un producto genérico de marca blanca.",
+				],
+			},
+		],
+	},
+	{
+		id: "pedidos",
+		icon: ListChecks,
+		title: "Pedidos, cotización y plazos",
+		faqs: [
+			{
+				q: "¿Cuál es el pedido mínimo para regalos corporativos?",
+				a: [
+					"TAQTO trabaja pedidos por volumen desde 12 unidades.",
+					"La disponibilidad, el precio y las condiciones pueden variar según el producto, la especie de madera, la personalización, el empaque y el plazo solicitado.",
+				],
+			},
+			{
+				q: "¿Cuánto tiempo demora un pedido corporativo?",
+				a: [
+					"El plazo depende de la cantidad de unidades, el producto seleccionado, la disponibilidad del material, la complejidad del grabado, la aprobación del diseño, el tipo de empaque y la ciudad de entrega.",
+					"El tiempo estimado debe confirmarse antes de aprobar la cotización.",
+				],
+			},
+			{
+				q: "¿Qué información se necesita para solicitar una cotización?",
+				a: [
+					"Se recomienda proporcionar: nombre de la empresa, persona de contacto, producto de interés, cantidad aproximada, tipo de destinatario, logo o elementos gráficos, personalización solicitada, ciudad de entrega, fecha requerida, necesidades de empaque y presupuesto referencial, cuando esté definido.",
+				],
+			},
+			{
+				q: "¿Los productos pueden entregarse con empaque corporativo?",
+				a: [
+					"La presentación puede evaluarse según el producto, la cantidad y las necesidades del pedido.",
+					"Para recibir una propuesta precisa, la empresa debe indicar si necesita cajas individuales, tarjetas, mensajes, identificadores por destinatario u otros elementos de presentación.",
+				],
+			},
+			{
+				q: "¿Cómo puedo solicitar una cotización de regalos corporativos?",
+				a: [
+					"Puedes escribir a ventas@taqto.com.pe o comunicarte por WhatsApp al +51 977 600 400.",
+					"Para recibir una orientación más precisa, incluye la cantidad aproximada, el producto de interés, el tipo de personalización, la ciudad de entrega y la fecha requerida.",
+				],
+			},
+		],
+	},
+	{
+		id: "entrega",
+		icon: Truck,
+		title: "Cuidados y envíos",
+		faqs: [
+			{
+				q: "¿Los regalos de madera necesitan cuidados?",
+				a: [
+					"Sí. Los cuidados dependen del producto, el material y el acabado.",
+					"Como recomendación general, las piezas de madera deben mantenerse alejadas del lavavajillas, el remojo prolongado, el sol directo y las fuentes intensas de calor. Cada pedido puede incluir indicaciones específicas de uso y mantenimiento.",
+				],
+			},
+			{
+				q: "¿TAQTO realiza envíos corporativos a provincias?",
+				a: [
+					"Sí. Los pedidos pueden enviarse a provincias mediante la agencia coordinada con el cliente.",
+					"El costo y el tiempo de traslado dependen del destino, el tamaño del pedido y la modalidad seleccionada.",
+				],
+			},
+		],
+	},
 ];
 ---
 
 <PageLayout
 	title="Preguntas frecuentes sobre regalos corporativos de madera | TAQTO"
 	description="Resolvemos las dudas más comunes sobre regalos corporativos de madera: personalización, co-branding, pedidos mínimos, tiempos, envíos y cotizaciones."
-	eyebrow="Preguntas frecuentes"
-	heading="Preguntas frecuentes sobre regalos corporativos de madera"
 >
-	<div class="space-y-14">
-		<section class="space-y-2">
-			<div class="divide-y divide-black/10 border-y border-black/10">
-				{faqs.map((item) => (
-					<details class="group py-4">
-						<summary class="cursor-pointer list-none font-medium text-black">{item.q}</summary>
-						<div class="mt-2 space-y-3 text-base leading-relaxed text-black/70">
-							{item.a.map((p) => <p>{p}</p>)}
-						</div>
-					</details>
-				))}
-			</div>
-		</section>
+	<PageHero
+		eyebrow="Preguntas frecuentes"
+		title="Preguntas frecuentes sobre regalos corporativos de madera"
+		lede="Resolvemos las dudas más comunes sobre personalización, co-branding, pedidos mínimos, tiempos, envíos y cotizaciones."
+		split="8-4"
+	>
+		<div slot="aside">
+			<p class="facts-caption">Lo esencial</p>
 
-		<!-- CTA final -->
-		<section class="space-y-4 rounded-2xl bg-black/5 p-8 text-base leading-relaxed text-black/70">
-			<h2 class="text-2xl font-semibold text-black">¿Listo para cotizar tus regalos corporativos?</h2>
-			<p>Indícanos la cantidad aproximada, el producto de interés, el tipo de personalización, la ciudad de entrega y la fecha requerida.</p>
-			<div class="flex flex-wrap gap-3 pt-2">
-				<a href={mail} class="inline-flex items-center justify-center rounded-lg bg-orange px-5 py-3 text-sm font-semibold text-white">Solicitar cotización corporativa</a>
-				<a href={wa} target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center rounded-lg border border-black/15 px-5 py-3 text-sm font-semibold text-black">Escribir por WhatsApp</a>
+			<ul class="facts">
+				{
+					claves.map((item) => {
+						const Icon = item.icon;
+
+						return (
+							<li>
+								<Icon
+									class="facts__icon"
+									aria-hidden="true"
+									size={20}
+									stroke-width={1.75}
+								/>
+
+								<div>
+									<p class="facts__label">{item.label}</p>
+									<p class="facts__value">{item.value}</p>
+									<p class="facts__hint">{item.hint}</p>
+								</div>
+							</li>
+						);
+					})
+				}
+			</ul>
+		</div>
+	</PageHero>
+
+	<!-- Índice de temas + grupos de preguntas -->
+	<section class="sect">
+		<div class="wrap">
+			<div class="g12">
+				<nav class="c4 faq-index" aria-label="Temas de preguntas frecuentes">
+					<p class="facts-caption">Temas</p>
+
+					<ul>
+						{
+							grupos.map((grupo) => {
+								const Icon = grupo.icon;
+
+								return (
+									<li>
+										<a href={`#${grupo.id}`}>
+											<Icon
+												aria-hidden="true"
+												size={18}
+												stroke-width={1.75}
+											/>
+
+											<span>{grupo.title}</span>
+
+											<span class="faq-index__count">
+												{grupo.faqs.length}
+											</span>
+										</a>
+									</li>
+								);
+							})
+						}
+					</ul>
+				</nav>
+
+				<div class="c8 faq-groups">
+					{
+						grupos.map((grupo) => {
+							const Icon = grupo.icon;
+
+							return (
+								<section id={grupo.id} class="faq-group">
+									<h2 class="faq-group__title">
+										<Icon
+											aria-hidden="true"
+											size={20}
+											stroke-width={1.75}
+										/>
+
+										{grupo.title}
+									</h2>
+
+									<div class="faq">
+										{grupo.faqs.map((item) => (
+											<details>
+												<summary>{item.q}</summary>
+
+												<div class="faq__answer">
+													{item.a.map((p) => (
+														<p>{p}</p>
+													))}
+												</div>
+											</details>
+										))}
+									</div>
+								</section>
+							);
+						})
+					}
+				</div>
 			</div>
-		</section>
-	</div>
+		</div>
+	</section>
+
+	<!-- CTA final -->
+	<section class="sect sect--last">
+		<div class="wrap">
+			<div class="page-cta page-cta--split">
+				<div class="page-cta__text">
+					<p class="eyebrow">Regalos corporativos</p>
+
+					<h2>¿Listo para cotizar tus regalos corporativos?</h2>
+
+					<p class="measure">
+						Indícanos la cantidad aproximada, el producto de
+						interés, el tipo de personalización, la ciudad de
+						entrega y la fecha requerida.
+					</p>
+				</div>
+
+				<div class="actions">
+					<a href={mail} class="btn btn--primary">
+						Solicitar cotización corporativa
+					</a>
+
+					<a
+						href={wa}
+						target="_blank"
+						rel="noopener noreferrer"
+						class="sp-btn sp-btn--ghost"
+					>
+						Escribir por WhatsApp
+					</a>
+				</div>
+			</div>
+		</div>
+	</section>
 </PageLayout>
+
+<style>
+	.faq-index ul {
+		display: grid;
+		gap: 2px;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.faq-index a {
+		display: flex;
+		align-items: center;
+		gap: 11px;
+		min-height: 44px;
+		padding: 10px 12px;
+		border-radius: 10px;
+		color: var(--ink-70);
+		font-size: 14.5px;
+		font-weight: 500;
+		text-decoration: none;
+		transition:
+			background-color 200ms ease,
+			color 200ms ease;
+	}
+
+	.faq-index a:hover {
+		background: var(--sp-tint);
+		color: var(--color-black);
+	}
+
+	.faq-index__count {
+		margin-inline-start: auto;
+		color: var(--ink-35);
+		font-size: 13px;
+		font-variant-numeric: tabular-nums;
+	}
+
+	.faq-groups {
+		display: grid;
+		gap: clamp(34px, 3.6vw, 52px);
+	}
+
+	.faq-group__title {
+		display: flex;
+		align-items: center;
+		gap: 11px;
+		margin-block-end: 14px;
+		font-size: clamp(19px, 1.4vw, 22px);
+		line-height: 1.25;
+	}
+
+	.faq-group__title :global(svg) {
+		flex: none;
+		color: var(--color-brown);
+	}
+
+	@media (min-width: 901px) {
+		.faq-index {
+			position: sticky;
+			top: clamp(24px, 4vw, 56px);
+		}
+	}
+</style>

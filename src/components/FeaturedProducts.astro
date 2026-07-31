@@ -2,6 +2,7 @@
 import { sanityClient } from "../lib/sanity";
 import { featuredProductsQuery } from "../lib/featuredProductsQuery";
 import ProductCard from "./ProductCard.astro";
+import { ArrowRight } from "@lucide/astro";
 
 interface Product {
 	_id: string;
@@ -9,6 +10,9 @@ interface Product {
 	slug: string;
 	[key: string]: unknown;
 }
+
+const rawBase = import.meta.env.BASE_URL;
+const base = rawBase.endsWith("/") ? rawBase : `${rawBase}/`;
 
 const products = await sanityClient.fetch<Product[]>(
 	featuredProductsQuery,
@@ -20,6 +24,14 @@ const products = await sanityClient.fetch<Product[]>(
 		<section class="featured-products">
 			<div class="featured-products__heading">
 				<h2>Productos destacados</h2>
+
+				<a
+					class="featured-products__all"
+					href={`${base}tienda/`}
+				>
+					Ver tienda
+					<ArrowRight aria-hidden="true" stroke-width={1.75} />
+				</a>
 			</div>
 
 			<div class="featured-products__grid">
@@ -33,43 +45,82 @@ const products = await sanityClient.fetch<Product[]>(
 
 <style>
 	.featured-products {
-		padding-block: clamp(28px, 8.5vw, 36px);
-		padding-inline: var(--page-padding);
+		padding-block: var(--section-py);
+		padding-inline: var(--container-gutter);
 		background: var(--surface);
 	}
 
 	.featured-products__heading {
-		width: min(100%, 1560px);
-		margin: 0 auto clamp(20px, 2.5vw, 32px);
-		text-align: center;
+		display: flex;
+		align-items: flex-end;
+		justify-content: space-between;
+		gap: clamp(16px, 3vw, 32px);
+		width: min(100%, var(--container-comercial));
+		margin: 0 auto var(--header-gap);
 	}
 
 	.featured-products__heading h2 {
 		margin: 0;
-		font-size: clamp(1.8125rem, 1.5rem + 1.5vw, 2.875rem);
+		font-size: var(--text-2xl);
 		font-weight: 600;
 		letter-spacing: -0.02em;
 		color: var(--color-black);
 	}
 
+	.featured-products__all {
+		display: inline-flex;
+		flex-shrink: 0;
+		align-items: center;
+		gap: 8px;
+		margin-bottom: 6px;
+		color: var(--color-brown);
+		font-size: 15px;
+		font-weight: 700;
+		letter-spacing: 0.02em;
+		text-decoration: none;
+		white-space: nowrap;
+	}
+
+	.featured-products__all svg {
+		width: 16px;
+		height: 16px;
+		transition: transform 180ms ease;
+	}
+
+	.featured-products__all:focus-visible {
+		outline: 2px solid var(--color-orange);
+		outline-offset: 4px;
+		border-radius: var(--radius-sm);
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.featured-products__all:hover svg {
+			transform: translateX(4px);
+		}
+	}
+
 	.featured-products__grid {
-		width: min(100%, 1560px);
+		width: min(100%, var(--container-comercial));
 		margin: 0 auto;
 		display: grid;
 		grid-template-columns: repeat(4, minmax(0, 1fr));
-		gap: 26px;
+		gap: clamp(20px, 2vw, 30px);
 	}
 
-	@media (min-width: 768px) {
-		.featured-products {
-			padding-block: clamp(36px, 5.2vw, 44px);
-		}
+	/*
+	 * Contexto de la vitrina destacada: menos texto, precio con más
+	 * presencia. No se toca ProductCard.astro para no romper /tienda.
+	 */
+	.featured-products__grid :global(.product-card__description) {
+		display: none;
 	}
 
-	@media (min-width: 1024px) {
-		.featured-products {
-			padding-block: clamp(48px, 3.4vw, 56px);
-		}
+	.featured-products__grid :global(.product-card__price) {
+		font-size: 16px;
+	}
+
+	.featured-products__grid :global(.product-card__information + .product-card__bottom) {
+		margin-top: 12px;
 	}
 
 	@media (max-width: 1100px) {
@@ -79,9 +130,25 @@ const products = await sanityClient.fetch<Product[]>(
 	}
 
 	@media (max-width: 760px) {
+		.featured-products__heading {
+			flex-wrap: wrap;
+		}
+
 		.featured-products__grid {
 			grid-template-columns: repeat(2, minmax(0, 1fr));
 			gap: 18px;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.featured-products__heading {
+			align-items: flex-start;
+			flex-direction: column;
+			gap: 10px;
+		}
+
+		.featured-products__all {
+			margin-bottom: 0;
 		}
 	}
 

@@ -131,14 +131,32 @@ const fontFaceCss = `
 		--page-padding: clamp(20px, 4vw, 64px);
 
 		/*
-		 * Sistema de contenedores fluidos. "comercial" para tienda,
-		 * productos y grids; "editorial" para historia, empresas y
-		 * secciones editoriales; "lectura" para texto largo.
+		 * Sistema de contenedores fluidos, tres niveles:
+		 * "comercial" (1440-1520px) para fotografía, categorías,
+		 * productos y galerías; "editorial" (1120-1240px) para
+		 * composiciones de imagen+texto más contenidas; "lectura"
+		 * para texto largo. Los bloques full bleed usan el ancho
+		 * comercial como límite de su contenido interior.
 		 */
 		--container-comercial: 1520px;
-		--container-editorial: 1360px;
+		--container-editorial: 1200px;
 		--container-lectura: 760px;
-		--container-gutter: clamp(16px, 4vw, 64px);
+		--container-gutter: clamp(18px, 4vw, 64px);
+
+		/*
+		 * Ritmo vertical compartido entre secciones. --section-py se
+		 * aplica en padding-block de cada sección estándar: al sumar
+		 * el padding inferior de una sección con el superior de la
+		 * siguiente da la separación real entre bloques. Las
+		 * secciones full bleed estratégicas (fondo oscuro/foto que
+		 * llega a los bordes) usan --section-py-strategic, que es un
+		 * padding único (no se suma a un vecino del mismo tipo).
+		 * --header-gap separa un encabezado de sección de su
+		 * contenido.
+		 */
+		--section-py: clamp(18px, 3.2vw, 40px);
+		--section-py-strategic: clamp(32px, 6vw, 88px);
+		--header-gap: clamp(18px, 3vw, 32px);
 
 		/*
 		 * Superficie dominante: blanco. El crema queda como superficie
@@ -179,14 +197,15 @@ const fontFaceCss = `
 		 * Escala tipografica fluida (clamp), reutilizable en todo el sitio.
 		 * xs/sm: texto auxiliar (nunca por debajo de 14px).
 		 * base/md: cuerpo y contenido editorial (17-20px).
-		 * lg: H3 (24-30px). 2xl: H2 (30-48px). 3xl: H1/display (38-64px).
+		 * lg: H3 (22-28px). 2xl: H2 (27-42px, contenido a propósito).
+		 * 3xl: H1/display (38-64px).
 		 */
 		--text-xs: clamp(0.875rem, 0.85rem + 0.1vw, 0.9375rem);
 		--text-sm: clamp(0.9375rem, 0.9rem + 0.15vw, 1rem);
 		--text-base: clamp(1.0625rem, 1.03rem + 0.15vw, 1.125rem);
 		--text-md: clamp(1.125rem, 1.08rem + 0.2vw, 1.25rem);
-		--text-lg: clamp(1.5rem, 1.35rem + 0.7vw, 1.875rem);
-		--text-2xl: clamp(1.875rem, 1.6rem + 1.3vw, 3rem);
+		--text-lg: clamp(1.375rem, 1.25rem + 0.6vw, 1.75rem);
+		--text-2xl: clamp(1.6875rem, 1.5rem + 1vw, 2.625rem);
 		--text-3xl: clamp(2.375rem, 1.85rem + 2.4vw, 4rem);
 
 		--leading-tight: 1.15;
@@ -209,6 +228,14 @@ const fontFaceCss = `
 		--radius-lg: 24px;
 		--radius-full: 999px;
 
+		/*
+		 * Sistema unificado de CTA comerciales: esquinas moderadas
+		 * (nunca cápsula) y altura compartida entre Hero, campaña,
+		 * personalización, empresas e historia.
+		 */
+		--button-radius: 12px;
+		--button-height: 48px;
+
 		/* Sombras de elevacion sobrias (sin resplandor de color) */
 		--shadow-sm: 0 1px 2px rgba(20, 20, 20, 0.06);
 		--shadow-md: 0 10px 28px rgba(20, 20, 20, 0.1);
@@ -218,6 +245,28 @@ const fontFaceCss = `
 
 		--focus-ring: 0 0 0 3px rgba(255, 77, 42, 0.5);
 		--focus-ring-on-dark: 0 0 0 3px rgba(255, 246, 237, 0.6);
+
+		/*
+		 * Alias con el vocabulario del manual de marca. No son colores
+		 * nuevos: apuntan a los tokens que ya usaba el proyecto, para que
+		 * el sistema de CTA se lea igual que el manual.
+		 */
+		--color-ink: var(--color-black);
+		--color-cream: var(--color-beige);
+		--color-accent: var(--color-orange);
+		--color-brand: var(--color-brown);
+
+		/*
+		 * CTA primario: degradado vertical entre dos tonos de naranja en
+		 * todos los estados. Nunca marron, nunca naranja hacia blanco.
+		 */
+		--cta-gradient-top: #ff6a45;
+		--cta-gradient-bottom: #ff4d2a;
+		--cta-hover: #ff5532;
+		--cta-hover-gradient-top: #ff7655;
+		--cta-active: #e94324;
+		--cta-active-gradient-top: #ff5532;
+		--cta-foreground-interactive: #ffffff;
 	}
 
 	*,
@@ -331,69 +380,230 @@ const fontFaceCss = `
 		border-radius: var(--radius-sm);
 	}
 
-	/* Botones reutilizables del sistema global (no un framework aparte) */
+	/*
+	 * ------------------------------------------------------------------
+	 * Sistema unico de botones
+	 * ------------------------------------------------------------------
+	 * Aqui viven la geometria y los estados. Los componentes solo aportan
+	 * posicion (margen, ancho, alineacion, area de grid): no repiten
+	 * fondo, color, radio ni hover. No existe un segundo sistema.
+	 */
 	.btn {
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
 		gap: var(--space-2xs);
-		min-height: 44px;
-		padding-inline: var(--space-sm);
+		min-height: var(--button-height);
+		padding-inline: 22px;
 		border: 1px solid transparent;
-		border-radius: var(--radius-sm);
+		border-radius: var(--button-radius);
 		color: inherit;
 		font-size: var(--text-sm);
 		font-weight: 600;
-		letter-spacing: 0.02em;
+		letter-spacing: 0.01em;
+		line-height: 1.2;
+		text-align: center;
 		text-decoration: none;
+		cursor: pointer;
 		transition:
-			background-color 180ms ease,
-			border-color 180ms ease,
-			color 180ms ease,
-			transform 180ms ease;
+			background-color 200ms ease,
+			background-image 200ms ease,
+			border-color 200ms ease,
+			color 200ms ease,
+			transform 200ms ease,
+			box-shadow 200ms ease;
 	}
 
-	.btn:active {
-		transform: translateY(1px);
+	.btn svg {
+		width: 17px;
+		height: 17px;
+		flex: 0 0 auto;
 	}
+
+	/*
+	 * El anillo de foco no depende del color del boton: aro claro interior
+	 * + aro oscuro exterior, legible sobre fondo blanco, crema, negro o
+	 * fotografia. Se declara aqui para que gane al radio de 10px que la
+	 * regla generica de :focus-visible aplica a cualquier boton.
+	 */
+	.btn:focus-visible {
+		outline: none;
+		border-radius: var(--button-radius);
+		box-shadow:
+			0 0 0 2px var(--color-white),
+			0 0 0 4px var(--color-ink);
+	}
+
+	/* ---------- Primario: degradado vertical naranja en reposo ---------- */
+
+	.btn--primary {
+		background-color: var(--cta-gradient-bottom);
+		background-image: linear-gradient(
+			to bottom,
+			var(--cta-gradient-top) 0%,
+			var(--cta-gradient-bottom) 100%
+		);
+		color: var(--cta-foreground-interactive);
+		border-color: transparent;
+	}
+
+	.btn--primary:hover:not(:disabled):not([aria-disabled="true"]) {
+		background-color: var(--cta-hover);
+		background-image: linear-gradient(
+			to bottom,
+			var(--cta-hover-gradient-top) 0%,
+			var(--cta-hover) 100%
+		);
+		color: var(--cta-foreground-interactive);
+		border-color: transparent;
+		transform: translateY(-1px);
+		box-shadow: 0 8px 18px rgba(255, 77, 42, 0.22);
+	}
+
+	.btn--primary:active:not(:disabled):not([aria-disabled="true"]) {
+		background-color: var(--cta-active);
+		background-image: linear-gradient(
+			to bottom,
+			var(--cta-active-gradient-top) 0%,
+			var(--cta-active) 100%
+		);
+		color: var(--cta-foreground-interactive);
+		border-color: transparent;
+		transform: translateY(0);
+		box-shadow: none;
+	}
+
+	/*
+	 * Foco solo por teclado: aro naranja simple, sin el doble anillo
+	 * generico de `.btn:focus-visible` (pensado para variantes claras).
+	 */
+	.btn--primary:focus-visible:not(:disabled):not([aria-disabled="true"]) {
+		outline: 2px solid var(--cta-gradient-bottom);
+		outline-offset: 3px;
+		box-shadow: none;
+	}
+
+	/* ---------- Secundario ---------- */
+
+	.btn--secondary {
+		border-color: var(--ink-15);
+		background: var(--surface);
+		color: var(--color-ink);
+		font-weight: 500;
+	}
+
+	.btn--secondary:hover:not(:disabled):not([aria-disabled="true"]) {
+		border-color: var(--ink-35);
+		background: var(--ink-08);
+	}
+
+	/* ---------- Terciario ---------- */
+
+	.btn--tertiary {
+		background: transparent;
+		color: var(--color-ink);
+		font-weight: 500;
+	}
+
+	.btn--tertiary:hover:not(:disabled):not([aria-disabled="true"]) {
+		background: var(--ink-08);
+	}
+
+	/* ---------- Destructivo ---------- */
+
+	.btn--danger {
+		min-height: 44px;
+		padding-inline: 8px;
+		background: transparent;
+		color: var(--ink-55);
+		font-size: 14px;
+		font-weight: 500;
+	}
+
+	.btn--danger svg {
+		width: 16px;
+		height: 16px;
+	}
+
+	.btn--danger:hover:not(:disabled):not([aria-disabled="true"]) {
+		background: rgba(168, 51, 26, 0.08);
+		color: #a8331a;
+	}
+
+	/* ---------- Solo icono ---------- */
+
+	.btn--icon {
+		width: 44px;
+		min-width: 44px;
+		height: 44px;
+		min-height: 44px;
+		padding: 0;
+		gap: 0;
+		border-color: var(--ink-15);
+		border-radius: var(--radius-sm);
+		background: var(--surface);
+		color: var(--color-ink);
+	}
+
+	.btn--icon:hover:not(:disabled):not([aria-disabled="true"]) {
+		background: var(--ink-08);
+	}
+
+	.btn--icon svg {
+		width: 18px;
+		height: 18px;
+	}
+
+	.btn--icon:focus-visible {
+		border-radius: var(--radius-sm);
+	}
+
+	/* ---------- Estados compartidos ---------- */
 
 	.btn:disabled,
 	.btn[aria-disabled="true"] {
+		background-color: var(--ink-15);
+		background-image: none;
+		border-color: transparent;
+		color: var(--ink-70);
 		transform: none;
+		opacity: 1;
+		cursor: not-allowed;
 	}
 
-	.btn--primary {
-		background: var(--color-brown);
-		color: var(--color-beige);
+	/*
+	 * Cargando: el ancho no cambia porque el texto permanece. El nombre
+	 * accesible tampoco desaparece.
+	 */
+	.btn.is-loading {
+		pointer-events: none;
+		opacity: 0.72;
 	}
 
-	.btn--primary:hover {
-		background: var(--color-brown-hover);
+	.btn.is-loading .btn__spinner {
+		animation: btn-spin 900ms linear infinite;
 	}
 
-	.btn--accent {
-		background: var(--color-orange);
-		color: var(--color-black);
+	@keyframes btn-spin {
+		to {
+			transform: rotate(360deg);
+		}
 	}
 
-	.btn--accent:hover {
-		background: var(--color-orange-hover);
-	}
-
-	.btn--outline {
-		border-color: var(--ink-15);
-		background: transparent;
-		color: var(--color-black);
-	}
-
-	.btn--outline:hover {
-		border-color: var(--ink-35);
-		background: var(--ink-08);
+	.btn--full {
+		width: 100%;
 	}
 
 	@media (prefers-reduced-motion: reduce) {
 		html {
 			scroll-behavior: auto;
+		}
+
+		.btn,
+		.btn:hover,
+		.btn:focus-visible,
+		.btn:active {
+			transform: none;
 		}
 
 		*,

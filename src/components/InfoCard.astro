@@ -1,0 +1,120 @@
+---
+/*
+ * Tarjeta informativa de las páginas secundarias.
+ *
+ * Cubre los tres usos que se repiten en el sistema: agrupar
+ * información (tipos de cliente, beneficios, usos), presentar un
+ * dato con su valor, y enlazar a otra ruta. El estilo vive en el
+ * sistema editorial de PageLayout para que todas las rutas compartan
+ * la misma superficie.
+ *
+ * Cuando la tarjeta aparece antes del primer H2 de la página (por
+ * ejemplo en el hero) se pasa heading={false} para no romper la
+ * jerarquía de encabezados.
+ */
+
+import { ArrowRight } from "@lucide/astro";
+
+interface Props {
+	title: string;
+	eyebrow?: string;
+	/* Valor destacado; convierte la tarjeta en un dato rápido */
+	value?: string;
+	href?: string;
+	external?: boolean;
+	/* Componente de icono de @lucide/astro */
+	icon?: any;
+	/* Texto del enlace al pie de la tarjeta */
+	cta?: string;
+	/* false → el título se compone como párrafo, no como H3 */
+	heading?: boolean;
+	variant?: "default" | "plain" | "do" | "avoid";
+	/* Título ligeramente menor para rejillas de 4 columnas */
+	compactTitle?: boolean;
+}
+
+const {
+	title,
+	eyebrow,
+	value,
+	href,
+	external = false,
+	icon: Icon,
+	cta,
+	heading = true,
+	variant = "default",
+	compactTitle = false,
+} = Astro.props;
+
+const Tag = href ? "a" : "div";
+
+const externalAttrs =
+	href && external
+		? { target: "_blank", rel: "noopener noreferrer" }
+		: {};
+---
+
+<Tag
+	class:list={[
+		"card",
+		variant !== "default" && `card--${variant}`,
+		href && "card--link",
+	]}
+	href={href}
+	{...externalAttrs}
+>
+	{
+		Icon && (
+			<span class="card__icon">
+				<Icon
+					aria-hidden="true"
+					size={20}
+					stroke-width={1.75}
+				/>
+			</span>
+		)
+	}
+
+	{eyebrow && <p class="card__eyebrow">{eyebrow}</p>}
+
+	{
+		heading ? (
+			<h3
+				class:list={[
+					"card__title",
+					compactTitle && "card__title--sm",
+				]}
+			>
+				{title}
+			</h3>
+		) : (
+			<p
+				class:list={[
+					"card__title",
+					compactTitle && "card__title--sm",
+				]}
+			>
+				{title}
+			</p>
+		)
+	}
+
+	{value && <p class="card__value">{value}</p>}
+
+	<div class="card__body">
+		<slot />
+	</div>
+
+	{
+		cta && (
+			<span class="card__cta">
+				{cta}
+				<ArrowRight
+					aria-hidden="true"
+					size={15}
+					stroke-width={1.75}
+				/>
+			</span>
+		)
+	}
+</Tag>

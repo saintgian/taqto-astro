@@ -210,61 +210,43 @@ const resolvedItems =
 
 <style>
 	.customer-proof {
-		padding-block: clamp(26px, 8vw, 36px);
-		padding-inline: var(--page-padding);
+		padding-block: var(--section-py);
+		padding-inline: var(--container-gutter);
 		background: var(--surface);
 		color: var(--color-black);
 	}
 
-	@media (min-width: 768px) {
-		.customer-proof {
-			padding-block: clamp(34px, 5vw, 44px);
-		}
-	}
-
-	@media (min-width: 1024px) {
-		.customer-proof {
-			padding-block: clamp(44px, 3.2vw, 56px);
-		}
-	}
-
 	.customer-proof__container {
-		width: min(100%, var(--page-width));
+		width: min(100%, var(--container-comercial));
 		margin-inline: auto;
 	}
 
 	.customer-proof__header {
 		max-width: 780px;
-		margin-bottom: clamp(28px, 4vw, 48px);
+		margin-bottom: var(--header-gap);
 	}
 
 	.customer-proof__header h2 {
 		margin: 0;
 		color: var(--color-black);
-		font-size: clamp(1.8125rem, 1.5rem + 1.5vw, 2.875rem);
+		font-size: var(--text-2xl);
 		font-weight: 600;
-		line-height: 1.1;
+		line-height: 1.15;
 		letter-spacing: -0.02em;
 	}
 
 	.customer-proof__intro {
 		max-width: 600px;
-		margin: 14px 0 0;
+		margin: 12px 0 0;
 		color: rgba(20, 20, 20, 0.68);
-		font-size: 16px;
+		font-size: clamp(17px, 0.3vw + 16.4px, 18px);
 		line-height: 1.6;
-	}
-
-	@media (min-width: 768px) {
-		.customer-proof__intro {
-			font-size: 17px;
-		}
 	}
 
 	.customer-proof__grid {
 		display: grid;
 		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: clamp(20px, 2.5vw, 34px);
+		gap: clamp(18px, 2vw, 28px);
 		margin: 0;
 		padding: 0;
 		list-style: none;
@@ -307,11 +289,11 @@ const resolvedItems =
 	}
 
 	.customer-proof__product {
-		margin: 0 0 9px;
+		margin: 0 0 8px;
 		color: var(--color-orange);
-		font-size: 10px;
+		font-size: 14px;
 		font-weight: 700;
-		letter-spacing: 0.14em;
+		letter-spacing: 0.06em;
 		text-transform: uppercase;
 	}
 
@@ -339,9 +321,9 @@ const resolvedItems =
 
 	.customer-proof__content h3 {
 		margin: 0;
-		font-size: clamp(18px, 1.8vw, 25px);
+		font-size: var(--text-lg);
 		font-weight: 600;
-		line-height: 1.12;
+		line-height: 1.15;
 		letter-spacing: -0.02em;
 	}
 
@@ -352,16 +334,10 @@ const resolvedItems =
 	}
 
 	.customer-proof__description {
-		margin: 10px 0 0;
+		margin: 8px 0 0;
 		color: rgba(20, 20, 20, 0.7);
-		font-size: 16px;
-		line-height: 1.6;
-	}
-
-	@media (min-width: 768px) {
-		.customer-proof__description {
-			font-size: 17px;
-		}
+		font-size: clamp(16px, 0.3vw + 15.4px, 17px);
+		line-height: 1.55;
 	}
 
 	.customer-proof__media:focus-visible,

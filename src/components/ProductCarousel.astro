@@ -84,33 +84,21 @@ const track = [...products, ...products];
 
 <style>
 	.carousel {
-		padding-block: clamp(26px, 8vw, 36px);
+		padding-block: var(--section-py);
 		background: var(--surface);
 		overflow: hidden;
 	}
 
-	@media (min-width: 768px) {
-		.carousel {
-			padding-block: clamp(34px, 5vw, 44px);
-		}
-	}
-
-	@media (min-width: 1024px) {
-		.carousel {
-			padding-block: clamp(44px, 3.2vw, 56px);
-		}
-	}
-
 	.carousel__heading {
-		width: min(100%, var(--page-width));
-		margin: 0 auto clamp(24px, 3vw, 36px);
-		padding-inline: var(--page-padding);
-		text-align: center;
+		width: min(100%, var(--container-comercial));
+		margin: 0 auto var(--header-gap);
+		padding-inline: var(--container-gutter);
+		text-align: left;
 	}
 
 	.carousel__heading h2 {
 		margin: 0;
-		font-size: clamp(1.8125rem, 1.5rem + 1.5vw, 2.875rem);
+		font-size: var(--text-2xl);
 		font-weight: 600;
 		letter-spacing: -0.02em;
 		color: var(--color-black);
@@ -131,8 +119,8 @@ const track = [...products, ...products];
 	.carousel__track {
 		display: flex;
 		width: max-content;
-		gap: 26px;
-		padding-inline: var(--page-padding);
+		gap: 24px;
+		padding-inline: var(--container-gutter);
 		animation: carousel-scroll 140s linear infinite;
 	}
 
@@ -147,7 +135,7 @@ const track = [...products, ...products];
 	}
 
 	.carousel__item {
-		width: 280px;
+		width: 320px;
 		flex-shrink: 0;
 	}
 
@@ -167,8 +155,12 @@ const track = [...products, ...products];
 	}
 
 	@media (max-width: 600px) {
+		.carousel__heading {
+			padding-inline: 18px;
+		}
+
 		.carousel__item {
-			width: 220px;
+			width: 240px;
 		}
 	}
 </style>

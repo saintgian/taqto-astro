@@ -1,0 +1,163 @@
+---
+/*
+ * Hero editorial de las páginas secundarias.
+ *
+ * Dos zonas en desktop: a la izquierda eyebrow, H1 e introducción;
+ * a la derecha un bloque auxiliar (datos rápidos, resumen o frase
+ * destacada). Cuando una ruta no tiene material para la columna
+ * auxiliar, se omite el slot y el texto ocupa 8 columnas en vez de
+ * estirarse por todo el ancho.
+ *
+ * El H1 vive aquí para que cada página tenga exactamente uno.
+ */
+
+interface Props {
+	eyebrow: string;
+	title: string;
+	lede?: string;
+	/* Reparto de columnas del grid de 12 en desktop */
+	split?: "7-5" | "8-4" | "6-6";
+	tint?: boolean;
+}
+
+const {
+	eyebrow,
+	title,
+	lede,
+	split = "7-5",
+	tint = false,
+} = Astro.props;
+
+const hasAside = Astro.slots.has("aside");
+const hasBefore = Astro.slots.has("before");
+---
+
+<!--
+	Un <div>, no un <header>: dentro de <main> algunos navegadores
+	siguen exponiendo <header> como landmark "banner" y la página
+	acabaría con dos banners, el del sitio y el del hero.
+-->
+<div class:list={["page-hero", tint && "page-hero--tint"]}>
+	<div class="wrap">
+		{
+			hasBefore && (
+				<div class="page-hero__before">
+					<slot name="before" />
+				</div>
+			)
+		}
+
+		<div
+			class:list={[
+				"page-hero__grid",
+				hasAside && `page-hero__grid--${split}`,
+			]}
+		>
+			<div class="page-hero__main">
+				<p class="eyebrow">{eyebrow}</p>
+
+				<h1 class="page-hero__title">{title}</h1>
+
+				{
+					lede && (
+						<p class="page-hero__lede">{lede}</p>
+					)
+				}
+
+				<slot />
+			</div>
+
+			{
+				hasAside && (
+					<div class="page-hero__aside">
+						<slot name="aside" />
+					</div>
+				)
+			}
+		</div>
+	</div>
+</div>
+
+<style>
+	.page-hero {
+		padding-block: clamp(40px, 5vw, 80px) clamp(40px, 4.4vw, 72px);
+	}
+
+	.page-hero--tint {
+		background: var(--sp-tint);
+	}
+
+	.page-hero__before {
+		margin-block-end: clamp(22px, 2.6vw, 36px);
+	}
+
+	.page-hero__grid {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: clamp(30px, 3.6vw, 44px);
+		align-items: start;
+	}
+
+	.page-hero__title {
+		margin: 0;
+		max-inline-size: 20ch;
+		color: var(--color-black);
+		font-size: var(--sp-h1);
+		font-weight: 600;
+		line-height: 1.06;
+		letter-spacing: -0.03em;
+		text-wrap: balance;
+	}
+
+	.page-hero__lede {
+		margin: clamp(16px, 1.6vw, 22px) 0 0;
+		max-inline-size: 56ch;
+		color: var(--ink-70);
+		font-size: var(--sp-lede);
+		line-height: 1.58;
+	}
+
+	.page-hero__main :global(.actions) {
+		margin-block-start: clamp(22px, 2.2vw, 30px);
+	}
+
+	.page-hero__main :global(.note) {
+		margin-block-start: 14px;
+	}
+
+	@media (min-width: 901px) {
+		.page-hero__grid {
+			grid-template-columns: repeat(12, minmax(0, 1fr));
+			gap: clamp(48px, 4.5vw, 72px);
+		}
+
+		/* Sin bloque auxiliar el texto no se estira de borde a borde */
+		.page-hero__main {
+			grid-column: span 8;
+		}
+
+		.page-hero__grid--7-5 .page-hero__main {
+			grid-column: span 7;
+		}
+
+		.page-hero__grid--7-5 .page-hero__aside {
+			grid-column: span 5;
+		}
+
+		.page-hero__grid--8-4 .page-hero__main {
+			grid-column: span 8;
+		}
+
+		.page-hero__grid--8-4 .page-hero__aside {
+			grid-column: span 4;
+		}
+
+		.page-hero__grid--6-6 .page-hero__main {
+			grid-column: span 6;
+		}
+
+		.page-hero__grid--6-6 .page-hero__aside {
+			grid-column: span 6;
+		}
+	}
+</style>

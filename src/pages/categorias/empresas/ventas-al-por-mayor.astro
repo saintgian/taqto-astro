@@ -1,7 +1,23 @@
 ---
 import PageLayout from "../../../layouts/PageLayout.astro";
+import PageHero from "../../../components/PageHero.astro";
+import InfoCard from "../../../components/InfoCard.astro";
+import ProcessSteps from "../../../components/ProcessSteps.astro";
 import Breadcrumbs from "../../../components/Breadcrumbs.astro";
 import { WHATSAPP_NUMBER } from "../../../lib/constants";
+import {
+	Boxes,
+	CreditCard,
+	Truck,
+	PackageCheck,
+	UtensilsCrossed,
+	Store,
+	Sofa,
+	Building2,
+	PenLine,
+	MessageCircle,
+	TreePine,
+} from "@lucide/astro";
 
 const base = import.meta.env.BASE_URL;
 
@@ -14,16 +30,109 @@ const whatsappMessage = encodeURIComponent(
 );
 
 const whatsappHref = `https://wa.me/${WHATSAPP_NUMBER}?text=${whatsappMessage}`;
+
+/* Condiciones comerciales reales, presentadas como datos rápidos */
+const condiciones = [
+	{
+		icon: Boxes,
+		label: "Pedido mínimo",
+		value: "12 unidades",
+		hint: "Aplica a todos los pedidos al por mayor.",
+	},
+	{
+		icon: CreditCard,
+		label: "Forma de pago",
+		value: "Al contado",
+		hint: "Sin crédito.",
+	},
+	{
+		icon: Truck,
+		label: "Cobertura",
+		value: "Todo el Perú",
+		hint: "Con tarifa plana en Lima.",
+	},
+	{
+		icon: PackageCheck,
+		label: "Embalaje",
+		value: "Según el producto",
+		hint: "Adecuado al tipo de pieza.",
+	},
+];
+
+const negocios = [
+	{
+		icon: UtensilsCrossed,
+		title: "Restaurantes y parrillas",
+		text: "Negocios que equipan su servicio de mesa.",
+	},
+	{
+		icon: Store,
+		title: "Tiendas y showrooms",
+		text: "Espacios que revenden piezas de madera y cuero.",
+	},
+	{
+		icon: Sofa,
+		title: "Decoración y oficina",
+		text: "Negocios que buscan piezas para su catálogo.",
+	},
+	{
+		icon: Building2,
+		title: "Empresas con uso interno",
+		text: "Volumen de una misma pieza para distintos usos internos.",
+	},
+];
+
+const beneficios = [
+	{
+		icon: Truck,
+		title: "Cobertura nacional",
+		text: "Enviamos a todo el Perú, con tarifa plana en Lima y embalaje adecuado según el producto.",
+	},
+	{
+		icon: PenLine,
+		title: "Personalización disponible",
+		text: "Grabado láser de logo, imagen, frase o nombre, incluido y sujeto a viabilidad técnica y condiciones vigentes.",
+	},
+	{
+		icon: MessageCircle,
+		title: "Atención directa",
+		text: "Coordinamos tu pedido por WhatsApp, con seguimiento cercano desde la cotización hasta la entrega.",
+	},
+	{
+		icon: TreePine,
+		title: "Materialidad consistente",
+		text: "Madera y cuero con veta, tono y textura que varían de forma natural entre unidades, tal como se muestra en nuestras fotos referenciales.",
+	},
+];
+
+const proceso = [
+	{
+		title: "Cuéntanos tu pedido",
+		text: "Escríbenos por WhatsApp con la pieza, la cantidad (mínimo 12 unidades) y si necesitas personalización.",
+	},
+	{
+		title: "Confirmamos condiciones",
+		text: "Te confirmamos disponibilidad, tiempos y el costo de envío según tu ciudad o región.",
+	},
+	{
+		title: "Pago y despacho",
+		text: "El pedido se confirma con pago al contado y se despacha a nivel nacional una vez producido.",
+	},
+];
 ---
 
 <PageLayout
 	title="Ventas al por mayor | TAQTO"
 	description="Pedidos al por mayor de piezas TAQTO en madera y cuero, con pedido mínimo de 12 unidades, pago al contado y cobertura nacional."
-	eyebrow="Empresas"
-	heading="Ventas al por mayor"
 >
-	<div class="space-y-14">
+	<PageHero
+		eyebrow="Empresas"
+		title="Ventas al por mayor"
+		lede="Atendemos pedidos al por mayor de piezas TAQTO en madera y cuero, para negocios que buscan reponer stock, equipar un espacio o revender nuestras colecciones."
+		split="7-5"
+	>
 		<Breadcrumbs
+			slot="before"
 			items={[
 				{ label: "Inicio", href: base },
 				{ label: "Categorías", href: `${base}categorias/` },
@@ -32,168 +141,164 @@ const whatsappHref = `https://wa.me/${WHATSAPP_NUMBER}?text=${whatsappMessage}`;
 			]}
 		/>
 
-		<!-- Introducción -->
-		<section class="space-y-4 text-base leading-relaxed text-black/70">
-			<p>
-				Atendemos pedidos al por mayor de piezas TAQTO en madera y
-				cuero, para negocios que buscan reponer stock, equipar un
-				espacio o revender nuestras colecciones.
-			</p>
-			<p>
-				El pedido mínimo al por mayor es de 12 unidades, con pago al
-				contado y sin crédito.
-			</p>
-		</section>
+		<div class="actions">
+			<a
+				href={whatsappHref}
+				target="_blank"
+				rel="noopener noreferrer"
+				class="btn btn--primary"
+			>
+				Cotizar por WhatsApp
+			</a>
 
-		<!-- Tipos de negocios atendidos -->
-		<section class="space-y-4 text-base leading-relaxed text-black/70">
-			<h2 class="text-2xl font-semibold text-black">
-				Tipos de negocios atendidos
-			</h2>
-			<ul class="list-disc space-y-2 pl-5">
-				<li>Restaurantes y parrillas que equipan su servicio de mesa.</li>
-				<li>Tiendas y showrooms que revenden piezas de madera y cuero.</li>
-				<li>
-					Negocios de decoración u oficina que buscan piezas para
-					su catálogo.
-				</li>
-				<li>
-					Empresas que necesitan volumen de una misma pieza para
-					distintos usos internos.
-				</li>
+			<a href={catalogHref} class="sp-btn sp-btn--ghost">
+				Ver piezas TAQTO
+			</a>
+		</div>
+
+		<div slot="aside">
+			<p class="facts-caption">Condiciones del pedido</p>
+
+			<ul class="facts">
+				{
+					condiciones.map((item) => {
+						const Icon = item.icon;
+
+						return (
+							<li>
+								<Icon
+									class="facts__icon"
+									aria-hidden="true"
+									size={20}
+									stroke-width={1.75}
+								/>
+
+								<div>
+									<p class="facts__label">{item.label}</p>
+									<p class="facts__value">{item.value}</p>
+									<p class="facts__hint">{item.hint}</p>
+								</div>
+							</li>
+						);
+					})
+				}
 			</ul>
-		</section>
+		</div>
+	</PageHero>
 
-		<!-- Beneficios de pedidos al por mayor -->
-		<section class="space-y-4 text-base leading-relaxed text-black/70">
-			<h2 class="text-2xl font-semibold text-black">
-				Beneficios de comprar al por mayor
-			</h2>
-
-			<dl class="grid gap-6 sm:grid-cols-2">
-				<div>
-					<dt class="font-semibold text-black">
-						Cobertura nacional
-					</dt>
-					<dd>
-						Enviamos a todo el Perú, con tarifa plana en Lima y
-						embalaje adecuado según el producto.
-					</dd>
-				</div>
-				<div>
-					<dt class="font-semibold text-black">
-						Personalización disponible
-					</dt>
-					<dd>
-						Grabado láser de logo, imagen, frase o nombre,
-						incluido y sujeto a viabilidad técnica y condiciones
-						vigentes.
-					</dd>
-				</div>
-				<div>
-					<dt class="font-semibold text-black">
-						Atención directa
-					</dt>
-					<dd>
-						Coordinamos tu pedido por WhatsApp, con seguimiento
-						cercano desde la cotización hasta la entrega.
-					</dd>
-				</div>
-				<div>
-					<dt class="font-semibold text-black">
-						Materialidad consistente
-					</dt>
-					<dd>
-						Madera y cuero con veta, tono y textura que varían de
-						forma natural entre unidades, tal como se muestra en
-						nuestras fotos referenciales.
-					</dd>
-				</div>
-			</dl>
-		</section>
-
-		<!-- Proceso de cotización -->
-		<section class="space-y-4 text-base leading-relaxed text-black/70">
-			<h2 class="text-2xl font-semibold text-black">
-				Proceso de cotización
-			</h2>
-
-			<ol class="grid gap-6 sm:grid-cols-3">
-				<li>
-					<p class="text-3xl font-semibold text-black">1</p>
-					<p class="font-semibold text-black">Cuéntanos tu pedido</p>
-					<p>
-						Escríbenos por WhatsApp con la pieza, la cantidad
-						(mínimo 12 unidades) y si necesitas personalización.
-					</p>
-				</li>
-				<li>
-					<p class="text-3xl font-semibold text-black">2</p>
-					<p class="font-semibold text-black">Confirmamos condiciones</p>
-					<p>
-						Te confirmamos disponibilidad, tiempos y el costo de
-						envío según tu ciudad o región.
-					</p>
-				</li>
-				<li>
-					<p class="text-3xl font-semibold text-black">3</p>
-					<p class="font-semibold text-black">Pago y despacho</p>
-					<p>
-						El pedido se confirma con pago al contado y se
-						despacha a nivel nacional una vez producido.
-					</p>
-				</li>
-			</ol>
-		</section>
-
-		<!-- Condiciones comerciales -->
-		<section class="space-y-4 text-base leading-relaxed text-black/70">
-			<h2 class="text-2xl font-semibold text-black">
-				Condiciones comerciales
-			</h2>
-			<ul class="list-disc space-y-2 pl-5">
-				<li>Pedido mínimo de 12 unidades.</li>
-				<li>Pago al contado, sin crédito.</li>
-				<li>Cobertura nacional, con tarifa plana en Lima.</li>
-				<li>Embalaje según el tipo de producto.</li>
-			</ul>
-			<p>
-				¿Buscas además un regalo con el logo de tu empresa? Revisa
-				también nuestros
-				<a href={regalosHref} class="font-semibold text-black underline">
-					regalos corporativos
-				</a>.
-			</p>
-		</section>
-
-		<!-- CTA final -->
-		<section class="space-y-4 rounded-2xl bg-black/5 p-8 text-base leading-relaxed text-black/70">
-			<p class="text-xs font-semibold uppercase tracking-widest text-orange">
-				Cotiza tu pedido al por mayor
-			</p>
-			<h2 class="text-2xl font-semibold text-black">
-				Conversemos sobre tu volumen
-			</h2>
-			<p>
-				Escríbenos por WhatsApp con la pieza y la cantidad que
-				necesitas (mínimo 12 unidades) y te confirmamos condiciones.
-			</p>
-			<div class="flex flex-wrap gap-3 pt-2">
-				<a
-					href={whatsappHref}
-					target="_blank"
-					rel="noopener noreferrer"
-					class="inline-flex items-center justify-center rounded-lg bg-orange px-5 py-3 text-sm font-semibold text-white"
-				>
-					Cotizar por WhatsApp
-				</a>
-				<a
-					href={catalogHref}
-					class="inline-flex items-center justify-center rounded-lg border border-black/15 px-5 py-3 text-sm font-semibold text-black"
-				>
-					Ver piezas TAQTO
-				</a>
+	<!-- Tipos de negocios: cuatro tarjetas de 3 columnas -->
+	<section class="sect sect--tint">
+		<div class="wrap">
+			<div class="sect__head">
+				<h2>Tipos de negocios atendidos</h2>
+				<p class="lede measure-lede">
+					Trabajamos con negocios que necesitan volumen sin
+					renunciar al acabado de cada pieza.
+				</p>
 			</div>
-		</section>
-	</div>
+
+			<ul class="cards" style="--cols:4">
+				{
+					negocios.map((item) => (
+						<li>
+							<InfoCard
+								icon={item.icon}
+								title={item.title}
+								compactTitle
+							>
+								<p>{item.text}</p>
+							</InfoCard>
+						</li>
+					))
+				}
+			</ul>
+		</div>
+	</section>
+
+	<!-- Beneficios: introducción de 4 columnas + detalle de 8 -->
+	<section class="sect">
+		<div class="wrap">
+			<div class="g12">
+				<div class="c4 flow" style="--flow:16px">
+					<h2>Beneficios de comprar al por mayor</h2>
+
+					<p class="lede measure-tight">
+						Las mismas piezas del catálogo, con las condiciones
+						que necesita un pedido de volumen.
+					</p>
+				</div>
+
+				<ul class="cards c8" style="--cols:2">
+					{
+						beneficios.map((item) => (
+							<li>
+								<InfoCard
+									icon={item.icon}
+									title={item.title}
+									variant="plain"
+									compactTitle
+								>
+									<p>{item.text}</p>
+								</InfoCard>
+							</li>
+						))
+					}
+				</ul>
+			</div>
+		</div>
+	</section>
+
+	<!-- Proceso de cotización -->
+	<section class="sect">
+		<div class="wrap">
+			<div class="sect__head">
+				<h2>Proceso de cotización</h2>
+				<p class="lede measure-lede">
+					Tres pasos desde tu consulta hasta el despacho.
+				</p>
+			</div>
+
+			<ProcessSteps steps={proceso} cols={3} />
+		</div>
+	</section>
+
+	<!-- CTA final -->
+	<section class="sect sect--last">
+		<div class="wrap">
+			<div class="page-cta page-cta--split">
+				<div class="page-cta__text">
+					<p class="eyebrow">Cotiza tu pedido al por mayor</p>
+
+					<h2>Conversemos sobre tu volumen</h2>
+
+					<p class="measure">
+						Escríbenos por WhatsApp con la pieza y la cantidad
+						que necesitas (mínimo 12 unidades) y te confirmamos
+						condiciones.
+					</p>
+
+					<p class="note measure">
+						¿Buscas además un regalo con el logo de tu empresa?
+						Revisa también nuestros{" "}
+						<a href={regalosHref}>regalos corporativos</a>.
+					</p>
+				</div>
+
+				<div class="actions">
+					<a
+						href={whatsappHref}
+						target="_blank"
+						rel="noopener noreferrer"
+						class="btn btn--primary"
+					>
+						Cotizar por WhatsApp
+					</a>
+
+					<a href={catalogHref} class="sp-btn sp-btn--ghost">
+						Ver piezas TAQTO
+					</a>
+				</div>
+			</div>
+		</div>
+	</section>
 </PageLayout>

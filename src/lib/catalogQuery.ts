@@ -2,12 +2,19 @@
 // catalogo completo de /tienda/: fecha de creacion (ordenar por mas
 // recientes), destacado (orden "Destacados") y si incluye grabado
 // (unico campo real de personalizacion en el schema de producto).
+//
+// El orden "featured desc, _createdAt desc" replica exactamente el
+// comparador por defecto ("Destacados") del filtro en cliente
+// (tienda/index.astro). Si difirieran, el grid se reordenaria de
+// forma visible justo despues de que el script de filtros corra,
+// porque ese script siempre llama a apply() (y por lo tanto
+// sortItems()) al cargar la pagina, incluso sin filtros activos.
 export const catalogQuery = `
 	*[
 		_type == "product" &&
 		active == true &&
 		defined(slug.current)
-	] | order(_createdAt desc) {
+	] | order(featured desc, _createdAt desc) {
 		_id,
 		_createdAt,
 		title,
