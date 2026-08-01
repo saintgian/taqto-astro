@@ -13,6 +13,7 @@ import {
 	productsForSubcategoryQuery,
 	subcategoryPathsQuery,
 } from "../../../lib/subcategoryQueries";
+import { buildBreadcrumbJsonLd } from "../../../lib/seo";
 
 interface Category {
 	_id?: string;
@@ -110,11 +111,33 @@ const pageTitle =
 const pageDescription =
 	subcategory.description ||
 	`Descubre ${subcategory.title} de TAQTO, piezas de madera creadas con precisión y personalización láser gratuita.`;
+
+const subcategoryUrl = Astro.site
+	? new URL(
+			`${base}categorias/${category.slug}/${subcategory.slug}/`,
+			Astro.site,
+		).toString()
+	: undefined;
+
+const subcategoryBreadcrumbJsonLd = buildBreadcrumbJsonLd(
+	[
+		{ label: "Inicio", href: homeHref },
+		{ label: category.title || "", href: categoryHref },
+		{ label: subcategory.title || "" },
+	],
+	Astro.site,
+	subcategoryUrl,
+);
+
+const subcategoryJsonLd = subcategoryBreadcrumbJsonLd
+	? [subcategoryBreadcrumbJsonLd]
+	: [];
 ---
 
 <BaseLayout
 	title={pageTitle}
 	description={pageDescription}
+	jsonLd={subcategoryJsonLd}
 >
 	<Header />
 

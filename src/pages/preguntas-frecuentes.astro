@@ -1,6 +1,7 @@
 ---
 import PageLayout from "../layouts/PageLayout.astro";
 import PageHero from "../components/PageHero.astro";
+import { buildFaqJsonLd } from "../lib/seo";
 import {
 	Gift,
 	TreePine,
@@ -176,11 +177,15 @@ const grupos = [
 		],
 	},
 ];
+
+const faqJsonLd = buildFaqJsonLd(grupos.flatMap((grupo) => grupo.faqs));
+const faqPageJsonLd = faqJsonLd ? [faqJsonLd] : [];
 ---
 
 <PageLayout
 	title="Preguntas frecuentes sobre regalos corporativos de madera | TAQTO"
 	description="Resolvemos las dudas más comunes sobre regalos corporativos de madera: personalización, co-branding, pedidos mínimos, tiempos, envíos y cotizaciones."
+	jsonLd={faqPageJsonLd}
 >
 	<PageHero
 		eyebrow="Preguntas frecuentes"

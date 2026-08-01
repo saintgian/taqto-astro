@@ -5,6 +5,7 @@ import InfoCard from "../../../components/InfoCard.astro";
 import ProcessSteps from "../../../components/ProcessSteps.astro";
 import Breadcrumbs from "../../../components/Breadcrumbs.astro";
 import { WHATSAPP_NUMBER } from "../../../lib/constants";
+import { buildBreadcrumbJsonLd } from "../../../lib/seo";
 import {
 	ScanLine,
 	BadgeCheck,
@@ -93,11 +94,34 @@ const paraCotizar = [
 	"El logo, imagen o frase que quieres grabar.",
 	"La ciudad o región de entrega.",
 ];
+
+const corporateGiftsUrl = Astro.site
+	? new URL(
+			`${base}categorias/empresas/regalos-corporativos/`,
+			Astro.site,
+		).toString()
+	: undefined;
+
+const corporateGiftsBreadcrumbJsonLd = buildBreadcrumbJsonLd(
+	[
+		{ label: "Inicio", href: base },
+		{ label: "Categorías", href: `${base}categorias/` },
+		{ label: "Empresas", href: empresasHref },
+		{ label: "Regalos corporativos" },
+	],
+	Astro.site,
+	corporateGiftsUrl,
+);
+
+const corporateGiftsJsonLd = corporateGiftsBreadcrumbJsonLd
+	? [corporateGiftsBreadcrumbJsonLd]
+	: [];
 ---
 
 <PageLayout
 	title="Regalos corporativos con co-branding | TAQTO"
 	description="Regalos corporativos de madera y cuero con grabado láser y co-branding: el sello TAQTO permanece visible junto a la marca de tu empresa."
+	jsonLd={corporateGiftsJsonLd}
 >
 	<PageHero
 		eyebrow="Empresas"

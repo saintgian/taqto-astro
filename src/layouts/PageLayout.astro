@@ -6,12 +6,33 @@ import "../styles/global.css";
 interface Props {
 	title: string;
 	description?: string;
+	robots?: string;
+	ogType?: "website" | "product" | "article";
+	ogImage?: string;
+	ogImageAlt?: string;
+	jsonLd?: Record<string, unknown>[];
 }
 
-const { title, description } = Astro.props;
+const {
+	title,
+	description,
+	robots,
+	ogType,
+	ogImage,
+	ogImageAlt,
+	jsonLd,
+} = Astro.props;
 ---
 
-<BaseLayout title={title} description={description}>
+<BaseLayout
+	title={title}
+	description={description}
+	robots={robots}
+	ogType={ogType}
+	ogImage={ogImage}
+	ogImageAlt={ogImageAlt}
+	jsonLd={jsonLd}
+>
 	<Header />
 
 	<main class="page-main">

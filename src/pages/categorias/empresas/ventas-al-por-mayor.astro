@@ -5,6 +5,7 @@ import InfoCard from "../../../components/InfoCard.astro";
 import ProcessSteps from "../../../components/ProcessSteps.astro";
 import Breadcrumbs from "../../../components/Breadcrumbs.astro";
 import { WHATSAPP_NUMBER } from "../../../lib/constants";
+import { buildBreadcrumbJsonLd } from "../../../lib/seo";
 import {
 	Boxes,
 	CreditCard,
@@ -119,11 +120,34 @@ const proceso = [
 		text: "El pedido se confirma con pago al contado y se despacha a nivel nacional una vez producido.",
 	},
 ];
+
+const wholesaleUrl = Astro.site
+	? new URL(
+			`${base}categorias/empresas/ventas-al-por-mayor/`,
+			Astro.site,
+		).toString()
+	: undefined;
+
+const wholesaleBreadcrumbJsonLd = buildBreadcrumbJsonLd(
+	[
+		{ label: "Inicio", href: base },
+		{ label: "Categorías", href: `${base}categorias/` },
+		{ label: "Empresas", href: empresasHref },
+		{ label: "Ventas al por mayor" },
+	],
+	Astro.site,
+	wholesaleUrl,
+);
+
+const wholesaleJsonLd = wholesaleBreadcrumbJsonLd
+	? [wholesaleBreadcrumbJsonLd]
+	: [];
 ---
 
 <PageLayout
 	title="Ventas al por mayor | TAQTO"
 	description="Pedidos al por mayor de piezas TAQTO en madera y cuero, con pedido mínimo de 12 unidades, pago al contado y cobertura nacional."
+	jsonLd={wholesaleJsonLd}
 >
 	<PageHero
 		eyebrow="Empresas"

@@ -5,6 +5,7 @@ import InfoCard from "../../../components/InfoCard.astro";
 import ProcessSteps from "../../../components/ProcessSteps.astro";
 import Breadcrumbs from "../../../components/Breadcrumbs.astro";
 import { WHATSAPP_NUMBER } from "../../../lib/constants";
+import { buildBreadcrumbJsonLd } from "../../../lib/seo";
 import {
 	Gift,
 	Boxes,
@@ -77,11 +78,30 @@ const proceso = [
 		text: "Una vez aprobado el pedido, coordinamos producción, grabado y entrega a nivel nacional.",
 	},
 ];
+
+const empresasUrl = Astro.site
+	? new URL(`${base}categorias/empresas/`, Astro.site).toString()
+	: undefined;
+
+const empresasBreadcrumbJsonLd = buildBreadcrumbJsonLd(
+	[
+		{ label: "Inicio", href: base },
+		{ label: "Categorías", href: `${base}categorias/` },
+		{ label: "Empresas" },
+	],
+	Astro.site,
+	empresasUrl,
+);
+
+const empresasJsonLd = empresasBreadcrumbJsonLd
+	? [empresasBreadcrumbJsonLd]
+	: [];
 ---
 
 <PageLayout
 	title="Empresas | Regalos corporativos y venta al por mayor | TAQTO"
 	description="Soluciones TAQTO para empresas: regalos corporativos con co-branding y venta al por mayor de piezas de madera y cuero, con grabado láser incluido."
+	jsonLd={empresasJsonLd}
 >
 	<PageHero
 		eyebrow="Soluciones con identidad"

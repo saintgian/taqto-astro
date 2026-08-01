@@ -14,6 +14,7 @@ import {
 } from "../../../lib/categoryQueries";
 
 import { EMPRESAS_CATEGORY_SLUG } from "../../../lib/constants";
+import { buildBreadcrumbJsonLd } from "../../../lib/seo";
 
 interface Subcategory {
 	_id: string;
@@ -105,11 +106,30 @@ const pageTitle =
 const pageDescription =
 	category.description ||
 	`Explora la colección ${category.title} de TAQTO.`;
+
+const categoryUrl = Astro.site
+	? new URL(`${base}categorias/${category.slug}/`, Astro.site).toString()
+	: undefined;
+
+const categoryBreadcrumbJsonLd = buildBreadcrumbJsonLd(
+	[
+		{ label: "Inicio", href: homeHref },
+		{ label: "Tienda", href: storeHref },
+		{ label: category.title },
+	],
+	Astro.site,
+	categoryUrl,
+);
+
+const categoryJsonLd = categoryBreadcrumbJsonLd
+	? [categoryBreadcrumbJsonLd]
+	: [];
 ---
 
 <BaseLayout
 	title={pageTitle}
 	description={pageDescription}
+	jsonLd={categoryJsonLd}
 >
 	<Header />
 

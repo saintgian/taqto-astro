@@ -1,6 +1,7 @@
 ---
 import PageLayout from "../layouts/PageLayout.astro";
 import PageHero from "../components/PageHero.astro";
+import { buildFaqJsonLd } from "../lib/seo";
 import InfoCard from "../components/InfoCard.astro";
 import {
 	MessageCircle,
@@ -172,11 +173,15 @@ const faqs = [
 		a: "Puedes escribir al WhatsApp +51 977 600 400 indicando el producto, la fecha de entrega, una descripción del caso y fotografías claras.",
 	},
 ];
+
+const faqJsonLd = buildFaqJsonLd(faqs);
+const contactPageJsonLd = faqJsonLd ? [faqJsonLd] : [];
 ---
 
 <PageLayout
 	title="Contáctanos | WhatsApp y redes de TAQTO Perú"
 	description="Contacta a TAQTO Perú por WhatsApp, correo o redes sociales. Consulta productos, personalizaciones, envíos y pedidos empresariales desde nuestro taller en Lima."
+	jsonLd={contactPageJsonLd}
 >
 	<PageHero
 		eyebrow="Contáctanos"

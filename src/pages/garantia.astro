@@ -1,6 +1,7 @@
 ---
 import PageLayout from "../layouts/PageLayout.astro";
 import PageHero from "../components/PageHero.astro";
+import { buildFaqJsonLd } from "../lib/seo";
 import InfoCard from "../components/InfoCard.astro";
 import ProcessSteps from "../components/ProcessSteps.astro";
 import {
@@ -218,11 +219,15 @@ const faqs = [
 		a: "No. Las condiciones de esta garantía comercial no excluyen los derechos que correspondan al consumidor de acuerdo con la normativa aplicable.",
 	},
 ];
+
+const faqJsonLd = buildFaqJsonLd(faqs);
+const warrantyPageJsonLd = faqJsonLd ? [faqJsonLd] : [];
 ---
 
 <PageLayout
 	title="Garantía de productos de madera | TAQTO"
 	description="Conoce la garantía de seis meses de TAQTO, qué defectos de fabricación cubre, qué situaciones no están incluidas y cómo solicitar una evaluación."
+	jsonLd={warrantyPageJsonLd}
 >
 	<PageHero
 		eyebrow="Garantía y respaldo"

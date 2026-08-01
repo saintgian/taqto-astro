@@ -3,6 +3,7 @@ import PageLayout from "../layouts/PageLayout.astro";
 import PageHero from "../components/PageHero.astro";
 import InfoCard from "../components/InfoCard.astro";
 import ProcessSteps from "../components/ProcessSteps.astro";
+import { buildFaqJsonLd } from "../lib/seo";
 import {
 	Trees,
 	FileText,
@@ -223,11 +224,15 @@ const faqs = [
 		a: "Los cuidados dependen del producto y del acabado. Como regla general, evita el lavavajillas, el remojo prolongado, el sol directo y las fuentes intensas de calor.",
 	},
 ];
+
+const faqJsonLd = buildFaqJsonLd(faqs);
+const woodPageJsonLd = faqJsonLd ? [faqJsonLd] : [];
 ---
 
 <PageLayout
 	title="Madera peruana y origen responsable | TAQTO"
 	description="Conoce las maderas peruanas de TAQTO, su origen, trazabilidad, proveedores certificados y la historia natural que hace diferente a cada pieza."
+	jsonLd={woodPageJsonLd}
 >
 	<PageHero
 		eyebrow="Material y origen"

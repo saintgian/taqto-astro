@@ -3,6 +3,7 @@ import PageLayout from "../layouts/PageLayout.astro";
 import PageHero from "../components/PageHero.astro";
 import InfoCard from "../components/InfoCard.astro";
 import ProcessSteps from "../components/ProcessSteps.astro";
+import { buildFaqJsonLd } from "../lib/seo";
 import {
 	Droplets,
 	Wind,
@@ -252,11 +253,15 @@ const faqs = [
 		a: "Revisa la ficha correspondiente o comunícate con TAQTO indicando el nombre del producto.",
 	},
 ];
+
+const faqJsonLd = buildFaqJsonLd(faqs);
+const carePageJsonLd = faqJsonLd ? [faqJsonLd] : [];
 ---
 
 <PageLayout
 	title="Cómo cuidar productos de madera | TAQTO"
 	description="Aprende a limpiar, secar, guardar y conservar correctamente tus productos TAQTO de madera y cuero. Evita el lavavajillas, el remojo y el sol directo."
+	jsonLd={carePageJsonLd}
 >
 	<PageHero
 		eyebrow="Uso y mantenimiento"

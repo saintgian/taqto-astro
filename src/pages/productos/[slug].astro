@@ -10,6 +10,7 @@ import {
 } from "../../lib/sanity";
 
 import { productDetailQuery } from "../../lib/productDetailQuery";
+import { buildBreadcrumbJsonLd } from "../../lib/seo";
 import {
 	PenLine,
 	ArrowRight,
@@ -446,6 +447,47 @@ const uniqueProductData =
 			}
 		: null;
 
+const productUrl = Astro.site
+	? new URL(`${base}productos/${product.slug}/`, Astro.site).toString()
+	: undefined;
+
+// Precio y disponibilidad reales del catalogo (misma variante/precio que
+// se muestra por defecto en la ficha). No se agrega AggregateRating: no
+// hay reseñas reales que respaldarlo.
+const productJsonLd = productUrl
+	? {
+			"@context": "https://schema.org",
+			"@type": "Product",
+			name: product.title,
+			description: pageDescription,
+			...(mainImageUrl ? { image: [mainImageUrl] } : {}),
+			...(initialSku ? { sku: initialSku } : {}),
+			...(product.category?.title
+				? { category: product.category.title }
+				: {}),
+			offers: {
+				"@type": "Offer",
+				url: productUrl,
+				priceCurrency: "PEN",
+				price: initialVisiblePrice.toFixed(2),
+				availability:
+					initialStock > 0
+						? "https://schema.org/InStock"
+						: "https://schema.org/OutOfStock",
+			},
+		}
+	: null;
+
+const breadcrumbJsonLd = buildBreadcrumbJsonLd(
+	breadcrumbItems,
+	Astro.site,
+	productUrl,
+);
+
+const productPageJsonLd = [productJsonLd, breadcrumbJsonLd].filter(
+	(schema): schema is Record<string, unknown> => Boolean(schema),
+);
+
 const safeVariantJson = JSON.stringify({
 	variants: variantData,
 	saleActive: currentSaleIsActive,
@@ -463,6 +505,10 @@ const safeVariantJson = JSON.stringify({
 <BaseLayout
 	title={pageTitle}
 	description={pageDescription}
+	ogType="product"
+	ogImage={mainImageUrl || undefined}
+	ogImageAlt={mainImageUrl ? mainImageAlt : undefined}
+	jsonLd={productPageJsonLd}
 >
 	<Header />
 

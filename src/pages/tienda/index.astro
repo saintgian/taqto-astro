@@ -7,6 +7,7 @@ import ProductCard from "../../components/ProductCard.astro";
 import { sanityClient } from "../../lib/sanity";
 import { catalogQuery } from "../../lib/catalogQuery";
 import { getProductPriceRange, formatPEN } from "../../lib/productPricing";
+import { buildBreadcrumbJsonLd } from "../../lib/seo";
 import { SlidersHorizontal, X } from "@lucide/astro";
 
 interface WoodRef {
@@ -201,12 +202,31 @@ const filterData = {
 	priceBuckets,
 };
 
-const pageTitle = "Tienda | TAQTO";
+const pageTitle = "Productos de madera para cocina, parrilla y hogar | TAQTO";
 const pageDescription =
-	"Explora todo el catálogo TAQTO: piezas de madera y cuero para parrilla, cocina, oficina y regalo, con grabado láser personalizado gratuito.";
+	"Explora tablas y productos de madera para cocinar, servir, compartir, organizar y regalar. Revisa medidas, maderas disponibles y opciones de personalización.";
+
+const storeUrl = Astro.site
+	? new URL(`${base}tienda/`, Astro.site).toString()
+	: undefined;
+
+const storeBreadcrumbJsonLd = buildBreadcrumbJsonLd(
+	[
+		{ label: "Inicio", href: base },
+		{ label: "Tienda" },
+	],
+	Astro.site,
+	storeUrl,
+);
+
+const storeJsonLd = storeBreadcrumbJsonLd ? [storeBreadcrumbJsonLd] : [];
 ---
 
-<BaseLayout title={pageTitle} description={pageDescription}>
+<BaseLayout
+	title={pageTitle}
+	description={pageDescription}
+	jsonLd={storeJsonLd}
+>
 	<Header />
 
 	<main class="store-page">

@@ -5,6 +5,14 @@ import WhatsAppFloatButton from "../components/WhatsAppFloatButton.astro";
 interface Props {
 	title: string;
 	description?: string;
+	/** "index, follow" por defecto. Usar "noindex, nofollow" en rutas transaccionales o privadas. */
+	robots?: string;
+	ogType?: "website" | "product" | "article";
+	/** Ruta relativa (con base) o URL absoluta ya resuelta (p.ej. imagen de Sanity). */
+	ogImage?: string;
+	ogImageAlt?: string;
+	/** Objetos JSON-LD ya construidos por la pagina (Organization, Product, BreadcrumbList, FAQPage...). */
+	jsonLd?: Record<string, unknown>[];
 }
 
 /*
@@ -23,7 +31,42 @@ const base = rawBase.endsWith("/")
 const {
 	title,
 	description = "Piezas peruanas de madera y cuero con grabado láser personalizado gratuito.",
+	robots = "index, follow",
+	ogType = "website",
+	ogImage,
+	ogImageAlt,
+	jsonLd = [],
 } = Astro.props;
+
+/*
+ * Patron de titulo: "Inicio" trae su propio titulo de marca (ya incluye
+ * "TAQTO"); el resto de paginas ya arma "[Titulo] | TAQTO" en su propia
+ * pagina. Esta guarda evita un "| TAQTO | TAQTO" si alguna pagina llega
+ * sin el sufijo, sin duplicar el sufijo cuando ya esta presente.
+ */
+const resolvedTitle = title.includes("TAQTO")
+	? title
+	: `${title} | TAQTO`;
+
+/*
+ * Astro.site ya esta configurado en astro.config.mjs (GitHub Pages). No
+ * se inventa ni se hardcodea un dominio nuevo aqui: si `site` no esta
+ * disponible en el contexto de build, canonical/og:url simplemente no
+ * se emiten.
+ */
+const canonicalURL = Astro.site
+	? new URL(Astro.url.pathname, Astro.site).toString()
+	: undefined;
+
+const resolvedOgImage = ogImage
+	? /^https?:\/\//i.test(ogImage)
+		? ogImage
+		: Astro.site
+			? new URL(ogImage, Astro.site).toString()
+			: undefined
+	: Astro.site
+		? new URL(`${base}images/hero/hero-parrilla.webp`, Astro.site).toString()
+		: undefined;
 
 /*
  * Este bloque se inserta sin que Vite procese las rutas.
@@ -73,7 +116,7 @@ const fontFaceCss = `
 ---
 
 <!doctype html>
-<html lang="es">
+<html lang="es-PE">
 	<head>
 		<meta charset="UTF-8" />
 
@@ -100,11 +143,47 @@ const fontFaceCss = `
 		/>
 
 		<meta
+			name="robots"
+			content={robots}
+		/>
+
+		{canonicalURL && <link rel="canonical" href={canonicalURL} />}
+
+		<meta
 			name="theme-color"
 			content="#141414"
 		/>
 
-		<title>{title}</title>
+		<title>{resolvedTitle}</title>
+
+		<!-- Open Graph -->
+		<meta property="og:site_name" content="TAQTO" />
+		<meta property="og:type" content={ogType} />
+		<meta property="og:title" content={resolvedTitle} />
+		<meta property="og:description" content={description} />
+		<meta property="og:locale" content="es_PE" />
+		{canonicalURL && <meta property="og:url" content={canonicalURL} />}
+		{resolvedOgImage && <meta property="og:image" content={resolvedOgImage} />}
+		{
+			resolvedOgImage && ogImageAlt && (
+				<meta property="og:image:alt" content={ogImageAlt} />
+			)
+		}
+
+		<!-- Twitter Card -->
+		<meta
+			name="twitter:card"
+			content={resolvedOgImage ? "summary_large_image" : "summary"}
+		/>
+		<meta name="twitter:title" content={resolvedTitle} />
+		<meta name="twitter:description" content={description} />
+		{resolvedOgImage && <meta name="twitter:image" content={resolvedOgImage} />}
+
+		{
+			jsonLd.map((schema) => (
+				<script type="application/ld+json" set:html={JSON.stringify(schema)} />
+			))
+		}
 	</head>
 
 	<body id="top">

@@ -190,6 +190,54 @@ const businessImage = businessImageSrc
 		}
 	: undefined;
 
+const siteUrl = Astro.site
+	? new URL(base, Astro.site).toString()
+	: undefined;
+
+// Datos reales publicados en /contactanos/: WhatsApp, correo, redes y la
+// ubicacion general del taller (sin direccion exacta ni horario de
+// atencion presencial, porque TAQTO no los publica).
+const organizationJsonLd = siteUrl
+	? {
+			"@context": "https://schema.org",
+			"@type": "Organization",
+			name: "TAQTO",
+			url: siteUrl,
+			logo: new URL(
+				`${base}brand/imagotipo/imagotipo-colorprincipal01.svg`,
+				Astro.site,
+			).toString(),
+			email: "ventas@taqto.com.pe",
+			telephone: "+51977600400",
+			sameAs: [
+				"https://www.instagram.com/taqto.pe/",
+				"https://www.facebook.com/taqto.pe",
+				"https://www.tiktok.com/@taqto.pe",
+			],
+			address: {
+				"@type": "PostalAddress",
+				addressLocality: "San Juan de Miraflores",
+				addressRegion: "Lima",
+				addressCountry: "PE",
+			},
+		}
+	: null;
+
+const websiteJsonLd = siteUrl
+	? {
+			"@context": "https://schema.org",
+			"@type": "WebSite",
+			name: "TAQTO",
+			description:
+				"Tienda de productos de madera para cocina, parrilla, mesa y hogar, con personalización mediante grabado láser.",
+			url: siteUrl,
+		}
+	: null;
+
+const homeJsonLd = [organizationJsonLd, websiteJsonLd].filter(
+	(schema): schema is Record<string, unknown> => Boolean(schema),
+);
+
 const customerProofProjects = (
 	["proyecto-01.webp", "proyecto-02.webp", "proyecto-03.webp"] as const
 )
@@ -212,8 +260,9 @@ const customerProofProjects = (
 ---
 
 <BaseLayout
-	title="TAQTO | Diseño con alma de madera"
-	description="Neo-Artesanía Peruana de Precisión. Piezas de madera y cuero con grabado láser personalizado gratuito."
+	title="TAQTO | Productos de madera para cocina, parrilla y hogar"
+	description="Tablas y productos de madera para cocina, parrilla, mesa y hogar. Diseños funcionales, opciones personalizadas y regalos para personas y empresas."
+	jsonLd={homeJsonLd}
 >
 	<Header />
 

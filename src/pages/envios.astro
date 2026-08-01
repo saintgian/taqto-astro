@@ -2,6 +2,7 @@
 import PageLayout from "../layouts/PageLayout.astro";
 import PageHero from "../components/PageHero.astro";
 import ProcessSteps from "../components/ProcessSteps.astro";
+import { buildFaqJsonLd } from "../lib/seo";
 import {
 	MapPin,
 	Truck,
@@ -137,11 +138,15 @@ const faqs = [
 		a: "Debes comunicarte con TAQTO y enviar la información y fotografías del caso. Evaluaremos si la incidencia es atribuible al producto o a la entrega y coordinaremos la solución correspondiente cuando aplique.",
 	},
 ];
+
+const faqJsonLd = buildFaqJsonLd(faqs);
+const shippingPageJsonLd = faqJsonLd ? [faqJsonLd] : [];
 ---
 
 <PageLayout
 	title="Envíos en Lima y provincias | TAQTO"
 	description="Conoce los tiempos de entrega de TAQTO en Lima Metropolitana y provincias, costos de envío, pedidos personalizados y coordinación por WhatsApp."
+	jsonLd={shippingPageJsonLd}
 >
 	<PageHero
 		eyebrow="Envíos y entregas"

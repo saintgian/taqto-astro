@@ -8,6 +8,7 @@ import CategoryCard from "../../components/CategoryCard.astro";
 
 import { sanityClient } from "../../lib/sanity";
 import { categoryPathsQuery } from "../../lib/categoryQueries";
+import { buildBreadcrumbJsonLd } from "../../lib/seo";
 
 interface Category {
 	_id: string;
@@ -50,11 +51,29 @@ const productCategories = (
 	...category,
 	imageSrc: getCategoryImageSrc(category.slug),
 }));
+
+const categoriesUrl = Astro.site
+	? new URL(`${base}categorias/`, Astro.site).toString()
+	: undefined;
+
+const categoriesBreadcrumbJsonLd = buildBreadcrumbJsonLd(
+	[
+		{ label: "Inicio", href: base },
+		{ label: "Categorías" },
+	],
+	Astro.site,
+	categoriesUrl,
+);
+
+const categoriesJsonLd = categoriesBreadcrumbJsonLd
+	? [categoriesBreadcrumbJsonLd]
+	: [];
 ---
 
 <BaseLayout
 	title="Categorías | TAQTO"
 	description="Explora las colecciones de parrilla, cocina, oficina, regalos y soluciones para empresas de TAQTO."
+	jsonLd={categoriesJsonLd}
 >
 	<Header />
 
