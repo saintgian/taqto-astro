@@ -1,8 +1,15 @@
 // Numero de WhatsApp de TAQTO usado en header, footer, boton flotante y checkout.
 export const WHATSAPP_NUMBER = "51977600400";
 
-export const YAPE_NAME = "Gianmarco Santillan";
+// Fuente unica de los datos de Yape confirmados por el propietario.
+// YAPE_NUMBER son solo digitos; YAPE_NUMBER_DISPLAY se deriva de ahi
+// (no se repite el numero a mano) solo para mostrarlo con espacios.
+export const YAPE_NAME = "Gianmarco Santillán";
 export const YAPE_NUMBER = "977600400";
+export const YAPE_NUMBER_DISPLAY = YAPE_NUMBER.replace(
+	/(\d{3})(\d{3})(\d{3})/,
+	"$1 $2 $3",
+);
 
 // Tarifa plana de envio: S/10 tanto para delivery en Lima como para entrega
 // en agencia en provincia.

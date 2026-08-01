@@ -259,6 +259,24 @@ const slides = [
 			restartProgress();
 		};
 
+		const goToSlide = (newIndex: number) => {
+			slider.setAttribute("data-interacted", "true");
+
+			const targetIndex = (newIndex + slides.length) % slides.length;
+			const targetImage = slides[targetIndex].querySelector<HTMLImageElement>(
+				".hero-slide__image",
+			);
+
+			if (targetImage && typeof targetImage.decode === "function") {
+				targetImage
+					.decode()
+					.catch(() => {})
+					.finally(() => showSlide(newIndex));
+			} else {
+				showSlide(newIndex);
+			}
+		};
+
 		const stopAutoplay = () => {
 			if (autoplayTimer !== undefined) {
 				window.clearInterval(autoplayTimer);
@@ -271,7 +289,7 @@ const slides = [
 			stopAutoplay();
 
 			autoplayTimer = window.setInterval(() => {
-				showSlide(activeIndex + 1);
+				goToSlide(activeIndex + 1);
 			}, autoplayDelay);
 		};
 
@@ -281,18 +299,18 @@ const slides = [
 		};
 
 		previousButton?.addEventListener("click", () => {
-			showSlide(activeIndex - 1);
+			goToSlide(activeIndex - 1);
 			restartAutoplay();
 		});
 
 		nextButton?.addEventListener("click", () => {
-			showSlide(activeIndex + 1);
+			goToSlide(activeIndex + 1);
 			restartAutoplay();
 		});
 
 		dots.forEach((dot, index) => {
 			dot.addEventListener("click", () => {
-				showSlide(index);
+				goToSlide(index);
 				restartAutoplay();
 			});
 		});
@@ -312,12 +330,12 @@ const slides = [
 
 		slider.addEventListener("keydown", (event) => {
 			if (event.key === "ArrowLeft") {
-				showSlide(activeIndex - 1);
+				goToSlide(activeIndex - 1);
 				restartAutoplay();
 			}
 
 			if (event.key === "ArrowRight") {
-				showSlide(activeIndex + 1);
+				goToSlide(activeIndex + 1);
 				restartAutoplay();
 			}
 		});
@@ -356,18 +374,25 @@ const slides = [
 		z-index: 0;
 		display: grid;
 		opacity: 0;
-		visibility: hidden;
 		pointer-events: none;
-		transition:
-			opacity 900ms cubic-bezier(0.22, 1, 0.36, 1),
-			visibility 900ms;
+		transition: opacity 280ms var(--ease-out);
 	}
 
 	.hero-slide.is-active {
 		z-index: 1;
 		opacity: 1;
-		visibility: visible;
 		pointer-events: auto;
+		transition: opacity 750ms var(--ease-out);
+	}
+
+	/*
+	 * Tras la primera interaccion (flechas, dots, autoplay, teclado) el
+	 * cambio de slide usa un crossfade mas corto que la entrada inicial:
+	 * la foto de apertura merece un fundido mas largo (750ms, entrada de
+	 * firma), el resto de transiciones deben sentirse agiles (460ms).
+	 */
+	.hero-slider[data-interacted] .hero-slide.is-active {
+		transition: opacity 460ms var(--ease-out);
 	}
 
 	.hero-slide__image {
@@ -378,18 +403,34 @@ const slides = [
 		max-width: none;
 		object-fit: cover;
 		object-position: var(--slide-position);
-		transform: scale(1.035);
-		transition: transform 7s linear;
+		transition:
+			opacity 800ms var(--ease-out),
+			transform 800ms var(--ease-out);
 	}
 
-	.hero-slide.is-active .hero-slide__image {
-		transform: scale(1);
+	/*
+	 * Entrada de firma: solo la foto del primer slide llega con un leve
+	 * escalado (1.035 -> 1) y opacidad (0.82 -> 1). Nunca se repite en
+	 * cambios de slide (ver nulificador `[data-interacted]` mas abajo) ni
+	 * se convierte en Ken Burns continuo: al terminar, el transform queda
+	 * fijo en su valor final.
+	 */
+	@starting-style {
+		.hero-slide.is-active .hero-slide__image {
+			opacity: 0.82;
+			transform: scale(1.035);
+		}
+	}
+
+	.hero-slider[data-interacted] .hero-slide__image {
+		transition: none;
 	}
 
 	.hero-slide__overlay {
 		position: absolute;
 		inset: 0;
 		z-index: 1;
+		transition: opacity 550ms var(--ease-out);
 		background:
 			linear-gradient(
 				90deg,
@@ -479,13 +520,34 @@ const slides = [
 		opacity: 0.86;
 	}
 
-	/* Solo posicion: color, geometria y estados vienen de `.btn--primary`. */
-	.hero-slide__button svg {
-		transition: transform 200ms ease;
+	/*
+	 * Solo posicion: color, geometria y estados vienen de `.btn--primary`.
+	 * El feedback de hover/presion usa las propiedades `translate`/`scale`
+	 * (independientes de `transform`) para no interferir con la entrada
+	 * del boton, que anima `transform` por separado.
+	 */
+	.hero-slide__button {
+		transition:
+			translate 200ms var(--ease-out),
+			scale 180ms var(--ease-out);
 	}
 
-	.hero-slide__button:hover svg {
-		transform: translateX(4px);
+	.hero-slide__button svg {
+		transition: transform 200ms var(--ease-out);
+	}
+
+	.hero-slide__button:active {
+		scale: 0.98;
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.hero-slide__button:hover {
+			translate: 0 -2px;
+		}
+
+		.hero-slide__button:hover svg {
+			transform: translateX(4px);
+		}
 	}
 
 	.hero-slide__trust {
@@ -634,10 +696,23 @@ const slides = [
 	.hero-slide__button,
 	.hero-slide__trust {
 		opacity: 0;
+		transform: translateY(18px);
+		transition:
+			opacity 660ms var(--ease-out),
+			transform 660ms var(--ease-out);
+	}
+
+	/*
+	 * El titulo lleva el movimiento mas claro de la secuencia de firma:
+	 * mayor desplazamiento (22px) y duracion (700ms) que el resto, que
+	 * solo acompaña (18px / 660ms).
+	 */
+	.hero-slide h1,
+	.hero-slide h2 {
 		transform: translateY(22px);
 		transition:
-			opacity 600ms ease,
-			transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+			opacity 700ms var(--ease-out),
+			transform 700ms var(--ease-out);
 	}
 
 	.hero-slide.is-active .hero-slide__eyebrow,
@@ -652,19 +727,80 @@ const slides = [
 
 	.hero-slide.is-active h1,
 	.hero-slide.is-active h2 {
-		transition-delay: 100ms;
+		transition-delay: 85ms;
 	}
 
 	.hero-slide.is-active .hero-slide__description {
-		transition-delay: 180ms;
+		transition-delay: 170ms;
 	}
 
 	.hero-slide.is-active .hero-slide__button {
-		transition-delay: 240ms;
+		transition-delay: 255ms;
 	}
 
 	.hero-slide.is-active .hero-slide__trust {
-		transition-delay: 300ms;
+		transition-delay: 340ms;
+	}
+
+	/*
+	 * Tras la primera interaccion, el contenido del slide entrante usa un
+	 * recorrido y un escalonado mas cortos que la entrada inicial: la
+	 * secuencia larga (16px / 520ms / hasta 280ms de retardo) solo debe
+	 * sentirse una vez, en la primera carga.
+	 */
+	.hero-slider[data-interacted] .hero-slide__eyebrow,
+	.hero-slider[data-interacted] .hero-slide h1,
+	.hero-slider[data-interacted] .hero-slide h2,
+	.hero-slider[data-interacted] .hero-slide__description,
+	.hero-slider[data-interacted] .hero-slide__button,
+	.hero-slider[data-interacted] .hero-slide__trust {
+		transform: translateY(10px);
+		transition:
+			opacity 450ms var(--ease-out),
+			transform 450ms var(--ease-out);
+	}
+
+	.hero-slider[data-interacted] .hero-slide.is-active h1,
+	.hero-slider[data-interacted] .hero-slide.is-active h2 {
+		transition-delay: 55ms;
+	}
+
+	.hero-slider[data-interacted] .hero-slide.is-active .hero-slide__description {
+		transition-delay: 110ms;
+	}
+
+	.hero-slider[data-interacted] .hero-slide.is-active .hero-slide__button {
+		transition-delay: 165ms;
+	}
+
+	.hero-slider[data-interacted] .hero-slide.is-active .hero-slide__trust {
+		transition-delay: 220ms;
+	}
+
+	/*
+	 * Entrada del primer slide en la carga inicial. Sin soporte de
+	 * `@starting-style` el navegador ignora el bloque completo y el
+	 * slide llega directo a su estado final (opacity 1, sin
+	 * desplazamiento) sin necesidad de JavaScript.
+	 */
+	@starting-style {
+		.hero-slide.is-active {
+			opacity: 0;
+		}
+
+		.hero-slide.is-active .hero-slide__eyebrow,
+		.hero-slide.is-active .hero-slide__description,
+		.hero-slide.is-active .hero-slide__button,
+		.hero-slide.is-active .hero-slide__trust {
+			opacity: 0;
+			transform: translateY(18px);
+		}
+
+		.hero-slide.is-active h1,
+		.hero-slide.is-active h2 {
+			opacity: 0;
+			transform: translateY(22px);
+		}
 	}
 
 	@keyframes slider-progress {
@@ -715,6 +851,71 @@ const slides = [
 
 		.hero-slider__counter {
 			right: 24px;
+		}
+
+		/*
+		 * Entrada inicial mas corta en mobile: menor desplazamiento,
+		 * escalonado mas breve y duracion total menor que en desktop.
+		 * Queda anulada tras la primera interaccion por la especificidad
+		 * mas alta de `.hero-slider[data-interacted] …` (arriba).
+		 */
+		.hero-slide__eyebrow,
+		.hero-slide h1,
+		.hero-slide h2,
+		.hero-slide__description,
+		.hero-slide__button,
+		.hero-slide__trust {
+			transform: translateY(12px);
+			transition:
+				opacity 560ms var(--ease-out),
+				transform 560ms var(--ease-out);
+		}
+
+		.hero-slide.is-active h1,
+		.hero-slide.is-active h2 {
+			transition-delay: 50ms;
+		}
+
+		.hero-slide.is-active .hero-slide__description {
+			transition-delay: 100ms;
+		}
+
+		.hero-slide.is-active .hero-slide__button {
+			transition-delay: 150ms;
+		}
+
+		.hero-slide.is-active .hero-slide__trust {
+			transition-delay: 200ms;
+		}
+
+		/*
+		 * Version mobile de la entrada de firma de la foto: escalado y
+		 * duracion mas contenidos que en desktop (1.02 / 560ms).
+		 */
+		.hero-slide__image {
+			transition:
+				opacity 560ms var(--ease-out),
+				transform 560ms var(--ease-out);
+		}
+
+		.hero-slide__overlay {
+			transition: opacity 500ms var(--ease-out);
+		}
+
+		@starting-style {
+			.hero-slide.is-active .hero-slide__eyebrow,
+			.hero-slide.is-active h1,
+			.hero-slide.is-active h2,
+			.hero-slide.is-active .hero-slide__description,
+			.hero-slide.is-active .hero-slide__button,
+			.hero-slide.is-active .hero-slide__trust {
+				transform: translateY(12px);
+			}
+
+			.hero-slide.is-active .hero-slide__image {
+				opacity: 0.85;
+				transform: scale(1.02);
+			}
 		}
 	}
 
@@ -777,16 +978,72 @@ const slides = [
 		}
 	}
 
+	/*
+	 * Movimiento reducido: el hero sigue apareciendo, pero solo con
+	 * opacidad. Nada se desplaza y el escalonado desaparece, para que el
+	 * contenido llegue completo de una vez. El autoplay ya queda
+	 * desactivado por script (:220).
+	 */
 	@media (prefers-reduced-motion: reduce) {
-		.hero-slide,
-		.hero-slide__image,
+		.hero-slide {
+			transition: opacity 200ms linear;
+		}
+
+		/*
+		 * La foto y el overlay pierden el escalado/transform de la
+		 * entrada de firma: solo queda una opacidad breve (150-200ms).
+		 */
+		.hero-slide__image {
+			transition: opacity 180ms linear;
+		}
+
+		.hero-slide__overlay {
+			transition: opacity 180ms linear;
+		}
+
 		.hero-slide__eyebrow,
 		.hero-slide h1,
 		.hero-slide h2,
 		.hero-slide__description,
 		.hero-slide__button,
 		.hero-slide__trust {
-			transition: none;
+			transform: none;
+			transition: opacity 240ms linear;
+		}
+
+		/*
+		 * Misma especificidad que las reglas de stagger de arriba y mas
+		 * abajo en el archivo: anula sus `transition-delay` sin recurrir
+		 * a `!important`.
+		 */
+		.hero-slide.is-active .hero-slide__eyebrow,
+		.hero-slide.is-active h1,
+		.hero-slide.is-active h2,
+		.hero-slide.is-active .hero-slide__description,
+		.hero-slide.is-active .hero-slide__button,
+		.hero-slide.is-active .hero-slide__trust {
+			transform: none;
+			transition-delay: 0ms;
+		}
+
+		/*
+		 * Misma especificidad que la variante post-interaccion (mas arriba
+		 * en el archivo): sin esto, su `translateY(9px)` de reposo seguiria
+		 * ganando bajo reduced-motion.
+		 */
+		.hero-slider[data-interacted] .hero-slide__eyebrow,
+		.hero-slider[data-interacted] .hero-slide h1,
+		.hero-slider[data-interacted] .hero-slide h2,
+		.hero-slider[data-interacted] .hero-slide__description,
+		.hero-slider[data-interacted] .hero-slide__button,
+		.hero-slider[data-interacted] .hero-slide__trust {
+			transform: none;
+		}
+
+		.hero-slide__button:hover,
+		.hero-slide__button:active {
+			translate: none;
+			scale: none;
 		}
 
 		.hero-slider__progress {

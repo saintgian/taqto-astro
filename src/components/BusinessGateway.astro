@@ -121,7 +121,7 @@ const businessLinks: BusinessLink[] = [
 
 <style>
 	.business-gateway {
-		padding-block: clamp(64px, 5vw, 80px);
+		padding-block: var(--home-section-py);
 		padding-inline: var(--container-gutter);
 	}
 
@@ -207,7 +207,7 @@ const businessLinks: BusinessLink[] = [
 		max-width: 600px;
 		margin: 0;
 		color: var(--business-foreground);
-		font-size: clamp(36px, 0.9vw + 26.8px, 44px);
+		font-size: var(--home-title);
 		font-weight: 600;
 		line-height: 1.15;
 		letter-spacing: -0.02em;
@@ -215,9 +215,9 @@ const businessLinks: BusinessLink[] = [
 
 	.business-gateway__description {
 		max-width: 520px;
-		margin: 12px 0 0;
+		margin: 10px 0 0;
 		color: var(--business-muted);
-		font-size: clamp(17px, 0.3vw + 16.4px, 18px);
+		font-size: var(--home-intro);
 		line-height: 1.6;
 	}
 
@@ -252,7 +252,7 @@ const businessLinks: BusinessLink[] = [
 	}
 
 	.business-gateway__link-copy strong {
-		font-size: clamp(19px, 1vw + 16px, 22px);
+		font-size: var(--home-card-title);
 		font-weight: 600;
 		letter-spacing: -0.02em;
 	}
@@ -260,7 +260,7 @@ const businessLinks: BusinessLink[] = [
 	.business-gateway__link-copy small {
 		max-width: 420px;
 		color: var(--business-muted);
-		font-size: clamp(15.5px, 0.5vw + 15px, 17px);
+		font-size: var(--home-card-body);
 		font-weight: 400;
 		line-height: 1.5;
 	}
@@ -336,8 +336,8 @@ const businessLinks: BusinessLink[] = [
 
 	@media (max-width: 680px) {
 		.business-gateway {
-			padding-inline: 18px;
-			padding-block: clamp(40px, 8vw, 56px);
+			padding-inline: 20px;
+			padding-block: var(--home-section-py);
 		}
 
 		.business-gateway__container {

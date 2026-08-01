@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Header from "../components/Header.astro";
+import { YAPE_NAME, YAPE_NUMBER_DISPLAY } from "../lib/constants";
 import {
 	ShoppingBag,
 	MapPin,
@@ -138,6 +139,13 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 					<div class="checkout-grid__main">
 						<div class="cart-items" id="cart-items" data-cart-items>
 						</div>
+
+						<p
+							class="cart-stock-note"
+							id="cart-stock-note"
+							role="status"
+							aria-live="polite"
+						></p>
 
 						<div class="cart-empty" id="cart-empty" hidden>
 							<ShoppingBag
@@ -625,11 +633,11 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 							<div class="yape-panel__details">
 								<p>
 									<span>Nombre</span>
-									Gianmarco Santillán
+									{YAPE_NAME}
 								</p>
 								<p>
 									<span>Número</span>
-									977 600 400
+									{YAPE_NUMBER_DISPLAY}
 								</p>
 							</div>
 
@@ -702,6 +710,7 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 		getCart,
 		updateQuantity,
 		removeItem,
+		clearCart,
 		onCartUpdated,
 		type CartItem,
 	} from "../lib/cart";
@@ -726,19 +735,6 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 
 	import { supabase } from "../lib/supabase";
 
-	const escapeHtml = (value: string) =>
-		value.replace(
-			/[&<>"']/g,
-			(char) =>
-				({
-					"&": "&amp;",
-					"<": "&lt;",
-					">": "&gt;",
-					'"': "&quot;",
-					"'": "&#39;",
-				})[char] || char,
-		);
-
 	const steps = Array.from(
 		document.querySelectorAll<HTMLElement>(
 			"[data-step]",
@@ -758,9 +754,9 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 	const renderStepper = (stepNumber: number) => {
 		// Paso 1: 0%. Paso 2: 50%. Paso 3: 100%.
 		if (stepProgress) {
-			stepProgress.style.width = `${
-				((stepNumber - 1) / (stepIndicators.length - 1 || 1)) * 100
-			}%`;
+			stepProgress.style.transform = `scaleX(${
+				(stepNumber - 1) / (stepIndicators.length - 1 || 1)
+			})`;
 		}
 
 		stepIndicators.forEach((indicator) => {
@@ -807,18 +803,129 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 		});
 	};
 
-	const goToStep = (stepNumber: number) => {
-		steps.forEach((section) => {
-			const isActive =
-				section.dataset.step === String(stepNumber);
+	const checkoutShell =
+		document.querySelector<HTMLElement>(".checkout-shell")!;
 
-			section.hidden = !isActive;
-			section.classList.toggle("is-active", isActive);
-		});
+	let currentStep = 1;
+	let isStepTransitioning = false;
+	let stepTransitionTimer: number | undefined;
+
+	const clearStepTransitionTimer = () => {
+		if (stepTransitionTimer !== undefined) {
+			window.clearTimeout(stepTransitionTimer);
+			stepTransitionTimer = undefined;
+		}
+	};
+
+	// Solo salta si el bloque no esta ya razonablemente visible: evita
+	// mover la pagina cuando el usuario ya ve el stepper y el formulario.
+	const ensureCheckoutVisible = () => {
+		const rect = checkoutShell.getBoundingClientRect();
+		const alreadyVisible = rect.top >= -8 && rect.top <= 96;
+
+		if (!alreadyVisible) {
+			window.scrollTo({
+				top: window.scrollY + rect.top - 24,
+				behavior: "auto",
+			});
+		}
+	};
+
+	const STEP_EXIT_MS = 120;
+	const STEP_ENTER_MS = 270;
+
+	const goToStep = (stepNumber: number) => {
+		if (isStepTransitioning || stepNumber === currentStep) return;
+
+		const outgoing = steps.find(
+			(section) => section.dataset.step === String(currentStep),
+		);
+
+		const incoming = steps.find(
+			(section) => section.dataset.step === String(stepNumber),
+		);
+
+		if (!outgoing || !incoming) return;
+
+		const isForward = stepNumber > currentStep;
+
+		currentStep = stepNumber;
+		isStepTransitioning = true;
 
 		renderStepper(stepNumber);
+		ensureCheckoutVisible();
 
-		window.scrollTo({ top: 0, behavior: "smooth" });
+		clearStepTransitionTimer();
+
+		const finishExit = () => {
+			outgoing.removeEventListener("transitionend", onExitEnd);
+			clearStepTransitionTimer();
+
+			outgoing.classList.remove("cart-step--leaving");
+			outgoing.classList.remove("is-active");
+			outgoing.hidden = true;
+
+			incoming.classList.add(
+				"is-active",
+				isForward
+					? "cart-step--entering"
+					: "cart-step--entering-back",
+			);
+			incoming.hidden = false;
+
+			window.requestAnimationFrame(() => {
+				incoming.classList.remove(
+					"cart-step--entering",
+					"cart-step--entering-back",
+				);
+				incoming.classList.add("cart-step--enter-active");
+
+				const finishEnter = () => {
+					incoming.removeEventListener(
+						"transitionend",
+						onEnterEnd,
+					);
+					clearStepTransitionTimer();
+					incoming.classList.remove("cart-step--enter-active");
+					isStepTransitioning = false;
+				};
+
+				const onEnterEnd = (event: TransitionEvent) => {
+					if (
+						event.target !== incoming ||
+						event.propertyName !== "opacity"
+					) {
+						return;
+					}
+
+					finishEnter();
+				};
+
+				incoming.addEventListener("transitionend", onEnterEnd);
+				stepTransitionTimer = window.setTimeout(
+					finishEnter,
+					STEP_ENTER_MS + 120,
+				);
+			});
+		};
+
+		const onExitEnd = (event: TransitionEvent) => {
+			if (
+				event.target !== outgoing ||
+				event.propertyName !== "opacity"
+			) {
+				return;
+			}
+
+			finishExit();
+		};
+
+		outgoing.addEventListener("transitionend", onExitEnd);
+		outgoing.classList.add("cart-step--leaving");
+		stepTransitionTimer = window.setTimeout(
+			finishExit,
+			STEP_EXIT_MS + 80,
+		);
 	};
 
 	renderStepper(1);
@@ -851,6 +958,33 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 		document.querySelector<HTMLElement>(
 			"#cart-subtotal",
 		)!;
+
+	const cartStockNote =
+		document.querySelector<HTMLElement>(
+			"#cart-stock-note",
+		)!;
+
+	let cartStockNoteTimer: number | undefined;
+
+	const announceCartStockLimit = (
+		title: string,
+		limit: number,
+	) => {
+		if (cartStockNoteTimer !== undefined) {
+			window.clearTimeout(cartStockNoteTimer);
+		}
+
+		cartStockNote.textContent = "";
+
+		window.requestAnimationFrame(() => {
+			cartStockNote.textContent = `${title}: alcanzaste el máximo disponible (${limit} unidad${limit === 1 ? "" : "es"}).`;
+		});
+
+		cartStockNoteTimer = window.setTimeout(() => {
+			cartStockNote.textContent = "";
+			cartStockNoteTimer = undefined;
+		}, 3000);
+	};
 
 	const goToStep2Button =
 		document.querySelector<HTMLButtonElement>(
@@ -951,11 +1085,34 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 		const increase = pick<HTMLButtonElement>("increase");
 
 		if (increase) {
+			const stockLimit =
+				typeof item.stock === "number"
+					? Math.max(0, Math.floor(item.stock))
+					: undefined;
+
+			const atMax =
+				typeof stockLimit === "number" &&
+				item.quantity >= stockLimit;
+
+			increase.disabled = atMax;
+			increase.setAttribute(
+				"aria-disabled",
+				String(atMax),
+			);
+
 			increase.setAttribute(
 				"aria-label",
 				`Aumentar cantidad de ${item.title}`,
 			);
 			increase.addEventListener("click", () => {
+				if (atMax) {
+					announceCartStockLimit(
+						item.title,
+						stockLimit as number,
+					);
+					return;
+				}
+
 				updateQuantity(item.id, item.quantity + 1);
 			});
 		}
@@ -1046,26 +1203,38 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 		container: HTMLElement,
 		items: CartItem[],
 	) => {
-		container.innerHTML = items
-			.map((item) => {
-				const variant = variantLabelOf(item);
+		container.replaceChildren();
 
-				return `
-					<div class="order-summary__product">
-						<span>
-							${item.title}${variant ? ` — ${variant}` : ""}
-							× ${item.quantity}
-							${
-								item.engravingText
-									? `<br /><small>Grabado: “${escapeHtml(item.engravingText)}”</small>`
-									: ""
-							}
-						</span>
-						<strong>${formatPEN(item.unitPrice * item.quantity)}</strong>
-					</div>
-				`;
-			})
-			.join("");
+		items.forEach((item) => {
+			const variant = variantLabelOf(item);
+
+			const row = document.createElement("div");
+			row.className = "order-summary__product";
+
+			const label = document.createElement("span");
+
+			label.appendChild(
+				document.createTextNode(
+					`${item.title}${variant ? ` — ${variant}` : ""} × ${item.quantity}`,
+				),
+			);
+
+			if (item.engravingText) {
+				label.appendChild(document.createElement("br"));
+
+				const small = document.createElement("small");
+				small.textContent = `Grabado: “${item.engravingText}”`;
+				label.appendChild(small);
+			}
+
+			const price = document.createElement("strong");
+			price.textContent = formatPEN(
+				item.unitPrice * item.quantity,
+			);
+
+			row.append(label, price);
+			container.appendChild(row);
+		});
 	};
 
 	const renderMiniSummary = () => {
@@ -1323,37 +1492,43 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 			? "Delivery a domicilio (Lima Metropolitana)"
 			: "Envío a agencia en tu ciudad";
 
-		orderCustomerSummary.innerHTML = `
-			<div>
-				<dt>Nombre</dt>
-				<dd>${customer.firstName} ${customer.lastName}</dd>
-			</div>
-			<div>
-				<dt>Correo</dt>
-				<dd>${customer.email}</dd>
-			</div>
-			<div>
-				<dt>Teléfono</dt>
-				<dd>${customer.phone}</dd>
-			</div>
-			<div>
-				<dt>Dirección</dt>
-				<dd>${customer.direccion}${
-					customer.referencia
-						? ` (${customer.referencia})`
-						: ""
-				}</dd>
-			</div>
-			<div>
-				<dt>Ubicación</dt>
-				<dd>${customer.distrito}, ${customer.provincia}, ${customer.departamento}</dd>
-			</div>
-			${
-				customer.giftMessage
-					? `<div><dt>Tarjeta de regalo</dt><dd>${customer.giftMessage}</dd></div>`
-					: ""
-			}
-		`;
+		orderCustomerSummary.replaceChildren();
+
+		const addSummaryRow = (label: string, value: string) => {
+			const row = document.createElement("div");
+			const dt = document.createElement("dt");
+			dt.textContent = label;
+
+			const dd = document.createElement("dd");
+			dd.textContent = value;
+
+			row.append(dt, dd);
+			orderCustomerSummary.appendChild(row);
+		};
+
+		addSummaryRow(
+			"Nombre",
+			`${customer.firstName} ${customer.lastName}`,
+		);
+		addSummaryRow("Correo", customer.email);
+		addSummaryRow("Teléfono", customer.phone);
+		addSummaryRow(
+			"Dirección",
+			customer.referencia
+				? `${customer.direccion} (${customer.referencia})`
+				: customer.direccion,
+		);
+		addSummaryRow(
+			"Ubicación",
+			`${customer.distrito}, ${customer.provincia}, ${customer.departamento}`,
+		);
+
+		if (customer.giftMessage) {
+			addSummaryRow(
+				"Tarjeta de regalo",
+				customer.giftMessage,
+			);
+		}
 
 		renderProductLines(orderProductsSummary, items);
 
@@ -1380,7 +1555,103 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 	// ---------- CREAR PEDIDO EN SUPABASE ----------
 
 	let createdOrderCode: string | null = null;
+	let createdOrderSignature: string | null = null;
 	let orderCreationInFlight = false;
+
+	const ORDER_REQUEST_ID_STORAGE_KEY =
+		"taqto_order_request";
+
+	const generateRequestId = (): string => {
+		if (
+			typeof crypto !== "undefined" &&
+			typeof crypto.randomUUID === "function"
+		) {
+			return crypto.randomUUID();
+		}
+
+		// Respaldo minimo si crypto.randomUUID no esta disponible
+		// (contexto no seguro / navegador muy antiguo). Solo se usa
+		// como clave de idempotencia por intento, no con fines
+		// criptograficos.
+		return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+	};
+
+	const buildOrderSignature = (
+		items: CartItem[],
+		customer: ReturnType<typeof getCustomerData>,
+		paymentMethod: string,
+	) =>
+		JSON.stringify({
+			items: items.map((item) => ({
+				id: item.id,
+				quantity: item.quantity,
+				unitPrice: item.unitPrice,
+			})),
+			customer,
+			paymentMethod,
+		});
+
+	/*
+	 * El id de idempotencia se guarda en sessionStorage junto con la
+	 * firma del intento (carrito + datos + metodo de pago) para que un
+	 * recargo de pagina en medio de la creacion del pedido reutilice el
+	 * mismo id: si la insercion en Supabase ya se habia completado, el
+	 * RPC devuelve el pedido existente en vez de duplicarlo.
+	 */
+	const getClientRequestId = (signature: string): string => {
+		if (typeof window !== "undefined") {
+			try {
+				const raw = window.sessionStorage.getItem(
+					ORDER_REQUEST_ID_STORAGE_KEY,
+				);
+
+				if (raw) {
+					const stored = JSON.parse(raw) as {
+						signature?: string;
+						requestId?: string;
+					};
+
+					if (
+						stored.signature === signature &&
+						stored.requestId
+					) {
+						return stored.requestId;
+					}
+				}
+			} catch {
+				// Se ignora: si sessionStorage falla, se genera un id
+				// nuevo valido solo en memoria para este intento.
+			}
+		}
+
+		const requestId = generateRequestId();
+
+		if (typeof window !== "undefined") {
+			try {
+				window.sessionStorage.setItem(
+					ORDER_REQUEST_ID_STORAGE_KEY,
+					JSON.stringify({ signature, requestId }),
+				);
+			} catch {
+				// Almacenamiento no disponible; el id sigue siendo
+				// valido en memoria para este intento.
+			}
+		}
+
+		return requestId;
+	};
+
+	const clearClientRequestId = () => {
+		if (typeof window === "undefined") return;
+
+		try {
+			window.sessionStorage.removeItem(
+				ORDER_REQUEST_ID_STORAGE_KEY,
+			);
+		} catch {
+			// Nada que limpiar si sessionStorage no esta disponible.
+		}
+	};
 
 	const orderConfirmError =
 		document.querySelector<HTMLElement>(
@@ -1418,6 +1689,14 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 			"#yape-send-proof",
 		)!;
 
+	/*
+	 * sanityProductId + productSku son las claves que create_order_v2
+	 * usa para buscar precio y stock reales en catalog_variants: son las
+	 * unicas dos que el RPC realmente confia. El resto (productName,
+	 * wood*, size*, dimensionsLabel, unitPrice) viaja solo como
+	 * respaldo/depuracion; el RPC los ignora como autoridad y usa lo que
+	 * encuentra en el catalogo para armar el pedido.
+	 */
 	const buildOrderItemsPayload = (items: CartItem[]) =>
 		items.map((item) => ({
 			sanityProductId: item.productId,
@@ -1437,13 +1716,34 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 	const ensureOrderCreated = async (
 		paymentMethod: "yape" | "cash_on_delivery",
 	): Promise<string | null> => {
-		if (createdOrderCode) return createdOrderCode;
 		if (orderCreationInFlight) return null;
 
-		const customer = getCustomerData();
 		const items = getCart();
 
-		if (items.length === 0) return null;
+		if (items.length === 0) {
+			// El carrito puede estar vacio porque el pedido ya se creo
+			// con exito y se limpio despues: se reutiliza ese codigo en
+			// vez de tratarlo como "no hay nada que ordenar".
+			return createdOrderCode;
+		}
+
+		const customer = getCustomerData();
+
+		const signature = buildOrderSignature(
+			items,
+			customer,
+			paymentMethod,
+		);
+
+		// Carrito y datos identicos al pedido ya creado: se reutiliza
+		// sin volver a llamar al RPC (doble click, Enter repetido,
+		// volver de un paso y regresar sin cambiar nada).
+		if (
+			createdOrderCode &&
+			createdOrderSignature === signature
+		) {
+			return createdOrderCode;
+		}
 
 		if (!supabase) {
 			orderConfirmError.textContent =
@@ -1453,55 +1753,103 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 			return null;
 		}
 
-		const subtotal = getCartSubtotal(items);
-		const total = subtotal + SHIPPING_COST;
+		const clientRequestId = getClientRequestId(signature);
+
+		const payload = {
+			p_payment_method: paymentMethod,
+			p_delivery_method: customer.isLima
+				? "lima_delivery"
+				: "province_agency",
+			p_customer_first_name: customer.firstName,
+			p_customer_last_name: customer.lastName,
+			p_customer_email: customer.email,
+			p_customer_phone: customer.phone,
+			p_delivery_department: customer.departamento,
+			p_delivery_province: customer.provincia,
+			p_delivery_district: customer.distrito,
+			p_delivery_address: customer.direccion,
+			p_delivery_reference:
+				customer.referencia || null,
+			p_customer_notes: customer.giftMessage
+				? `Mensaje para la tarjeta de regalo: ${customer.giftMessage}`
+				: null,
+			// Ya no se envian p_subtotal/p_delivery_cost/p_total: el RPC
+			// endurecido los calcula el mismo desde el catalogo, no
+			// desde lo que mande el navegador.
+			p_items: buildOrderItemsPayload(items),
+			p_client_request_id: clientRequestId,
+		};
 
 		orderCreationInFlight = true;
 		orderConfirmError.hidden = true;
 
+		confirmPaymentButton.disabled = true;
 		confirmPaymentButton.classList.add("is-loading");
 
+		/*
+		 * Unica via de escritura: create_order_v2 (ver
+		 * supabase/harden_create_order.sql). A diferencia de la version
+		 * anterior de este archivo, ya NO hay reintento contra el RPC
+		 * viejo si este falla: degradar en silencio a una version sin
+		 * validacion de catalogo ni idempotencia real seria exactamente
+		 * el problema que se esta corrigiendo.
+		 */
 		const { data, error } = await supabase.rpc(
-			"create_order",
-			{
-				p_payment_method: paymentMethod,
-				p_delivery_method: customer.isLima
-					? "lima_delivery"
-					: "province_agency",
-				p_customer_first_name: customer.firstName,
-				p_customer_last_name: customer.lastName,
-				p_customer_email: customer.email,
-				p_customer_phone: customer.phone,
-				p_delivery_department: customer.departamento,
-				p_delivery_province: customer.provincia,
-				p_delivery_district: customer.distrito,
-				p_delivery_address: customer.direccion,
-				p_delivery_reference:
-					customer.referencia || null,
-				p_customer_notes: customer.giftMessage
-					? `Mensaje para la tarjeta de regalo: ${customer.giftMessage}`
-					: null,
-				p_subtotal: subtotal,
-				p_delivery_cost: SHIPPING_COST,
-				p_total: total,
-				p_items: buildOrderItemsPayload(items),
-			},
+			"create_order_v2",
+			payload,
 		);
 
 		orderCreationInFlight = false;
 		confirmPaymentButton.classList.remove("is-loading");
+		renderPaymentSelection();
 
 		if (error || !data) {
-			orderConfirmError.textContent =
-				"No pudimos registrar tu pedido. Intenta de nuevo o escríbenos directo por WhatsApp.";
+			if (
+				error?.code === "PGRST202" ||
+				error?.code === "PGRST203" ||
+				error?.code === "42883"
+			) {
+				// La funcion create_order_v2 todavia no existe o no se
+				// puede resolver sin ambiguedad en el proyecto remoto:
+				// falta correr supabase/catalog_mirror.sql,
+				// harden_create_order.sql y harden_permissions.sql. No
+				// hay una ruta de compra alternativa mientras tanto.
+				orderConfirmError.textContent =
+					"El checkout seguro todavía no está activo en este servidor. Escríbenos directo por WhatsApp para completar tu compra.";
+			} else if (
+				error?.message?.startsWith("IDEMPOTENCY_MISMATCH")
+			) {
+				// La clave de este intento ya se uso con otros datos: se
+				// descarta para que el proximo click genere una clave
+				// nueva en vez de volver a chocar con la misma.
+				clearClientRequestId();
+
+				orderConfirmError.textContent =
+					"Tu pedido cambió antes de confirmarse. Revisa el resumen e intenta de nuevo.";
+			} else if (error?.message) {
+				// Mensajes propios del RPC (stock insuficiente, producto
+				// ya no disponible, datos incompletos): ya estan escritos
+				// para mostrarse tal cual, sin detalle tecnico.
+				orderConfirmError.textContent = error.message;
+			} else {
+				orderConfirmError.textContent =
+					"No pudimos registrar tu pedido. Intenta de nuevo o escríbenos directo por WhatsApp.";
+			}
 
 			orderConfirmError.hidden = false;
 			return null;
 		}
 
 		createdOrderCode = data as string;
+		createdOrderSignature = signature;
 		orderCreatedBlock.hidden = false;
 		orderCreatedCode.textContent = createdOrderCode;
+
+		// El pedido ya quedo confirmado en Supabase: se vacia el
+		// carrito para que ni un recargo de pagina ni un nuevo intento
+		// de confirmar puedan volver a enviarlo.
+		clearCart();
+		clearClientRequestId();
 
 		return createdOrderCode;
 	};
@@ -1652,11 +2000,13 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 
 	.stepper__progress {
 		display: block;
-		width: 0%;
+		width: 100%;
 		height: 100%;
 		border-radius: inherit;
 		background: var(--color-orange);
-		transition: width 260ms cubic-bezier(0.33, 1, 0.68, 1);
+		transform: scaleX(0);
+		transform-origin: left center;
+		transition: transform 320ms var(--ease-in-out);
 	}
 
 	.stepper__list {
@@ -1673,6 +2023,7 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 		align-items: flex-start;
 		gap: 9px;
 		color: var(--ink-35);
+		transition: color 180ms var(--ease-out);
 	}
 
 	.stepper__icon-slot {
@@ -1708,6 +2059,7 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 		letter-spacing: 0.05em;
 		line-height: 1.4;
 		text-transform: uppercase;
+		transition: color 180ms var(--ease-out);
 	}
 
 	.stepper__step.is-active .stepper__number {
@@ -1720,6 +2072,7 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 		font-size: var(--text-sm);
 		font-weight: 500;
 		line-height: var(--leading-snug);
+		transition: color 180ms var(--ease-out);
 	}
 
 	/* Activo en naranja, completado en tinta, pendiente en gris. El
@@ -1760,6 +2113,43 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 
 	.cart-step.is-active {
 		display: block;
+	}
+
+	/*
+	 * Transicion entre pasos: la seccion saliente se desvanece y se
+	 * oculta por completo antes de que la entrante empiece a mostrarse,
+	 * asi que nunca coexisten dos secciones ocupando espacio.
+	 */
+	.cart-step.cart-step--leaving {
+		opacity: 0;
+		transition: opacity 120ms var(--ease-out);
+	}
+
+	.cart-step.cart-step--entering {
+		opacity: 0;
+		transform: translateX(8px);
+	}
+
+	.cart-step.cart-step--entering-back {
+		transform: translateX(-8px);
+	}
+
+	.cart-step.cart-step--enter-active {
+		opacity: 1;
+		transform: translateX(0);
+		transition:
+			opacity 270ms var(--ease-out),
+			transform 270ms var(--ease-out);
+	}
+
+	@media (max-width: 760px) {
+		.cart-step.cart-step--entering {
+			transform: translateX(6px);
+		}
+
+		.cart-step.cart-step--entering-back {
+			transform: translateX(-6px);
+		}
 	}
 
 	/* ---------- Layout de dos columnas ---------- */
@@ -1926,6 +2316,16 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 	.cart-item__content,
 	.cart-item__remove {
 		align-self: start;
+	}
+
+	.cart-stock-note {
+		margin: 0;
+		font-size: var(--text-xs);
+		color: var(--color-orange, #c2410c);
+	}
+
+	.cart-stock-note:empty {
+		display: none;
 	}
 
 	.cart-empty {
@@ -2646,5 +3046,37 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 	.cart-page [hidden],
 	.checkout-shell [hidden] {
 		display: none;
+	}
+
+	/*
+	 * Movimiento reducido: la barra del stepper salta al paso nuevo sin
+	 * transicion. La orientacion la sigue dando el indicador activo, no
+	 * el recorrido de la barra.
+	 */
+	@media (prefers-reduced-motion: reduce) {
+		.stepper__progress {
+			transition: none;
+		}
+
+		.stepper__step,
+		.stepper__number,
+		.stepper__name {
+			transition: none;
+		}
+
+		.cart-step.cart-step--leaving,
+		.cart-step.cart-step--entering,
+		.cart-step.cart-step--entering-back,
+		.cart-step.cart-step--enter-active {
+			transform: none;
+		}
+
+		.cart-step.cart-step--leaving {
+			transition: opacity 120ms linear;
+		}
+
+		.cart-step.cart-step--enter-active {
+			transition: opacity 120ms linear;
+		}
 	}
 </style>

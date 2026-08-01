@@ -1,5 +1,11 @@
 ---
-import { ArrowRight } from "@lucide/astro";
+import {
+	ArrowRight,
+	Search,
+	SlidersHorizontal,
+	ClipboardCheck,
+	PackageCheck,
+} from "@lucide/astro";
 
 interface PurchaseLink {
 	label: string;
@@ -33,6 +39,8 @@ const steps = [
 		description:
 			"Explora el catálogo y encuentra el diseño que mejor se adapte a tu espacio, uso o regalo.",
 		cta: { label: "Ver tienda", href: `${base}tienda/` },
+		icon: Search,
+		modifier: "search",
 	},
 	{
 		number: "02",
@@ -43,6 +51,8 @@ const steps = [
 			label: "Ver personalización",
 			href: "#personalization-title",
 		},
+		icon: SlidersHorizontal,
+		modifier: "customize",
 	},
 	{
 		number: "03",
@@ -52,6 +62,8 @@ const steps = [
 		cta: faqLink
 			? { label: "Ver preguntas frecuentes", href: faqLink.href }
 			: undefined,
+		icon: ClipboardCheck,
+		modifier: "confirm",
 	},
 	{
 		number: "04",
@@ -61,6 +73,8 @@ const steps = [
 		cta: shippingLink
 			? { label: "Ver envíos", href: shippingLink.href }
 			: undefined,
+		icon: PackageCheck,
+		modifier: "ship",
 	},
 ];
 
@@ -92,18 +106,28 @@ const auxLinks = links.filter(
 			{
 				steps.map((step) => {
 					const CardTag = step.cta ? "a" : "div";
+					const Icon = step.icon;
 
 					return (
-						<li class="purchase-process__step">
+						<li
+							class="purchase-process__step"
+							data-reveal-item
+						>
 							<CardTag
-								class="purchase-process__card"
+								class:list={[
+									"purchase-process__card",
+									`purchase-process__card--${step.modifier}`,
+								]}
 								href={step.cta?.href}
 							>
 								<span
-									class="purchase-process__number"
+									class="purchase-process__icon"
 									aria-hidden="true"
 								>
-									{step.number}
+									<Icon stroke-width={1.6} />
+									<span class="purchase-process__number">
+										{step.number}
+									</span>
 								</span>
 
 								<h3>{step.title}</h3>
@@ -149,9 +173,48 @@ const auxLinks = links.filter(
 	</div>
 </section>
 
+<script>
+	const revealItems = document.querySelectorAll<HTMLElement>(
+		".purchase-process__step[data-reveal-item]",
+	);
+
+	const prefersReducedMotion = window.matchMedia(
+		"(prefers-reduced-motion: reduce)",
+	).matches;
+
+	if (
+		!prefersReducedMotion &&
+		revealItems.length > 0 &&
+		"IntersectionObserver" in window
+	) {
+		const viewportHeight = window.innerHeight;
+
+		const pending = Array.from(revealItems).filter((el) => {
+			const rect = el.getBoundingClientRect();
+			return rect.top >= viewportHeight || rect.bottom <= 0;
+		});
+
+		pending.forEach((el) => el.classList.add("is-pending"));
+
+		const observer = new IntersectionObserver(
+			(entries, obs) => {
+				entries.forEach((entry) => {
+					if (entry.isIntersecting) {
+						entry.target.classList.add("is-inview");
+						obs.unobserve(entry.target);
+					}
+				});
+			},
+			{ threshold: 0.18 },
+		);
+
+		pending.forEach((el) => observer.observe(el));
+	}
+</script>
+
 <style>
 	.purchase-process {
-		padding-block: var(--section-py);
+		padding-block: var(--home-section-py);
 		padding-inline: var(--container-gutter);
 		background: var(--surface);
 		color: var(--color-black);
@@ -164,13 +227,13 @@ const auxLinks = links.filter(
 
 	.purchase-process__header {
 		max-width: 62ch;
-		margin-bottom: var(--header-gap);
+		margin-bottom: var(--home-header-gap);
 	}
 
 	.purchase-process__header h2 {
 		margin: 0;
 		color: var(--color-black);
-		font-size: clamp(34px, 2.4vw, 40px);
+		font-size: var(--home-title);
 		font-weight: 600;
 		line-height: 1.15;
 		letter-spacing: -0.02em;
@@ -178,16 +241,16 @@ const auxLinks = links.filter(
 
 	.purchase-process__intro {
 		max-width: 60ch;
-		margin: 12px 0 0;
+		margin: 10px 0 0;
 		color: var(--ink-70);
-		font-size: clamp(17px, 0.3vw + 16.4px, 19px);
+		font-size: var(--home-intro);
 		line-height: 1.6;
 	}
 
 	.purchase-process__steps {
 		display: grid;
 		grid-template-columns: repeat(4, minmax(0, 1fr));
-		gap: clamp(20px, 2vw, 28px);
+		gap: var(--home-gap);
 		margin: 0;
 		padding: 0;
 		list-style: none;
@@ -203,7 +266,7 @@ const auxLinks = links.filter(
 		height: 100%;
 		flex-direction: column;
 		min-width: 0;
-		padding: clamp(26px, 1.6vw, 32px);
+		padding: clamp(20px, 1.4vw, 26px);
 		border: 1px solid var(--ink-15);
 		border-radius: var(--radius-md);
 		background: var(--surface);
@@ -211,30 +274,54 @@ const auxLinks = links.filter(
 		text-decoration: none;
 		transition:
 			border-color 200ms ease,
+			background-color 200ms ease,
+			scale 150ms var(--ease-out);
+	}
+
+	.purchase-process__icon {
+		position: relative;
+		display: grid;
+		width: 44px;
+		height: 44px;
+		flex: 0 0 auto;
+		place-items: center;
+		margin: 0 0 14px;
+		border: 1px solid var(--ink-15);
+		border-radius: 50%;
+		background: var(--ink-08);
+		color: var(--color-brown);
+		transition:
+			transform 200ms var(--ease-out),
+			border-color 200ms ease,
 			background-color 200ms ease;
 	}
 
+	.purchase-process__icon svg {
+		width: 20px;
+		height: 20px;
+	}
+
 	.purchase-process__number {
-		display: inline-flex;
-		width: fit-content;
-		min-width: 32px;
-		height: 26px;
-		align-items: center;
-		justify-content: center;
-		margin: 0 0 18px;
-		padding: 0 10px;
-		border-radius: 999px;
-		background: var(--ink-08);
+		position: absolute;
+		right: -4px;
+		bottom: -4px;
+		display: grid;
+		width: 17px;
+		height: 17px;
+		place-items: center;
+		border: 1px solid var(--ink-15);
+		border-radius: 50%;
+		background: var(--surface);
 		color: var(--color-brown);
-		font-size: 13px;
+		font-size: 8.5px;
 		font-weight: 700;
-		letter-spacing: 0.06em;
+		letter-spacing: 0.01em;
 	}
 
 	.purchase-process__card h3 {
 		margin: 0;
 		color: var(--color-black);
-		font-size: clamp(21px, 0.5vw + 19.7px, 25px);
+		font-size: var(--home-card-title);
 		font-weight: 600;
 		line-height: 1.2;
 		letter-spacing: -0.02em;
@@ -242,9 +329,9 @@ const auxLinks = links.filter(
 	}
 
 	.purchase-process__card p {
-		margin: 10px 0 0;
+		margin: 8px 0 0;
 		color: var(--ink-70);
-		font-size: clamp(16.5px, 0.3vw + 15.9px, 18px);
+		font-size: var(--home-card-body);
 		line-height: 1.55;
 	}
 
@@ -254,7 +341,7 @@ const auxLinks = links.filter(
 		justify-content: space-between;
 		gap: 16px;
 		margin-top: auto;
-		padding-top: 22px;
+		padding-top: 18px;
 	}
 
 	.purchase-process__action-label {
@@ -316,12 +403,40 @@ const auxLinks = links.filter(
 			border-color: var(--color-brown);
 			background: var(--surface);
 		}
+
+		.purchase-process__card--search:hover .purchase-process__icon {
+			border-color: rgba(255, 77, 42, 0.45);
+			background: var(--surface);
+			transform: translateY(-2px) scale(1.04) translateX(2px);
+		}
+
+		.purchase-process__card--customize:hover .purchase-process__icon {
+			border-color: rgba(255, 77, 42, 0.45);
+			background: var(--surface);
+			transform: translateY(-2px) scale(1.04) rotate(3deg);
+		}
+
+		.purchase-process__card--confirm:hover .purchase-process__icon {
+			border-color: rgba(255, 77, 42, 0.45);
+			background: var(--surface);
+			transform: translateY(-2px) scale(1.08);
+		}
+
+		.purchase-process__card--ship:hover .purchase-process__icon {
+			border-color: rgba(255, 77, 42, 0.45);
+			background: var(--surface);
+			transform: translateY(-2px) scale(1.04) translateX(3px);
+		}
+	}
+
+	a.purchase-process__card:active {
+		scale: 0.98;
 	}
 
 	@media (prefers-reduced-motion: no-preference) {
 		.purchase-process__card:hover .purchase-process__arrow,
 		.purchase-process__card:focus-visible .purchase-process__arrow {
-			transform: translateX(4px);
+			transform: translateX(3px);
 		}
 	}
 
@@ -330,11 +445,25 @@ const auxLinks = links.filter(
 			transition:
 				border-color 200ms ease,
 				background-color 200ms ease,
-				transform 200ms ease;
+				transform 200ms ease,
+				scale 150ms var(--ease-out);
 		}
 
 		.purchase-process__card:hover {
 			transform: translateY(-2px);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.purchase-process__card--search:hover .purchase-process__icon,
+		.purchase-process__card--customize:hover .purchase-process__icon,
+		.purchase-process__card--confirm:hover .purchase-process__icon,
+		.purchase-process__card--ship:hover .purchase-process__icon {
+			transform: none;
+		}
+
+		a.purchase-process__card:active {
+			scale: 1;
 		}
 	}
 
@@ -368,34 +497,80 @@ const auxLinks = links.filter(
 	@media (max-width: 920px) {
 		.purchase-process__steps {
 			grid-template-columns: repeat(2, minmax(0, 1fr));
-			gap: 20px;
+			gap: var(--home-gap);
 		}
 	}
 
 	@media (max-width: 640px) {
 		.purchase-process {
-			padding-inline: 18px;
+			padding-inline: 20px;
 		}
 
 		.purchase-process__header {
-			margin-bottom: 26px;
-		}
-
-		.purchase-process__header h2 {
-			font-size: clamp(28px, 7vw, 32px);
-		}
-
-		.purchase-process__intro {
-			font-size: clamp(16px, 1vw + 15px, 17px);
+			margin-bottom: var(--home-header-gap);
 		}
 
 		.purchase-process__steps {
 			grid-template-columns: 1fr;
-			gap: 18px;
+			gap: var(--home-gap);
 		}
 
 		.purchase-process__aux {
-			margin-top: 20px;
+			margin-top: var(--home-gap);
 		}
+	}
+
+	/*
+	 * Revelado por tarjeta al entrar en viewport (solo primera vez). El
+	 * JS solo agrega `is-pending` a las tarjetas que no son visibles en
+	 * la carga inicial, asi que sin JavaScript ninguna queda oculta.
+	 */
+	.purchase-process__step.is-pending {
+		opacity: 0;
+		transform: translateY(20px);
+		transition:
+			opacity 520ms var(--ease-out),
+			transform 520ms var(--ease-out);
+	}
+
+	.purchase-process__step.is-pending.is-inview {
+		opacity: 1;
+		transform: translateY(0);
+	}
+
+	.purchase-process__step:nth-child(2).is-pending {
+		transition-delay: 60ms;
+	}
+
+	.purchase-process__step:nth-child(3).is-pending {
+		transition-delay: 120ms;
+	}
+
+	.purchase-process__step:nth-child(4).is-pending {
+		transition-delay: 180ms;
+	}
+
+	/*
+	 * Entrada propia del icono, mas corta que la de la tarjeta y
+	 * desacoplada de la transicion de hover (usa `animation`).
+	 */
+	@keyframes purchase-process-icon-in {
+		from {
+			opacity: 0;
+			transform: translateY(6px) scale(0.94);
+		}
+
+		to {
+			opacity: 1;
+			transform: none;
+		}
+	}
+
+	.purchase-process__step.is-pending .purchase-process__icon {
+		opacity: 0;
+	}
+
+	.purchase-process__step.is-pending.is-inview .purchase-process__icon {
+		animation: purchase-process-icon-in 300ms var(--ease-out) 40ms both;
 	}
 </style>

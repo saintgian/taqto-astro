@@ -1,5 +1,5 @@
 ---
-import { ArrowRight } from "@lucide/astro";
+import { ArrowRight, MousePointerClick, TreePine, PenTool } from "@lucide/astro";
 
 interface Props {
 	imageSrc?: string;
@@ -23,18 +23,24 @@ const steps = [
 		title: "Elige tu pieza",
 		description:
 			"Encuentra el diseño que acompañará tu mesa, cocina, parrilla o espacio de trabajo.",
+		icon: MousePointerClick,
+		modifier: "select",
 	},
 	{
 		number: "02",
 		title: "Selecciona la madera",
 		description:
 			"Escoge entre las maderas disponibles y sus variaciones naturales de tono y veta.",
+		icon: TreePine,
+		modifier: "wood",
 	},
 	{
 		number: "03",
 		title: "Añade tu grabado",
 		description:
 			"Personaliza la pieza con un nombre, una frase o una imagen preparada para grabado láser.",
+		icon: PenTool,
+		modifier: "engrave",
 	},
 ];
 ---
@@ -42,6 +48,7 @@ const steps = [
 <section
 	class="personalization"
 	aria-labelledby="personalization-title"
+	data-reveal-section
 >
 	<div class="personalization__container">
 		<div class="personalization__media">
@@ -77,21 +84,30 @@ const steps = [
 
 			<ol class="personalization__steps">
 				{
-					steps.map((step) => (
-						<li class="personalization__step">
-							<span
-								class="personalization__number"
-								aria-hidden="true"
-							>
-								{step.number}
-							</span>
+					steps.map((step) => {
+						const Icon = step.icon;
 
-							<div class="personalization__step-copy">
-								<h3>{step.title}</h3>
-								<p>{step.description}</p>
-							</div>
-						</li>
-					))
+						return (
+							<li
+								class:list={[
+									"personalization__step",
+									`personalization__step--${step.modifier}`,
+								]}
+							>
+								<span class="personalization__icon" aria-hidden="true">
+									<Icon stroke-width={1.6} />
+									<span class="personalization__number">
+										{step.number}
+									</span>
+								</span>
+
+								<div class="personalization__step-copy">
+									<h3>{step.title}</h3>
+									<p>{step.description}</p>
+								</div>
+							</li>
+						);
+					})
 				}
 			</ol>
 
@@ -105,7 +121,7 @@ const steps = [
 
 <style>
 	.personalization {
-		padding-block: var(--section-py);
+		padding-block: var(--home-section-py);
 		padding-inline: var(--container-gutter);
 		background: var(--surface);
 		color: var(--color-black);
@@ -117,7 +133,7 @@ const steps = [
 		margin-inline: auto;
 		grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
 		align-items: stretch;
-		gap: clamp(32px, 5vw, 64px);
+		gap: clamp(28px, 4vw, 48px);
 	}
 
 	.personalization__media {
@@ -165,7 +181,7 @@ const steps = [
 
 	.personalization__header h2 {
 		margin: 0;
-		font-size: var(--text-2xl);
+		font-size: var(--home-title);
 		font-weight: 600;
 		line-height: 1.15;
 		letter-spacing: -0.02em;
@@ -173,9 +189,9 @@ const steps = [
 
 	.personalization__intro {
 		max-width: 480px;
-		margin: 14px 0 0;
+		margin: 10px 0 0;
 		color: rgba(20, 20, 20, 0.7);
-		font-size: clamp(17px, 0.3vw + 16.4px, 18px);
+		font-size: var(--home-intro);
 		line-height: 1.6;
 	}
 
@@ -183,16 +199,16 @@ const steps = [
 		position: relative;
 		display: grid;
 		gap: 0;
-		margin: var(--header-gap) 0 0;
+		margin: var(--home-header-gap) 0 0;
 		padding: 0;
 		list-style: none;
 	}
 
 	.personalization__steps::before {
 		position: absolute;
-		top: 26px;
-		bottom: 26px;
-		left: 25px;
+		top: 24px;
+		bottom: 24px;
+		left: 23px;
 		width: 1px;
 		background: rgba(20, 20, 20, 0.18);
 		content: "";
@@ -201,50 +217,138 @@ const steps = [
 	.personalization__step {
 		position: relative;
 		display: grid;
-		grid-template-columns: 52px minmax(0, 1fr);
-		gap: 18px;
-		padding: 0 0 20px;
+		grid-template-columns: 48px minmax(0, 1fr);
+		gap: 16px;
+		padding: 0 0 16px;
 	}
 
 	.personalization__step:last-child {
 		padding-bottom: 0;
 	}
 
-	.personalization__number {
+	.personalization__icon {
 		position: relative;
 		z-index: 1;
 		display: grid;
-		width: 52px;
-		height: 52px;
+		width: 48px;
+		height: 48px;
 		place-items: center;
 		border: 1px solid rgba(20, 20, 20, 0.16);
 		border-radius: 50%;
 		background: var(--surface);
 		color: var(--color-brown);
-		font-size: 15px;
-		font-weight: 600;
-		letter-spacing: -0.02em;
+		opacity: 1;
+		transition:
+			transform 200ms var(--ease-out),
+			border-color 200ms ease,
+			background-color 200ms ease;
+	}
+
+	.personalization__icon svg {
+		width: 22px;
+		height: 22px;
+	}
+
+	.personalization__number {
+		position: absolute;
+		right: -3px;
+		bottom: -3px;
+		z-index: 2;
+		display: grid;
+		width: 18px;
+		height: 18px;
+		place-items: center;
+		border: 1px solid rgba(20, 20, 20, 0.14);
+		border-radius: 50%;
+		background: var(--surface);
+		color: var(--color-brown);
+		font-size: 9px;
+		font-weight: 700;
+		letter-spacing: 0.01em;
 	}
 
 	.personalization__step-copy h3 {
 		margin: 0;
-		font-size: var(--text-lg);
+		font-size: var(--home-card-title);
 		font-weight: 600;
 		letter-spacing: -0.02em;
 	}
 
 	.personalization__step-copy p {
 		max-width: 440px;
-		margin: 6px 0 0;
+		margin: 5px 0 0;
 		color: rgba(20, 20, 20, 0.68);
-		font-size: clamp(16px, 0.3vw + 15.4px, 17px);
+		font-size: var(--home-card-body);
 		line-height: 1.55;
+	}
+
+	/*
+	 * Entrada perceptible del icono (una sola vez), independiente de la
+	 * transicion de hover: usa `animation` en vez de `transition` para
+	 * que el retardo escalonado no interfiera con la respuesta al pasar
+	 * el cursor.
+	 */
+	@keyframes personalization-icon-in {
+		from {
+			opacity: 0;
+			transform: translateY(6px) scale(0.94);
+		}
+
+		to {
+			opacity: 1;
+			transform: none;
+		}
+	}
+
+	.personalization.is-pending .personalization__icon {
+		opacity: 0;
+	}
+
+	.personalization.is-pending.is-inview .personalization__icon {
+		animation: personalization-icon-in 320ms var(--ease-out) both;
+	}
+
+	.personalization.is-pending.is-inview
+		.personalization__step:nth-child(2)
+		.personalization__icon {
+		animation-delay: 50ms;
+	}
+
+	.personalization.is-pending.is-inview
+		.personalization__step:nth-child(3)
+		.personalization__icon {
+		animation-delay: 100ms;
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.personalization__step--select:hover .personalization__icon {
+			border-color: rgba(255, 77, 42, 0.45);
+			transform: translateY(-2px) scale(1.04);
+		}
+
+		.personalization__step--wood:hover .personalization__icon {
+			border-color: rgba(255, 77, 42, 0.45);
+			transform: translateY(-2px) scale(1.04) rotate(3deg);
+		}
+
+		.personalization__step--engrave:hover .personalization__icon {
+			border-color: rgba(255, 77, 42, 0.45);
+			transform: translateY(-2px) scale(1.04) translateX(2px) rotate(-3deg);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.personalization__step--select:hover .personalization__icon,
+		.personalization__step--wood:hover .personalization__icon,
+		.personalization__step--engrave:hover .personalization__icon {
+			transform: none;
+		}
 	}
 
 	/* Solo posicion: color, geometria y estados vienen de `.btn--primary`. */
 	.personalization__cta {
 		width: fit-content;
-		margin-top: clamp(22px, 3vw, 32px);
+		margin-top: clamp(18px, 2.4vw, 26px);
 	}
 
 	.personalization__cta svg {
@@ -274,7 +378,7 @@ const steps = [
 
 	@media (max-width: 600px) {
 		.personalization {
-			padding-inline: 18px;
+			padding-inline: 20px;
 		}
 
 		.personalization__container {
@@ -290,27 +394,78 @@ const steps = [
 		}
 
 		.personalization__steps {
-			margin-top: 30px;
-		}
-
-		.personalization__steps::before {
-			left: 23px;
+			margin-top: var(--home-header-gap);
 		}
 
 		.personalization__step {
-			grid-template-columns: 48px minmax(0, 1fr);
-			gap: 16px;
-			padding-bottom: 24px;
-		}
-
-		.personalization__number {
-			width: 48px;
-			height: 48px;
-			font-size: 14px;
+			padding-bottom: 16px;
 		}
 
 		.personalization__cta {
 			width: 100%;
 		}
 	}
+
+	/*
+	 * Revelado al entrar en viewport (solo primera vez). El JS solo
+	 * agrega `is-pending` si la seccion no es visible en la carga
+	 * inicial, asi que sin JavaScript nunca queda oculta.
+	 */
+	.personalization.is-pending {
+		opacity: 0;
+		transform: translateY(26px);
+		transition:
+			opacity 660ms var(--ease-out),
+			transform 660ms var(--ease-out);
+	}
+
+	.personalization.is-pending.is-inview {
+		opacity: 1;
+		transform: translateY(0);
+	}
+
+	@media (max-width: 760px) {
+		.personalization.is-pending {
+			transform: translateY(14px);
+			transition-duration: 520ms;
+		}
+	}
 </style>
+
+<script>
+	const revealSection = document.querySelector<HTMLElement>(
+		".personalization[data-reveal-section]",
+	);
+
+	const prefersReducedMotion = window.matchMedia(
+		"(prefers-reduced-motion: reduce)",
+	).matches;
+
+	if (
+		revealSection &&
+		!prefersReducedMotion &&
+		"IntersectionObserver" in window
+	) {
+		const rect = revealSection.getBoundingClientRect();
+		const alreadyVisible =
+			rect.top < window.innerHeight && rect.bottom > 0;
+
+		if (!alreadyVisible) {
+			revealSection.classList.add("is-pending");
+
+			const observer = new IntersectionObserver(
+				(entries, obs) => {
+					entries.forEach((entry) => {
+						if (entry.isIntersecting) {
+							entry.target.classList.add("is-inview");
+							obs.unobserve(entry.target);
+						}
+					});
+				},
+				{ threshold: 0.18 },
+			);
+
+			observer.observe(revealSection);
+		}
+	}
+</script>

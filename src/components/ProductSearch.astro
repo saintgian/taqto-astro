@@ -222,11 +222,20 @@ const categoryHref = (slug: string) =>
 		border: 0;
 	}
 
+	/*
+	 * `visibility` se anima con retardo (tecnica clasica, sin depender de
+	 * `transition-behavior: allow-discrete`): al cerrar, permanece
+	 * `visible` 160ms -- lo que tarda la salida mas lenta del panel --
+	 * para que el fundido de salida termine de reproducirse antes de
+	 * desaparecer. Al abrir, el retardo se anula para que aparezca de
+	 * inmediato.
+	 */
 	.megasearch {
 		position: fixed;
 		inset: 0;
 		z-index: 320;
 		visibility: hidden;
+		transition: visibility 0s linear 160ms;
 
 		/*
 		 * Distancia real hasta el borde inferior del Header. El script la
@@ -239,6 +248,7 @@ const categoryHref = (slug: string) =>
 
 	.megasearch.is-open {
 		visibility: visible;
+		transition-delay: 0s;
 	}
 
 	.megasearch__backdrop {
@@ -246,11 +256,12 @@ const categoryHref = (slug: string) =>
 		inset: 0;
 		background: rgba(20, 20, 20, 0.22);
 		opacity: 0;
-		transition: opacity 190ms ease;
+		transition: opacity 140ms var(--ease-out);
 	}
 
 	.megasearch.is-open .megasearch__backdrop {
 		opacity: 1;
+		transition: opacity 180ms var(--ease-out);
 	}
 
 	.megasearch__panel {
@@ -267,17 +278,36 @@ const categoryHref = (slug: string) =>
 		background: var(--surface);
 		box-shadow: 0 18px 44px rgba(20, 20, 20, 0.14);
 		opacity: 0;
-		transform: translate(-50%, -8px);
+		transform: translate(-50%, -10px) scale(0.98);
+		transform-origin: top center;
 		pointer-events: none;
 		transition:
-			opacity 190ms ease,
-			transform 190ms ease;
+			opacity 160ms var(--ease-out),
+			transform 160ms var(--ease-out);
 	}
 
 	.megasearch.is-open .megasearch__panel {
 		opacity: 1;
-		transform: translate(-50%, 0);
+		transform: translate(-50%, 0) scale(1);
 		pointer-events: auto;
+		transition:
+			opacity 240ms var(--ease-panel),
+			transform 240ms var(--ease-panel);
+	}
+
+	/*
+	 * Apertura por teclado: sin desplazamiento espacial. `transform` sale
+	 * de la lista de propiedades animadas, asi que su valor cambia de
+	 * forma instantanea (en el mismo tick en que el script agrega ambas
+	 * clases, antes de la primera pintura) en vez de recorrer la
+	 * distancia; solo la opacidad se anima.
+	 */
+	.megasearch[data-open-input="keyboard"] .megasearch__panel {
+		transition: opacity 160ms var(--ease-out);
+	}
+
+	.megasearch[data-open-input="keyboard"].is-open .megasearch__panel {
+		transition: opacity 240ms var(--ease-panel);
 	}
 
 	.megasearch__head {
@@ -640,11 +670,17 @@ const categoryHref = (slug: string) =>
 			border: 0;
 			border-radius: 0;
 			box-shadow: none;
-			transform: none;
+			transform: translateY(6px);
+			transition:
+				opacity 160ms var(--ease-out),
+				transform 160ms var(--ease-out);
 		}
 
 		.megasearch.is-open .megasearch__panel {
-			transform: none;
+			transform: translateY(0);
+			transition:
+				opacity 240ms var(--ease-panel),
+				transform 240ms var(--ease-panel);
 		}
 
 		.megasearch__head {
@@ -675,9 +711,53 @@ const categoryHref = (slug: string) =>
 		}
 	}
 
+	/*
+	 * Movimiento reducido: el panel solo funde. Se fija su estado final
+	 * en vez de anular el `transform`, porque el centrado horizontal
+	 * depende de `translate(-50%, …)`.
+	 */
 	@media (prefers-reduced-motion: reduce) {
-		.megasearch__backdrop,
-		.megasearch__panel,
+		/*
+		 * Mismo criterio que en el minicarrito: el retardo de `visibility`
+		 * (arriba, 160ms) se acorta a los 150ms del fundido reducido, para
+		 * que el panel nunca quede "invisible pero enfocable" ni
+		 * desaparezca antes de terminar de fundirse.
+		 */
+		.megasearch {
+			transition-delay: 150ms;
+		}
+
+		.megasearch__backdrop {
+			transition: opacity 150ms linear;
+		}
+
+		.megasearch__panel {
+			transform: translate(-50%, 0);
+			transition: opacity 150ms linear;
+		}
+
+		/*
+		 * En mobile el panel es pantalla completa (`left: 0`, sin
+		 * centrado): el `translate(-50%, 0)` de arriba lo desplazaria
+		 * fuera de lugar, asi que aqui se anula por completo.
+		 */
+		@media (max-width: 680px) {
+			.megasearch__panel {
+				transform: none;
+			}
+		}
+
+		/*
+		 * Los cinco estados (idle/loading/success/empty/error) solo
+		 * funden, sin depender del retardo de `display` pensado para
+		 * movimiento normal.
+		 */
+		.megasearch__state {
+			transition:
+				opacity 150ms linear,
+				display 150ms allow-discrete;
+		}
+
 		.megasearch__result-link {
 			transition: none;
 		}
@@ -694,6 +774,34 @@ const categoryHref = (slug: string) =>
 	 */
 	.megasearch [hidden] {
 		display: none;
+	}
+
+	/*
+	 * Fundido grupal entre loading/resultados/vacio/error: los cinco
+	 * estados son hermanos que solo alternan `hidden`, asi que fundir la
+	 * salida de uno con la entrada del otro exige animar a traves de
+	 * `display: none`. `allow-discrete` retrasa el salto a `none` hasta
+	 * que el fundido de salida termina; `@starting-style` da el punto de
+	 * partida (opacity 0) la primera vez que un estado deja de estar
+	 * oculto. Sin soporte, el navegador ignora ambas reglas y el cambio
+	 * de estado vuelve a ser instantaneo -- el mismo comportamiento que
+	 * ya existia, sin roturas.
+	 */
+	.megasearch__state {
+		opacity: 1;
+		transition:
+			opacity 200ms var(--ease-out),
+			display 200ms allow-discrete;
+	}
+
+	.megasearch__state[hidden] {
+		opacity: 0;
+	}
+
+	@starting-style {
+		.megasearch__state:not([hidden]) {
+			opacity: 0;
+		}
 	}
 </style>
 
@@ -732,6 +840,14 @@ const categoryHref = (slug: string) =>
 	const MAX_RESULTS = 12;
 	const MIN_QUERY_LENGTH = 2;
 	const DEBOUNCE_MS = 220;
+
+	/*
+	 * Ventana de gracia antes de mostrar "Buscando...": si la respuesta
+	 * llega antes, el loading nunca se pinta. Si llega a mostrarse, se
+	 * mantiene al menos `LOADING_MIN_VISIBLE_MS` para no parpadear.
+	 */
+	const LOADING_SHOW_DELAY_MS = 150;
+	const LOADING_MIN_VISIBLE_MS = 300;
 
 	let cachedIndex: SearchItem[] | null = null;
 	let indexPromise: Promise<SearchItem[]> | null = null;
@@ -1008,7 +1124,45 @@ const categoryHref = (slug: string) =>
 			const controller = new AbortController();
 			inFlight = controller;
 
-			setState("loading");
+			let loadingShownAt: number | null = null;
+
+			const loadingShowTimer = window.setTimeout(() => {
+				if (controller.signal.aborted || token !== requestToken) {
+					return;
+				}
+
+				loadingShownAt = performance.now();
+				setState("loading");
+			}, LOADING_SHOW_DELAY_MS);
+
+			/*
+			 * Punto unico de salida: si el loading nunca llego a
+			 * mostrarse, aplica de inmediato. Si ya se mostro, espera lo
+			 * que falte para completar `LOADING_MIN_VISIBLE_MS` antes de
+			 * revelar el resultado, para que no parpadee.
+			 */
+			const settle = (apply: () => void) => {
+				window.clearTimeout(loadingShowTimer);
+
+				if (loadingShownAt === null) {
+					apply();
+					return;
+				}
+
+				const elapsed = performance.now() - loadingShownAt;
+				const remaining = Math.max(
+					0,
+					LOADING_MIN_VISIBLE_MS - elapsed,
+				);
+
+				window.setTimeout(() => {
+					if (controller.signal.aborted || token !== requestToken) {
+						return;
+					}
+
+					apply();
+				}, remaining);
+			};
 
 			try {
 				const items = await loadIndex();
@@ -1016,19 +1170,22 @@ const categoryHref = (slug: string) =>
 				// Cancelada (se cerro el panel o llego otra consulta) u
 				// obsoleta: no debe pintar nada.
 				if (controller.signal.aborted || token !== requestToken) {
+					window.clearTimeout(loadingShowTimer);
 					return;
 				}
 
 				const results = search(items, query);
 
-				if (results.length === 0) {
-					setState("empty");
-				} else {
-					renderResults(results);
-					setState("success");
-				}
+				settle(() => {
+					if (results.length === 0) {
+						setState("empty");
+					} else {
+						renderResults(results);
+						setState("success");
+					}
 
-				announce(results.length, query);
+					announce(results.length, query);
+				});
 			} catch (error) {
 				// Un abort no es un fallo: no debe pintar el estado error.
 				if (
@@ -1036,11 +1193,14 @@ const categoryHref = (slug: string) =>
 					(error as Error)?.name === "AbortError" ||
 					token !== requestToken
 				) {
+					window.clearTimeout(loadingShowTimer);
 					return;
 				}
 
-				setState("error");
-				status.textContent = "No se pudo cargar el buscador.";
+				settle(() => {
+					setState("error");
+					status.textContent = "No se pudo cargar el buscador.";
+				});
 			} finally {
 				if (inFlight === controller) inFlight = null;
 			}
@@ -1102,10 +1262,21 @@ const categoryHref = (slug: string) =>
 			closeOverlay(OVERLAY_ID);
 		};
 
-		const openPanel = (trigger: HTMLElement) => {
+		const openPanel = (
+			trigger: HTMLElement,
+			viaKeyboard = false,
+		) => {
 			if (isOpen()) return;
 
 			anchorToHeader();
+
+			// Sin `MouseEvent.detail` (0 = activado por teclado, no por
+			// clic real) no hay forma de distinguir el origen: se lee
+			// antes de abrir para que la regla de "sin movimiento
+			// espacial" aplique desde el primer fotograma.
+			panel.dataset.openInput = viaKeyboard
+				? "keyboard"
+				: "pointer";
 
 			panel.classList.add("is-open");
 			panel.setAttribute("aria-hidden", "false");
@@ -1136,7 +1307,10 @@ const categoryHref = (slug: string) =>
 				if (isOpen()) {
 					closePanel();
 				} else {
-					openPanel(trigger);
+					// `detail === 0` en un evento "click" indica
+					// activacion por teclado (Enter/Espacio), no un clic
+					// real de puntero.
+					openPanel(trigger, event.detail === 0);
 				}
 			});
 		});

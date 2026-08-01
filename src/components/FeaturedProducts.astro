@@ -45,7 +45,7 @@ const products = await sanityClient.fetch<Product[]>(
 
 <style>
 	.featured-products {
-		padding-block: var(--section-py);
+		padding-block: var(--home-section-py);
 		padding-inline: var(--container-gutter);
 		background: var(--surface);
 	}
@@ -56,12 +56,12 @@ const products = await sanityClient.fetch<Product[]>(
 		justify-content: space-between;
 		gap: clamp(16px, 3vw, 32px);
 		width: min(100%, var(--container-comercial));
-		margin: 0 auto var(--header-gap);
+		margin: 0 auto var(--home-header-gap);
 	}
 
 	.featured-products__heading h2 {
 		margin: 0;
-		font-size: var(--text-2xl);
+		font-size: var(--home-title);
 		font-weight: 600;
 		letter-spacing: -0.02em;
 		color: var(--color-black);
@@ -104,7 +104,7 @@ const products = await sanityClient.fetch<Product[]>(
 		margin: 0 auto;
 		display: grid;
 		grid-template-columns: repeat(4, minmax(0, 1fr));
-		gap: clamp(20px, 2vw, 30px);
+		gap: var(--home-gap);
 	}
 
 	/*
@@ -130,13 +130,17 @@ const products = await sanityClient.fetch<Product[]>(
 	}
 
 	@media (max-width: 760px) {
+		.featured-products {
+			padding-inline: 20px;
+		}
+
 		.featured-products__heading {
 			flex-wrap: wrap;
 		}
 
 		.featured-products__grid {
 			grid-template-columns: repeat(2, minmax(0, 1fr));
-			gap: 18px;
+			gap: var(--home-gap);
 		}
 	}
 
@@ -158,4 +162,100 @@ const products = await sanityClient.fetch<Product[]>(
 			max-width: 360px;
 		}
 	}
+
+	/*
+	 * Revelado al entrar en viewport (solo primera vez), con escalonado
+	 * limitado a los primeros cuatro productos. El JS solo agrega
+	 * `is-pending` a las tarjetas que no son visibles en la carga
+	 * inicial, asi que sin JavaScript ninguna tarjeta queda oculta.
+	 */
+	.featured-products__grid > :global(.product-card.is-pending) {
+		opacity: 0;
+		transform: translateY(26px);
+		transition:
+			opacity 660ms var(--ease-out),
+			transform 660ms var(--ease-out);
+	}
+
+	.featured-products__grid
+		> :global(.product-card.is-pending.is-inview) {
+		opacity: 1;
+		transform: translateY(0);
+	}
+
+	.featured-products__grid
+		> :global(.product-card):nth-child(2).is-pending {
+		transition-delay: 65ms;
+	}
+
+	.featured-products__grid
+		> :global(.product-card):nth-child(3).is-pending {
+		transition-delay: 130ms;
+	}
+
+	.featured-products__grid
+		> :global(.product-card):nth-child(4).is-pending {
+		transition-delay: 195ms;
+	}
+
+	@media (max-width: 760px) {
+		.featured-products__grid > :global(.product-card.is-pending) {
+			transform: translateY(14px);
+			transition-duration: 520ms;
+		}
+
+		.featured-products__grid
+			> :global(.product-card):nth-child(2).is-pending {
+			transition-delay: 45ms;
+		}
+
+		.featured-products__grid
+			> :global(.product-card):nth-child(3).is-pending {
+			transition-delay: 90ms;
+		}
+
+		.featured-products__grid
+			> :global(.product-card):nth-child(4).is-pending {
+			transition-delay: 135ms;
+		}
+	}
 </style>
+
+<script>
+	const revealItems = document.querySelectorAll<HTMLElement>(
+		".featured-products__grid > .product-card",
+	);
+
+	const prefersReducedMotion = window.matchMedia(
+		"(prefers-reduced-motion: reduce)",
+	).matches;
+
+	if (
+		!prefersReducedMotion &&
+		revealItems.length > 0 &&
+		"IntersectionObserver" in window
+	) {
+		const viewportHeight = window.innerHeight;
+
+		const pending = Array.from(revealItems).filter((el) => {
+			const rect = el.getBoundingClientRect();
+			return rect.top >= viewportHeight || rect.bottom <= 0;
+		});
+
+		pending.forEach((el) => el.classList.add("is-pending"));
+
+		const observer = new IntersectionObserver(
+			(entries, obs) => {
+				entries.forEach((entry) => {
+					if (entry.isIntersecting) {
+						entry.target.classList.add("is-inview");
+						obs.unobserve(entry.target);
+					}
+				});
+			},
+			{ threshold: 0.18 },
+		);
+
+		pending.forEach((el) => observer.observe(el));
+	}
+</script>

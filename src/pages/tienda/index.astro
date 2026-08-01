@@ -521,6 +521,8 @@ const pageDescription =
 />
 
 <script>
+	import { openOverlay, closeOverlay } from "../../lib/overlay";
+
 	interface CatalogEntry {
 		id: string;
 		category: string;
@@ -971,29 +973,38 @@ const pageDescription =
 				"[data-filters-close], [data-filters-apply]",
 			);
 
-			const openDrawer = () => {
-				filtersPanel.classList.add("is-open");
-				filtersBackdrop?.classList.add("is-open");
-				filtersPanel.setAttribute("role", "dialog");
-				filtersPanel.setAttribute("aria-modal", "true");
-				filtersOpenButton.setAttribute("aria-expanded", "true");
-				document.body.classList.add("catalog-filters-open");
+			const DRAWER_OVERLAY_ID = "catalog-filters";
 
-				const firstControl =
-					filtersPanel.querySelector<HTMLElement>(
-						"input, button, select",
-					);
-				firstControl?.focus();
-			};
-
+			/*
+			 * Bloqueo de scroll, focus trap, Escape y devolucion del
+			 * foco al boton que abrio el drawer los resuelve overlay.ts
+			 * (la misma pieza que usan el minicarrito y el buscador), en
+			 * vez de reimplementarlos aqui. Tambien garantiza que este
+			 * drawer nunca coexista abierto con otro overlay modal.
+			 */
 			const closeDrawer = () => {
 				filtersPanel.classList.remove("is-open");
 				filtersBackdrop?.classList.remove("is-open");
 				filtersPanel.removeAttribute("role");
 				filtersPanel.removeAttribute("aria-modal");
 				filtersOpenButton.setAttribute("aria-expanded", "false");
-				document.body.classList.remove("catalog-filters-open");
-				filtersOpenButton.focus();
+
+				closeOverlay(DRAWER_OVERLAY_ID);
+			};
+
+			const openDrawer = () => {
+				filtersPanel.classList.add("is-open");
+				filtersBackdrop?.classList.add("is-open");
+				filtersPanel.setAttribute("role", "dialog");
+				filtersPanel.setAttribute("aria-modal", "true");
+				filtersOpenButton.setAttribute("aria-expanded", "true");
+
+				openOverlay({
+					id: DRAWER_OVERLAY_ID,
+					container: filtersPanel,
+					trigger: filtersOpenButton,
+					close: closeDrawer,
+				});
 			};
 
 			filtersOpenButton.addEventListener("click", openDrawer);
@@ -1001,15 +1012,6 @@ const pageDescription =
 
 			closeButtons.forEach((button) => {
 				button.addEventListener("click", closeDrawer);
-			});
-
-			document.addEventListener("keydown", (event) => {
-				if (
-					event.key === "Escape" &&
-					filtersPanel.classList.contains("is-open")
-				) {
-					closeDrawer();
-				}
 			});
 		}
 	}

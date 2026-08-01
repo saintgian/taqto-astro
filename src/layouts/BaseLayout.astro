@@ -247,6 +247,24 @@ const fontFaceCss = `
 		--focus-ring-on-dark: 0 0 0 3px rgba(255, 246, 237, 0.6);
 
 		/*
+		 * Movimiento: vocabulario compartido del sitio. Aqui solo se
+		 * declara; cada componente adopta los tokens en su propia fase,
+		 * sin refactor masivo de las duraciones ya existentes.
+		 *
+		 * out: entradas y salidas. in-out: lo que se desplaza en pantalla
+		 * sin entrar ni salir. panel: apertura de capas ancladas.
+		 */
+		--ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+		--ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+		--ease-panel: cubic-bezier(0.32, 0.72, 0, 1);
+
+		--dur-press: 150ms;
+		--dur-exit: 160ms;
+		--dur-panel: 220ms;
+		--dur-content: 280ms;
+		--dur-entry: 420ms;
+
+		/*
 		 * Alias con el vocabulario del manual de marca. No son colores
 		 * nuevos: apuntan a los tokens que ya usaba el proyecto, para que
 		 * el sistema de CTA se lea igual que el manual.
@@ -411,7 +429,8 @@ const fontFaceCss = `
 			border-color 200ms ease,
 			color 200ms ease,
 			transform 200ms ease,
-			box-shadow 200ms ease;
+			box-shadow 200ms ease,
+			scale 105ms var(--ease-out);
 	}
 
 	.btn svg {
@@ -434,6 +453,20 @@ const fontFaceCss = `
 			0 0 0 4px var(--color-ink);
 	}
 
+	/*
+	 * Feedback de presion, compartido por todas las variantes pulsables.
+	 * Usa `scale` (independiente de `transform`) para no interferir con
+	 * el `translateY` de hover-lift de `.btn--primary`: ambas propiedades
+	 * componen sin pisarse. La entrada usa `--dur-press` (150ms); la
+	 * liberacion, al no redeclararse aqui, cae en la duracion de `scale`
+	 * del `.btn` base (105ms) — mas rapida, para que soltar se sienta
+	 * inmediato. No aplica ni a `:disabled` ni a `.is-loading`.
+	 */
+	.btn:active:not(:disabled):not([aria-disabled="true"]):not(.is-loading) {
+		scale: 0.98;
+		transition: scale var(--dur-press) var(--ease-out);
+	}
+
 	/* ---------- Primario: degradado vertical naranja en reposo ---------- */
 
 	.btn--primary {
@@ -447,17 +480,19 @@ const fontFaceCss = `
 		border-color: transparent;
 	}
 
-	.btn--primary:hover:not(:disabled):not([aria-disabled="true"]) {
-		background-color: var(--cta-hover);
-		background-image: linear-gradient(
-			to bottom,
-			var(--cta-hover-gradient-top) 0%,
-			var(--cta-hover) 100%
-		);
-		color: var(--cta-foreground-interactive);
-		border-color: transparent;
-		transform: translateY(-1px);
-		box-shadow: 0 8px 18px rgba(255, 77, 42, 0.22);
+	@media (hover: hover) and (pointer: fine) {
+		.btn--primary:hover:not(:disabled):not([aria-disabled="true"]) {
+			background-color: var(--cta-hover);
+			background-image: linear-gradient(
+				to bottom,
+				var(--cta-hover-gradient-top) 0%,
+				var(--cta-hover) 100%
+			);
+			color: var(--cta-foreground-interactive);
+			border-color: transparent;
+			transform: translateY(-1px);
+			box-shadow: 0 8px 18px rgba(255, 77, 42, 0.22);
+		}
 	}
 
 	.btn--primary:active:not(:disabled):not([aria-disabled="true"]) {
@@ -492,9 +527,11 @@ const fontFaceCss = `
 		font-weight: 500;
 	}
 
-	.btn--secondary:hover:not(:disabled):not([aria-disabled="true"]) {
-		border-color: var(--ink-35);
-		background: var(--ink-08);
+	@media (hover: hover) and (pointer: fine) {
+		.btn--secondary:hover:not(:disabled):not([aria-disabled="true"]) {
+			border-color: var(--ink-35);
+			background: var(--ink-08);
+		}
 	}
 
 	/* ---------- Terciario ---------- */
@@ -505,8 +542,10 @@ const fontFaceCss = `
 		font-weight: 500;
 	}
 
-	.btn--tertiary:hover:not(:disabled):not([aria-disabled="true"]) {
-		background: var(--ink-08);
+	@media (hover: hover) and (pointer: fine) {
+		.btn--tertiary:hover:not(:disabled):not([aria-disabled="true"]) {
+			background: var(--ink-08);
+		}
 	}
 
 	/* ---------- Destructivo ---------- */
@@ -525,9 +564,11 @@ const fontFaceCss = `
 		height: 16px;
 	}
 
-	.btn--danger:hover:not(:disabled):not([aria-disabled="true"]) {
-		background: rgba(168, 51, 26, 0.08);
-		color: #a8331a;
+	@media (hover: hover) and (pointer: fine) {
+		.btn--danger:hover:not(:disabled):not([aria-disabled="true"]) {
+			background: rgba(168, 51, 26, 0.08);
+			color: #a8331a;
+		}
 	}
 
 	/* ---------- Solo icono ---------- */
@@ -545,8 +586,10 @@ const fontFaceCss = `
 		color: var(--color-ink);
 	}
 
-	.btn--icon:hover:not(:disabled):not([aria-disabled="true"]) {
-		background: var(--ink-08);
+	@media (hover: hover) and (pointer: fine) {
+		.btn--icon:hover:not(:disabled):not([aria-disabled="true"]) {
+			background: var(--ink-08);
+		}
 	}
 
 	.btn--icon svg {
@@ -599,10 +642,14 @@ const fontFaceCss = `
 			scroll-behavior: auto;
 		}
 
+		/*
+		 * Reposo, hover y foco no se desplazan. `:active` queda fuera a
+		 * proposito: el feedback de presion es puntual y no espacial, asi
+		 * que se conserva tambien con movimiento reducido.
+		 */
 		.btn,
 		.btn:hover,
-		.btn:focus-visible,
-		.btn:active {
+		.btn:focus-visible {
 			transform: none;
 		}
 

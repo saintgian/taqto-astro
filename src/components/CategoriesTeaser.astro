@@ -78,6 +78,7 @@ const featured = categories.slice(0, 3).map((category) => ({
 								"categories-teaser__card--placeholder",
 						]}
 						href={`${base}categorias/${category.slug}/`}
+						data-reveal-item
 					>
 						<div
 							class:list={[
@@ -130,9 +131,48 @@ const featured = categories.slice(0, 3).map((category) => ({
 	)
 }
 
+<script>
+	const revealItems = document.querySelectorAll<HTMLElement>(
+		".categories-teaser__card[data-reveal-item]",
+	);
+
+	const prefersReducedMotion = window.matchMedia(
+		"(prefers-reduced-motion: reduce)",
+	).matches;
+
+	if (
+		!prefersReducedMotion &&
+		revealItems.length > 0 &&
+		"IntersectionObserver" in window
+	) {
+		const viewportHeight = window.innerHeight;
+
+		const pending = Array.from(revealItems).filter((el) => {
+			const rect = el.getBoundingClientRect();
+			return rect.top >= viewportHeight || rect.bottom <= 0;
+		});
+
+		pending.forEach((el) => el.classList.add("is-pending"));
+
+		const observer = new IntersectionObserver(
+			(entries, obs) => {
+				entries.forEach((entry) => {
+					if (entry.isIntersecting) {
+						entry.target.classList.add("is-inview");
+						obs.unobserve(entry.target);
+					}
+				});
+			},
+			{ threshold: 0.18 },
+		);
+
+		pending.forEach((el) => observer.observe(el));
+	}
+</script>
+
 <style>
 	.categories-teaser {
-		padding-block: var(--section-py);
+		padding-block: var(--home-section-py);
 		padding-inline: var(--container-gutter);
 		background: var(--surface);
 	}
@@ -143,13 +183,13 @@ const featured = categories.slice(0, 3).map((category) => ({
 		justify-content: space-between;
 		gap: clamp(16px, 3vw, 32px);
 		width: min(100%, var(--container-comercial));
-		margin: 0 auto var(--header-gap);
+		margin: 0 auto var(--home-header-gap);
 	}
 
 	.categories-teaser__heading h2 {
 		max-width: 620px;
 		margin: 0;
-		font-size: var(--text-2xl);
+		font-size: var(--home-title);
 		font-weight: 600;
 		line-height: 1.15;
 		letter-spacing: -0.02em;
@@ -193,7 +233,7 @@ const featured = categories.slice(0, 3).map((category) => ({
 		margin: 0 auto;
 		display: grid;
 		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: clamp(20px, 2vw, 32px);
+		gap: var(--home-gap);
 	}
 
 	.categories-teaser__card {
@@ -213,9 +253,11 @@ const featured = categories.slice(0, 3).map((category) => ({
 			box-shadow 220ms ease;
 	}
 
-	.categories-teaser__card:hover {
-		transform: translateY(-4px);
-		box-shadow: var(--shadow-md);
+	@media (hover: hover) and (pointer: fine) {
+		.categories-teaser__card:hover {
+			transform: translateY(-3px);
+			box-shadow: var(--shadow-md);
+		}
 	}
 
 	.categories-teaser__card--placeholder {
@@ -248,8 +290,10 @@ const featured = categories.slice(0, 3).map((category) => ({
 		transition: transform 420ms ease;
 	}
 
-	.categories-teaser__card:hover .categories-teaser__image img {
-		transform: scale(1.05);
+	@media (hover: hover) and (pointer: fine) {
+		.categories-teaser__card:hover .categories-teaser__image img {
+			transform: scale(1.05);
+		}
 	}
 
 	.categories-teaser__scrim {
@@ -271,24 +315,24 @@ const featured = categories.slice(0, 3).map((category) => ({
 	.categories-teaser__content {
 		position: relative;
 		z-index: 2;
-		padding: clamp(20px, 3vw, 30px);
+		padding: clamp(16px, 2.4vw, 24px);
 		text-align: left;
 	}
 
 	.categories-teaser__card h3 {
 		margin: 0;
 		color: #fff;
-		font-size: clamp(21px, 1vw + 18px, 27px);
+		font-size: var(--home-card-title);
 		font-weight: 700;
 		letter-spacing: -0.01em;
 	}
 
 	.categories-teaser__card p {
 		max-width: 340px;
-		margin: 8px 0 0;
+		margin: 6px 0 0;
 		color: inherit;
 		opacity: 0.92;
-		font-size: clamp(16.5px, 0.4vw + 15.5px, 18px);
+		font-size: var(--home-card-body);
 		line-height: 1.5;
 	}
 
@@ -317,8 +361,10 @@ const featured = categories.slice(0, 3).map((category) => ({
 		transition: transform 180ms ease;
 	}
 
-	.categories-teaser__card:hover .categories-teaser__link svg {
-		transform: translateX(4px);
+	@media (hover: hover) and (pointer: fine) {
+		.categories-teaser__card:hover .categories-teaser__link svg {
+			transform: translateX(4px);
+		}
 	}
 
 	@media (max-width: 1024px) and (min-width: 769px) {
@@ -333,6 +379,10 @@ const featured = categories.slice(0, 3).map((category) => ({
 	}
 
 	@media (max-width: 768px) {
+		.categories-teaser {
+			padding-inline: 20px;
+		}
+
 		.categories-teaser__heading {
 			align-items: flex-start;
 			flex-direction: column;
@@ -345,6 +395,7 @@ const featured = categories.slice(0, 3).map((category) => ({
 
 		.categories-teaser__grid {
 			grid-template-columns: 1fr;
+			gap: var(--home-gap);
 		}
 
 		.categories-teaser__card {
@@ -357,6 +408,47 @@ const featured = categories.slice(0, 3).map((category) => ({
 		.categories-teaser__image img,
 		.categories-teaser__link svg {
 			transition: none;
+		}
+	}
+
+	/*
+	 * Revelado al entrar en viewport (solo primera vez). El JS agrega
+	 * `is-pending` unicamente a las tarjetas que no son visibles en la
+	 * carga inicial, asi que sin JavaScript ninguna tarjeta queda oculta.
+	 */
+	.categories-teaser__card.is-pending {
+		opacity: 0;
+		transform: translateY(26px);
+		transition:
+			opacity 660ms var(--ease-out),
+			transform 660ms var(--ease-out);
+	}
+
+	.categories-teaser__card.is-pending.is-inview {
+		opacity: 1;
+		transform: translateY(0);
+	}
+
+	.categories-teaser__card:nth-child(2).is-pending {
+		transition-delay: 70ms;
+	}
+
+	.categories-teaser__card:nth-child(3).is-pending {
+		transition-delay: 140ms;
+	}
+
+	@media (max-width: 760px) {
+		.categories-teaser__card.is-pending {
+			transform: translateY(14px);
+			transition-duration: 520ms;
+		}
+
+		.categories-teaser__card:nth-child(2).is-pending {
+			transition-delay: 45ms;
+		}
+
+		.categories-teaser__card:nth-child(3).is-pending {
+			transition-delay: 90ms;
 		}
 	}
 </style>

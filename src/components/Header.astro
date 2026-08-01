@@ -417,6 +417,13 @@ const getCategoryIcon = (slug: string) =>
 				</div>
 			</div>
 
+			<p
+				class="minicart__stock-note"
+				id="minicart-stock-note"
+				role="status"
+				aria-live="polite"
+			></p>
+
 			<div class="minicart__foot" data-minicart-foot hidden>
 				<div class="minicart__subtotal">
 					<span>Subtotal</span>
@@ -568,6 +575,9 @@ const getCategoryIcon = (slug: string) =>
 		const subtotalLabel = minicart.querySelector<HTMLElement>(
 			"[data-minicart-subtotal]",
 		);
+		const stockNote = minicart.querySelector<HTMLElement>(
+			"#minicart-stock-note",
+		);
 		const listTemplate = document.querySelector<HTMLTemplateElement>(
 			"[data-minicart-list-template]",
 		);
@@ -590,6 +600,30 @@ const getCategoryIcon = (slug: string) =>
 		) {
 			return;
 		}
+
+		let stockNoteTimer: number | undefined;
+
+		const announceStockLimit = (
+			title: string,
+			limit: number,
+		) => {
+			if (!stockNote) return;
+
+			if (stockNoteTimer !== undefined) {
+				window.clearTimeout(stockNoteTimer);
+			}
+
+			stockNote.textContent = "";
+
+			window.requestAnimationFrame(() => {
+				stockNote.textContent = `${title}: alcanzaste el máximo disponible (${limit} unidad${limit === 1 ? "" : "es"}).`;
+			});
+
+			stockNoteTimer = window.setTimeout(() => {
+				stockNote.textContent = "";
+				stockNoteTimer = undefined;
+			}, 3000);
+		};
 
 		const triggers = () =>
 			Array.from(
@@ -673,11 +707,34 @@ const getCategoryIcon = (slug: string) =>
 			const increase = pick<HTMLButtonElement>("increase");
 
 			if (increase) {
+				const stockLimit =
+					typeof item.stock === "number"
+						? Math.max(0, Math.floor(item.stock))
+						: undefined;
+
+				const atMax =
+					typeof stockLimit === "number" &&
+					item.quantity >= stockLimit;
+
+				increase.disabled = atMax;
+				increase.setAttribute(
+					"aria-disabled",
+					String(atMax),
+				);
+
 				increase.setAttribute(
 					"aria-label",
 					`Aumentar cantidad de ${item.title}`,
 				);
 				increase.addEventListener("click", () => {
+					if (atMax) {
+						announceStockLimit(
+							item.title,
+							stockLimit as number,
+						);
+						return;
+					}
+
 					updateQuantity(item.id, item.quantity + 1);
 				});
 			}
@@ -743,14 +800,24 @@ const getCategoryIcon = (slug: string) =>
 				`[data-role="${memory.role}"]`,
 			);
 
-			// Si el control quedo deshabilitado (bajar de 1) el foco pasa
-			// al hermano util en vez de perderse.
+			// Si el control quedo deshabilitado (bajar de 1, o llegar al
+			// stock maximo) el foco pasa al hermano util en vez de perderse.
+			const increaseBtn = row.querySelector<HTMLButtonElement>(
+				'[data-role="increase"]',
+			);
+			const decreaseBtn = row.querySelector<HTMLButtonElement>(
+				'[data-role="decrease"]',
+			);
+			const removeBtn = row.querySelector<HTMLButtonElement>(
+				'[data-role="remove"]',
+			);
+
 			const target =
 				exact && !exact.disabled
 					? exact
-					: row.querySelector<HTMLButtonElement>(
-							'[data-role="increase"]',
-						);
+					: (increaseBtn && !increaseBtn.disabled && increaseBtn) ||
+						(decreaseBtn && !decreaseBtn.disabled && decreaseBtn) ||
+						removeBtn;
 
 			target?.focus();
 		};
@@ -1976,15 +2043,25 @@ const getCategoryIcon = (slug: string) =>
 	 * cubriendo el viewport, pero es transparente: solo sirve para
 	 * detectar el clic exterior, no oscurece la pagina.
 	 */
+	/*
+	 * `visibility` se anima con retardo (tecnica clasica, sin depender de
+	 * `transition-behavior: allow-discrete`): al cerrar, permanece
+	 * `visible` 160ms -- lo que tarda la salida mas lenta del dialogo --
+	 * para que el fundido de salida termine de reproducirse antes de
+	 * desaparecer. Al abrir, el retardo se anula para que aparezca de
+	 * inmediato.
+	 */
 	.minicart {
 		position: fixed;
 		inset: 0;
 		z-index: 300;
 		visibility: hidden;
+		transition: visibility 0s linear 160ms;
 	}
 
 	.minicart.is-open {
 		visibility: visible;
+		transition-delay: 0s;
 	}
 
 	.minicart__backdrop {
@@ -1992,11 +2069,12 @@ const getCategoryIcon = (slug: string) =>
 		inset: 0;
 		background: rgba(20, 20, 20, 0.34);
 		opacity: 0;
-		transition: opacity 200ms ease;
+		transition: opacity 140ms var(--ease-out);
 	}
 
 	.minicart.is-open .minicart__backdrop {
 		opacity: 1;
+		transition: opacity 180ms var(--ease-out);
 	}
 
 	.minicart__dialog {
@@ -2017,14 +2095,17 @@ const getCategoryIcon = (slug: string) =>
 		transform: translate(-50%, calc(-50% + 8px));
 		pointer-events: none;
 		transition:
-			opacity 200ms ease,
-			transform 200ms ease;
+			opacity 160ms var(--ease-out),
+			transform 160ms var(--ease-out);
 	}
 
 	.minicart.is-open .minicart__dialog {
 		opacity: 1;
 		transform: translate(-50%, -50%);
 		pointer-events: auto;
+		transition:
+			opacity 220ms var(--ease-panel),
+			transform 220ms var(--ease-panel);
 	}
 
 	/* ---------- Popover anclado (desktop) ---------- */
@@ -2049,7 +2130,7 @@ const getCategoryIcon = (slug: string) =>
 			padding: 20px;
 			border-radius: 16px;
 			box-shadow: 0 16px 40px rgba(20, 20, 20, 0.13);
-			transform: translateY(-8px) scale(0.96);
+			transform: translateY(-8px) scale(0.97);
 			transform-origin: top right;
 		}
 
@@ -2280,6 +2361,18 @@ const getCategoryIcon = (slug: string) =>
 		margin-top: 10px;
 	}
 
+	.minicart__stock-note {
+		flex: 0 0 auto;
+		margin: 0;
+		padding-top: 8px;
+		font-size: var(--text-xs);
+		color: var(--color-orange, #c2410c);
+	}
+
+	.minicart__stock-note:empty {
+		display: none;
+	}
+
 	.minicart__foot {
 		flex: 0 0 auto;
 		padding-top: 18px;
@@ -2349,10 +2442,36 @@ const getCategoryIcon = (slug: string) =>
 		}
 	}
 
+	/*
+	 * Movimiento reducido: el minicarrito solo funde. El modal se centra
+	 * con `translate(-50%, -50%)`, asi que aqui se fija su estado final
+	 * en vez de anular el `transform`, que romperia el centrado. El
+	 * popover se ancla con `top`/`right` y si puede prescindir de el.
+	 */
 	@media (prefers-reduced-motion: reduce) {
-		.minicart__backdrop,
+		/*
+		 * El retardo de `visibility` (arriba, 160ms) esta pensado para la
+		 * salida animada normal. Aqui se acorta a los mismos 150ms del
+		 * fundido reducido para que nunca quede "invisible pero enfocable"
+		 * ni tampoco desaparezca antes de terminar de fundirse.
+		 */
+		.minicart {
+			transition-delay: 150ms;
+		}
+
+		.minicart__backdrop {
+			transition: opacity 150ms linear;
+		}
+
 		.minicart__dialog {
-			transition: none;
+			transform: translate(-50%, -50%);
+			transition: opacity 150ms linear;
+		}
+
+		@media (min-width: 768px) {
+			.minicart[data-mode="popover"] .minicart__dialog {
+				transform: none;
+			}
 		}
 	}
 

@@ -84,21 +84,21 @@ const track = [...products, ...products];
 
 <style>
 	.carousel {
-		padding-block: var(--section-py);
+		padding-block: var(--home-section-py);
 		background: var(--surface);
 		overflow: hidden;
 	}
 
 	.carousel__heading {
 		width: min(100%, var(--container-comercial));
-		margin: 0 auto var(--header-gap);
+		margin: 0 auto var(--home-header-gap);
 		padding-inline: var(--container-gutter);
 		text-align: left;
 	}
 
 	.carousel__heading h2 {
 		margin: 0;
-		font-size: var(--text-2xl);
+		font-size: var(--home-title);
 		font-weight: 600;
 		letter-spacing: -0.02em;
 		color: var(--color-black);
@@ -156,7 +156,7 @@ const track = [...products, ...products];
 
 	@media (max-width: 600px) {
 		.carousel__heading {
-			padding-inline: 18px;
+			padding-inline: 20px;
 		}
 
 		.carousel__item {

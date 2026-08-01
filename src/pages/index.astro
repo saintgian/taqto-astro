@@ -265,6 +265,37 @@ const customerProofProjects = (
 </BaseLayout>
 
 <style>
+	/*
+	 * Tokens locales de la portada. Escalan la tipografia y el ritmo
+	 * vertical de las secciones comerciales (categorias, productos,
+	 * pasos, maderas, galeria, prueba social, origen) sin tocar los
+	 * tokens globales de BaseLayout.astro, que siguen intactos para
+	 * Header, Footer, tienda y ficha de producto.
+	 */
+	main {
+		--home-eyebrow: clamp(0.7rem, 0.66rem + 0.2vw, 0.78rem);
+		--home-title: clamp(1.9rem, 1.55rem + 1.6vw, 2.55rem);
+		--home-intro: clamp(1rem, 0.94rem + 0.3vw, 1.1rem);
+		--home-card-title: clamp(1.1rem, 1.02rem + 0.35vw, 1.3rem);
+		--home-card-body: clamp(0.94rem, 0.9rem + 0.2vw, 1.02rem);
+		--home-section-py: clamp(40px, 4.5vw, 64px);
+		--home-header-gap: clamp(14px, 1.6vw, 22px);
+		--home-gap: clamp(16px, 1.8vw, 24px);
+	}
+
+	@media (max-width: 640px) {
+		main {
+			--home-title: clamp(1.55rem, 1.3rem + 3vw, 1.85rem);
+			--home-intro: clamp(0.94rem, 0.9rem + 0.6vw, 1rem);
+			--home-card-title: clamp(1.08rem, 1rem + 0.9vw, 1.25rem);
+			--home-card-body: clamp(0.92rem, 0.88rem + 0.5vw, 1rem);
+			--home-eyebrow: clamp(0.68rem, 0.64rem + 0.4vw, 0.74rem);
+			--home-section-py: clamp(48px, 10vw, 64px);
+			--home-header-gap: 14px;
+			--home-gap: 16px;
+		}
+	}
+
 	.campaign-section {
 		padding-block: var(--section-py);
 		padding-inline: var(--container-gutter);

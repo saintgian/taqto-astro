@@ -872,6 +872,7 @@ const safeVariantJson = JSON.stringify({
 							class="product-quantity__input"
 							id="product-quantity-input"
 							min="1"
+							max={initialStock > 0 ? initialStock : 1}
 							step="1"
 							value="1"
 							inputmode="numeric"
@@ -883,6 +884,8 @@ const safeVariantJson = JSON.stringify({
 							class="product-quantity__button"
 							data-quantity-increase
 							aria-label="Aumentar cantidad"
+							disabled={initialStock <= 1}
+							aria-disabled={initialStock <= 1 ? "true" : "false"}
 						>
 							+
 						</button>
@@ -900,12 +903,33 @@ const safeVariantJson = JSON.stringify({
 							},
 						]}
 						id="product-add-to-cart"
+						disabled={initialStock <= 0}
+						aria-disabled={initialStock <= 0 ? "true" : "false"}
 					>
-						<span id="product-add-to-cart-label">
-							Agregar al carrito
+						<span class="product-add-to-cart__labels">
+							<span
+								id="product-add-to-cart-label"
+								class="product-add-to-cart__label product-add-to-cart__label--default"
+							>
+								Agregar al carrito
+							</span>
+
+							<span
+								class="product-add-to-cart__label product-add-to-cart__label--confirm"
+								aria-hidden="true"
+							>
+								Agregado ✓
+							</span>
 						</span>
 					</button>
 				</div>
+
+				<p
+					id="product-add-to-cart-status"
+					class="product-add-to-cart__status"
+					role="status"
+					aria-live="polite"
+				></p>
 
 				{
 					product.careInstructions && (
@@ -1130,10 +1154,41 @@ const safeVariantJson = JSON.stringify({
 				"#product-add-to-cart",
 			);
 
-		const addToCartLabel =
+		const addToCartStatus =
 			document.querySelector<HTMLElement>(
-				"#product-add-to-cart-label",
+				"#product-add-to-cart-status",
 			);
+
+		let addToCartConfirmTimer: number | undefined;
+
+		const showAddedConfirmation = () => {
+			if (!addToCartButton) return;
+
+			if (addToCartConfirmTimer !== undefined) {
+				window.clearTimeout(addToCartConfirmTimer);
+			}
+
+			addToCartButton.classList.add("is-confirmed");
+
+			if (addToCartStatus) {
+				// Se vacia primero para que lectores de pantalla vuelvan
+				// a anunciar el mensaje aunque sea identico al anterior
+				// (altas consecutivas del mismo producto).
+				addToCartStatus.textContent = "";
+
+				window.requestAnimationFrame(() => {
+					addToCartStatus.textContent =
+						"Producto añadido al carrito";
+				});
+			}
+
+			addToCartConfirmTimer = window.setTimeout(() => {
+				addToCartButton.classList.remove(
+					"is-confirmed",
+				);
+				addToCartConfirmTimer = undefined;
+			}, 1300);
+		};
 
 		const quantityInput =
 			document.querySelector<HTMLInputElement>(
@@ -1261,6 +1316,14 @@ const safeVariantJson = JSON.stringify({
 					"is-disabled",
 				);
 
+				if (addToCartButton) {
+					addToCartButton.disabled = true;
+					addToCartButton.setAttribute(
+						"aria-disabled",
+						"true",
+					);
+				}
+
 				return;
 			}
 
@@ -1323,6 +1386,18 @@ const safeVariantJson = JSON.stringify({
 				"is-disabled",
 				stock <= 0,
 			);
+
+			if (addToCartButton) {
+				addToCartButton.disabled = stock <= 0;
+				addToCartButton.setAttribute(
+					"aria-disabled",
+					stock <= 0 ? "true" : "false",
+				);
+			}
+
+			// La variante pudo cambiar a una con menos stock: se
+			// re-acota la cantidad elegida y el boton "+" al nuevo limite.
+			setQuantity(getQuantity());
 		};
 
 		const selectButton = (
@@ -1367,6 +1442,13 @@ const safeVariantJson = JSON.stringify({
 			});
 		});
 
+		const getStockLimit = () => {
+			const selection = getCurrentSelection();
+			return selection
+				? Math.max(0, Number(selection.stock) || 0)
+				: 0;
+		};
+
 		const getQuantity = () => {
 			const value = Number(
 				quantityInput?.value || 1,
@@ -1379,12 +1461,58 @@ const safeVariantJson = JSON.stringify({
 			return Math.floor(value);
 		};
 
+		let stockLimitTimer: number | undefined;
+
+		const announceStockLimit = (limit: number) => {
+			if (!messageElement) return;
+
+			if (stockLimitTimer !== undefined) {
+				window.clearTimeout(stockLimitTimer);
+			}
+
+			messageElement.textContent = "";
+
+			window.requestAnimationFrame(() => {
+				messageElement.textContent =
+					limit > 0
+						? `Alcanzaste el máximo disponible: ${limit} unidad${limit === 1 ? "" : "es"}.`
+						: "Esta combinación no tiene stock disponible.";
+			});
+
+			stockLimitTimer = window.setTimeout(() => {
+				if (messageElement.textContent) {
+					messageElement.textContent = "";
+				}
+
+				stockLimitTimer = undefined;
+			}, 3000);
+		};
+
 		const setQuantity = (value: number) => {
 			if (!quantityInput) return;
 
-			quantityInput.value = String(
-				Math.max(1, Math.floor(value)),
-			);
+			const limit = getStockLimit();
+			const safeValue = Number.isFinite(value)
+				? Math.floor(value)
+				: 1;
+
+			const clamped =
+				limit > 0
+					? Math.min(Math.max(1, safeValue), limit)
+					: 1;
+
+			quantityInput.value = String(clamped);
+			quantityInput.max = String(limit > 0 ? limit : 1);
+
+			const atMax = limit <= 0 || clamped >= limit;
+
+			if (quantityIncrease) {
+				quantityIncrease.disabled = atMax;
+				quantityIncrease.setAttribute(
+					"aria-disabled",
+					String(atMax),
+				);
+			}
 		};
 
 		quantityDecrease?.addEventListener(
@@ -1397,14 +1525,29 @@ const safeVariantJson = JSON.stringify({
 		quantityIncrease?.addEventListener(
 			"click",
 			() => {
-				setQuantity(getQuantity() + 1);
+				const limit = getStockLimit();
+				const next = getQuantity() + 1;
+
+				if (limit > 0 && next > limit) {
+					announceStockLimit(limit);
+					return;
+				}
+
+				setQuantity(next);
 			},
 		);
 
 		quantityInput?.addEventListener(
 			"change",
 			() => {
-				setQuantity(getQuantity());
+				const limit = getStockLimit();
+				const requested = getQuantity();
+
+				if (limit > 0 && requested > limit) {
+					announceStockLimit(limit);
+				}
+
+				setQuantity(requested);
 			},
 		);
 
@@ -1412,6 +1555,7 @@ const safeVariantJson = JSON.stringify({
 			"click",
 			() => {
 				if (
+					addToCartButton.disabled ||
 					addToCartButton.classList.contains(
 						"is-disabled",
 					)
@@ -1428,6 +1572,16 @@ const safeVariantJson = JSON.stringify({
 							"Elige una combinación disponible antes de agregar al carrito.";
 					}
 
+					return;
+				}
+
+				const stockLimit = Math.max(
+					0,
+					Number(selection.stock) || 0,
+				);
+
+				if (stockLimit <= 0) {
+					announceStockLimit(0);
 					return;
 				}
 
@@ -1452,42 +1606,52 @@ const safeVariantJson = JSON.stringify({
 					.filter(Boolean)
 					.join("__");
 
-				addItem({
-					id: cartId || productInfo.slug,
-					productId: productInfo.id,
-					slug: productInfo.slug,
-					title: productInfo.title,
-					image: productInfo.image || "",
-					sku: selection.sku,
-					woodTitle:
-						selection.woodTitle || undefined,
-					woodSlug:
-						selection.woodSlug || undefined,
-					sizeTitle:
-						selection.sizeTitle || undefined,
-					sizeSlug:
-						selection.sizeSlug || undefined,
-					dimensionsLabel:
-						selection.dimensions || undefined,
-					engravingText:
-						engravingText || undefined,
-					unitPrice,
-					quantity: getQuantity(),
-				});
+				const requestedQuantity = Math.min(
+					getQuantity(),
+					stockLimit,
+				);
+
+				let result;
+
+				try {
+					result = addItem({
+						id: cartId || productInfo.slug,
+						productId: productInfo.id,
+						slug: productInfo.slug,
+						title: productInfo.title,
+						image: productInfo.image || "",
+						sku: selection.sku,
+						woodTitle:
+							selection.woodTitle ||
+							undefined,
+						woodSlug:
+							selection.woodSlug ||
+							undefined,
+						sizeTitle:
+							selection.sizeTitle ||
+							undefined,
+						sizeSlug:
+							selection.sizeSlug ||
+							undefined,
+						dimensionsLabel:
+							selection.dimensions ||
+							undefined,
+						engravingText:
+							engravingText || undefined,
+						unitPrice,
+						quantity: requestedQuantity,
+						stock: stockLimit,
+					});
+				} catch {
+					return;
+				}
 
 				setQuantity(1);
 
-				if (addToCartLabel) {
-					const previousLabel =
-						addToCartLabel.textContent;
-
-					addToCartLabel.textContent =
-						"Agregado ✓";
-
-					window.setTimeout(() => {
-						addToCartLabel.textContent =
-							previousLabel;
-					}, 1600);
+				if (result?.capped) {
+					announceStockLimit(result.quantity);
+				} else {
+					showAddedConfirmation();
 				}
 			},
 		);
@@ -1993,6 +2157,12 @@ const safeVariantJson = JSON.stringify({
 		background: rgba(20, 20, 20, 0.06);
 	}
 
+	.product-quantity__button:disabled {
+		opacity: 0.4;
+		cursor: not-allowed;
+		pointer-events: none;
+	}
+
 	.product-quantity__button:focus-visible,
 	.product-engraving__input:focus-visible {
 		outline: 2px solid var(--color-orange, #ff4d2a);
@@ -2029,9 +2199,64 @@ const safeVariantJson = JSON.stringify({
 		text-transform: uppercase;
 	}
 
-	.product-add-to-cart.is-disabled {
+	.product-add-to-cart.is-disabled,
+	.product-add-to-cart:disabled {
 		pointer-events: none;
 		opacity: 0.42;
+		cursor: not-allowed;
+	}
+
+	/*
+	 * Ambos labels ocupan la misma celda de grid: el ancho del boton
+	 * queda reservado por el mas largo de los dos, sin importar cual
+	 * este visible, asi que confirmar nunca mueve ni redimensiona el
+	 * CTA. El label de confirmacion es `aria-hidden`: el nombre
+	 * accesible del boton sigue siendo siempre "Agregar al carrito".
+	 */
+	.product-add-to-cart__labels {
+		display: grid;
+	}
+
+	.product-add-to-cart__label {
+		grid-area: 1 / 1;
+		opacity: 1;
+		transition: opacity 200ms var(--ease-out);
+	}
+
+	.product-add-to-cart__label--confirm {
+		opacity: 0;
+	}
+
+	.product-add-to-cart.is-confirmed
+		.product-add-to-cart__label--default {
+		opacity: 0;
+	}
+
+	.product-add-to-cart.is-confirmed
+		.product-add-to-cart__label--confirm {
+		opacity: 1;
+	}
+
+	/*
+	 * Region de anuncio para lectores de pantalla: existe siempre en el
+	 * DOM, nunca ocupa espacio visual y no depende del label visible.
+	 */
+	.product-add-to-cart__status {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		margin: -1px;
+		padding: 0;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+		border: 0;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.product-add-to-cart__label {
+			transition: opacity 150ms linear;
+		}
 	}
 
 	.product-benefits {

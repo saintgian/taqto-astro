@@ -210,7 +210,7 @@ const resolvedItems =
 
 <style>
 	.customer-proof {
-		padding-block: var(--section-py);
+		padding-block: var(--home-section-py);
 		padding-inline: var(--container-gutter);
 		background: var(--surface);
 		color: var(--color-black);
@@ -223,13 +223,13 @@ const resolvedItems =
 
 	.customer-proof__header {
 		max-width: 780px;
-		margin-bottom: var(--header-gap);
+		margin-bottom: var(--home-header-gap);
 	}
 
 	.customer-proof__header h2 {
 		margin: 0;
 		color: var(--color-black);
-		font-size: var(--text-2xl);
+		font-size: var(--home-title);
 		font-weight: 600;
 		line-height: 1.15;
 		letter-spacing: -0.02em;
@@ -237,16 +237,16 @@ const resolvedItems =
 
 	.customer-proof__intro {
 		max-width: 600px;
-		margin: 12px 0 0;
+		margin: 10px 0 0;
 		color: rgba(20, 20, 20, 0.68);
-		font-size: clamp(17px, 0.3vw + 16.4px, 18px);
+		font-size: var(--home-intro);
 		line-height: 1.6;
 	}
 
 	.customer-proof__grid {
 		display: grid;
 		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: clamp(18px, 2vw, 28px);
+		gap: var(--home-gap);
 		margin: 0;
 		padding: 0;
 		list-style: none;
@@ -321,7 +321,7 @@ const resolvedItems =
 
 	.customer-proof__content h3 {
 		margin: 0;
-		font-size: var(--text-lg);
+		font-size: var(--home-card-title);
 		font-weight: 600;
 		line-height: 1.15;
 		letter-spacing: -0.02em;
@@ -334,9 +334,9 @@ const resolvedItems =
 	}
 
 	.customer-proof__description {
-		margin: 8px 0 0;
+		margin: 6px 0 0;
 		color: rgba(20, 20, 20, 0.7);
-		font-size: clamp(16px, 0.3vw + 15.4px, 17px);
+		font-size: var(--home-card-body);
 		line-height: 1.55;
 	}
 
@@ -369,14 +369,14 @@ const resolvedItems =
 		}
 
 		.customer-proof__header {
-			padding-inline: 18px;
-			margin-bottom: 24px;
+			padding-inline: 20px;
+			margin-bottom: var(--home-header-gap);
 		}
 
 		.customer-proof__grid {
 			grid-template-columns: 1fr;
-			gap: 24px;
-			padding-inline: 18px;
+			gap: var(--home-gap);
+			padding-inline: 20px;
 		}
 
 		.customer-proof__item,
