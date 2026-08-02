@@ -1130,6 +1130,18 @@ const safeVariantJson = JSON.stringify({
 
 		if (!dataElement) return;
 
+		/*
+		 * Guarda de idempotencia por DOM. Este modulo se ejecuta al
+		 * cargarse y ademas se vuelve a llamar en cada `astro:page-load`,
+		 * que el ClientRouter tambien dispara en la carga inicial: sin esta
+		 * marca la misma ficha quedaba con dos listeners de "Agregar al
+		 * carrito" y un solo toque anadia dos unidades. El ClientRouter
+		 * reemplaza el documento en cada navegacion, asi que una ficha
+		 * nueva siempre llega sin marcar y se vuelve a enlazar.
+		 */
+		if (dataElement.dataset.initialized === "true") return;
+		dataElement.dataset.initialized = "true";
+
 		const parsedData = JSON.parse(
 			dataElement.textContent || "{}",
 		);

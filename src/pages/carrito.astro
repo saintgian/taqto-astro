@@ -740,145 +740,213 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 
 	import { supabase } from "../lib/supabase";
 
-	const steps = Array.from(
-		document.querySelectorAll<HTMLElement>(
-			"[data-step]",
-		),
-	);
+	let disposeCheckout: (() => void) | null = null;
 
-	const stepIndicators = Array.from(
-		document.querySelectorAll<HTMLElement>(
-			"[data-step-indicator]",
-		),
-	);
+	/*
+	 * Todo el checkout se enlaza aqui dentro y se vuelve a enlazar en cada
+	 * `astro:page-load`. Antes el script corria una sola vez, al evaluarse el
+	 * modulo: al volver a /carrito/ con el ClientRouter el modulo ya estaba en
+	 * el registro del navegador, no se re-ejecutaba, y la pagina nueva se
+	 * quedaba sin render ni listeners (carrito vacio y S/ 0.00 hasta recargar
+	 * a mano).
+	 */
+	const initCheckout = () => {
+		const checkoutShell =
+			document.querySelector<HTMLElement>(".checkout-shell");
 
-	const stepProgress = document.querySelector<HTMLElement>(
-		"[data-step-progress]",
-	);
-
-	const renderStepper = (stepNumber: number) => {
-		// Paso 1: 0%. Paso 2: 50%. Paso 3: 100%.
-		if (stepProgress) {
-			stepProgress.style.transform = `scaleX(${
-				(stepNumber - 1) / (stepIndicators.length - 1 || 1)
-			})`;
+		// Otra pagina (el evento es global) o este mismo DOM ya enlazado.
+		if (!checkoutShell || checkoutShell.dataset.checkoutReady === "true") {
+			return;
 		}
 
-		stepIndicators.forEach((indicator) => {
-			const stepValue = Number(
-				indicator.dataset.stepIndicator,
+		checkoutShell.dataset.checkoutReady = "true";
+
+		// Suscripciones de la visita anterior: se sueltan antes de crear las
+		// nuevas para no acumular consumidores de cart:updated.
+		disposeCheckout?.();
+		disposeCheckout = null;
+
+		const steps = Array.from(
+			document.querySelectorAll<HTMLElement>(
+				"[data-step]",
+			),
+		);
+
+		const stepIndicators = Array.from(
+			document.querySelectorAll<HTMLElement>(
+				"[data-step-indicator]",
+			),
+		);
+
+		const stepProgress = document.querySelector<HTMLElement>(
+			"[data-step-progress]",
+		);
+
+		/*
+		 * Pulso del icono al activarse un paso. La clase se quita al
+		 * terminar para que un cambio rapido de paso vuelva a lanzarla en
+		 * vez de quedarse a medias. El temporizador es el respaldo de
+		 * `animationend`, que no llega si la pestaña queda oculta a mitad
+		 * de la animacion ni con movimiento reducido (donde no hay
+		 * animacion que termine). 340ms es la duracion en el CSS.
+		 */
+		const STEP_POP_FALLBACK_MS = 340 + 120;
+
+		const playStepIconPop = (indicator: HTMLElement) => {
+			const slot = indicator.querySelector<HTMLElement>(
+				".stepper__icon-slot",
 			);
 
-			const isActive = stepValue === stepNumber;
-			const isComplete = stepValue < stepNumber;
+			if (!slot) return;
 
-			indicator.classList.toggle("is-active", isActive);
-			indicator.classList.toggle("is-complete", isComplete);
+			slot.classList.remove("is-popping");
 
-			if (isActive) {
-				indicator.setAttribute("aria-current", "step");
-			} else {
-				indicator.removeAttribute("aria-current");
+			// Reflow forzado: reinicia la animacion aunque la clase se
+			// quite y se vuelva a poner en el mismo tick.
+			void slot.offsetWidth;
+
+			const stopPop = () => {
+				window.clearTimeout(popTimer);
+				slot.removeEventListener("animationend", stopPop);
+				slot.classList.remove("is-popping");
+			};
+
+			const popTimer = window.setTimeout(
+				stopPop,
+				STEP_POP_FALLBACK_MS,
+			);
+
+			slot.addEventListener("animationend", stopPop);
+			slot.classList.add("is-popping");
+		};
+
+		// `animate` solo llega desde `goToStep`: el render inicial pinta el
+		// paso 1 sin pulso ni barrido de la barra.
+		const renderStepper = (
+			stepNumber: number,
+			animate = false,
+		) => {
+			// Paso 1: 0%. Paso 2: 50%. Paso 3: 100%.
+			const progressRatio =
+				(stepNumber - 1) / (stepIndicators.length - 1 || 1);
+
+			if (stepProgress) {
+				stepProgress.style.transform = `scaleX(${progressRatio})`;
 			}
 
-			// El icono del paso se sustituye por un check cuando ya se
-			// completo: el estado no depende solo del color.
-			const stepIcon = indicator.querySelector<HTMLElement>(
-				".stepper__icon:not(.stepper__icon--check)",
-			);
+			stepIndicators.forEach((indicator) => {
+				const stepValue = Number(
+					indicator.dataset.stepIndicator,
+				);
 
-			const checkIcon = indicator.querySelector<HTMLElement>(
-				".stepper__icon--check",
-			);
+				const isActive = stepValue === stepNumber;
+				const isComplete = stepValue < stepNumber;
+				const wasActive =
+					indicator.classList.contains("is-active");
 
-			if (stepIcon) stepIcon.hidden = isComplete;
-			if (checkIcon) checkIcon.hidden = !isComplete;
+				if (animate && isActive && !wasActive) {
+					playStepIconPop(indicator);
+				}
 
-			const stateLabel = indicator.querySelector<HTMLElement>(
-				"[data-step-state]",
-			);
+				indicator.classList.toggle("is-active", isActive);
+				indicator.classList.toggle("is-complete", isComplete);
 
-			if (stateLabel) {
-				stateLabel.textContent = isComplete
-					? " (completado)"
-					: isActive
-						? " (paso actual)"
-						: " (pendiente)";
-			}
-		});
-	};
+				if (isActive) {
+					indicator.setAttribute("aria-current", "step");
+				} else {
+					indicator.removeAttribute("aria-current");
+				}
 
-	const checkoutShell =
-		document.querySelector<HTMLElement>(".checkout-shell")!;
+				// El icono del paso se sustituye por un check cuando ya se
+				// completo: el estado no depende solo del color.
+				const stepIcon = indicator.querySelector<HTMLElement>(
+					".stepper__icon:not(.stepper__icon--check)",
+				);
 
-	let currentStep = 1;
-	let isStepTransitioning = false;
-	let stepTransitionTimer: number | undefined;
+				const checkIcon = indicator.querySelector<HTMLElement>(
+					".stepper__icon--check",
+				);
 
-	const clearStepTransitionTimer = () => {
-		if (stepTransitionTimer !== undefined) {
-			window.clearTimeout(stepTransitionTimer);
-			stepTransitionTimer = undefined;
-		}
-	};
+				if (stepIcon) stepIcon.hidden = isComplete;
+				if (checkIcon) checkIcon.hidden = !isComplete;
 
-	// Solo salta si el bloque no esta ya razonablemente visible: evita
-	// mover la pagina cuando el usuario ya ve el stepper y el formulario.
-	const ensureCheckoutVisible = () => {
-		const rect = checkoutShell.getBoundingClientRect();
-		const alreadyVisible = rect.top >= -8 && rect.top <= 96;
+				const stateLabel = indicator.querySelector<HTMLElement>(
+					"[data-step-state]",
+				);
 
-		if (!alreadyVisible) {
-			window.scrollTo({
-				top: window.scrollY + rect.top - 24,
-				behavior: "auto",
+				if (stateLabel) {
+					stateLabel.textContent = isComplete
+						? " (completado)"
+						: isActive
+							? " (paso actual)"
+							: " (pendiente)";
+				}
 			});
-		}
-	};
+		};
 
-	const STEP_EXIT_MS = 120;
-	const STEP_ENTER_MS = 270;
+		const unsubscribeFromCart: Array<() => void> = [];
 
-	const goToStep = (stepNumber: number) => {
-		if (isStepTransitioning || stepNumber === currentStep) return;
+		let currentStep = 1;
+		let isStepTransitioning = false;
+		let stepTransitionTimer: number | undefined;
 
-		const outgoing = steps.find(
-			(section) => section.dataset.step === String(currentStep),
-		);
+		const clearStepTransitionTimer = () => {
+			if (stepTransitionTimer !== undefined) {
+				window.clearTimeout(stepTransitionTimer);
+				stepTransitionTimer = undefined;
+			}
+		};
 
-		const incoming = steps.find(
-			(section) => section.dataset.step === String(stepNumber),
-		);
+		// Solo salta si el bloque no esta ya razonablemente visible: evita
+		// mover la pagina cuando el usuario ya ve el stepper y el formulario.
+		const ensureCheckoutVisible = () => {
+			const rect = checkoutShell.getBoundingClientRect();
+			const alreadyVisible = rect.top >= -8 && rect.top <= 96;
 
-		if (!outgoing || !incoming) return;
+			if (!alreadyVisible) {
+				window.scrollTo({
+					top: window.scrollY + rect.top - 24,
+					behavior: "auto",
+				});
+			}
+		};
 
-		const isForward = stepNumber > currentStep;
+		// Deben coincidir con las duraciones de `.cart-step--*` en el CSS:
+		// son el respaldo por si `transitionend` no llega.
+		const STEP_EXIT_MS = 130;
+		const STEP_ENTER_MS = 300;
 
-		currentStep = stepNumber;
-		isStepTransitioning = true;
+		const goToStep = (stepNumber: number) => {
+			if (isStepTransitioning || stepNumber === currentStep) return;
 
-		renderStepper(stepNumber);
-		ensureCheckoutVisible();
+			const outgoing = steps.find(
+				(section) => section.dataset.step === String(currentStep),
+			);
 
-		clearStepTransitionTimer();
+			const incoming = steps.find(
+				(section) => section.dataset.step === String(stepNumber),
+			);
 
-		const finishExit = () => {
-			outgoing.removeEventListener("transitionend", onExitEnd);
+			if (!outgoing || !incoming) return;
+
+			const isForward = stepNumber > currentStep;
+
+			currentStep = stepNumber;
+			isStepTransitioning = true;
+
+			renderStepper(stepNumber, true);
+			ensureCheckoutVisible();
+
 			clearStepTransitionTimer();
 
-			outgoing.classList.remove("cart-step--leaving");
-			outgoing.classList.remove("is-active");
-			outgoing.hidden = true;
+			let hasStartedEnter = false;
 
-			incoming.classList.add(
-				"is-active",
-				isForward
-					? "cart-step--entering"
-					: "cart-step--entering-back",
-			);
-			incoming.hidden = false;
+			const startEnter = () => {
+				if (hasStartedEnter) return;
+				hasStartedEnter = true;
 
-			window.requestAnimationFrame(() => {
+				clearStepTransitionTimer();
+
 				incoming.classList.remove(
 					"cart-step--entering",
 					"cart-step--entering-back",
@@ -911,1040 +979,1082 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 					finishEnter,
 					STEP_ENTER_MS + 120,
 				);
-			});
-		};
+			};
 
-		const onExitEnd = (event: TransitionEvent) => {
-			if (
-				event.target !== outgoing ||
-				event.propertyName !== "opacity"
-			) {
-				return;
-			}
+			const finishExit = () => {
+				outgoing.removeEventListener("transitionend", onExitEnd);
+				clearStepTransitionTimer();
 
-			finishExit();
-		};
+				outgoing.classList.remove("cart-step--leaving");
+				outgoing.classList.remove("is-active");
+				outgoing.hidden = true;
 
-		outgoing.addEventListener("transitionend", onExitEnd);
-		outgoing.classList.add("cart-step--leaving");
-		stepTransitionTimer = window.setTimeout(
-			finishExit,
-			STEP_EXIT_MS + 80,
-		);
-	};
-
-	renderStepper(1);
-
-	document
-		.querySelectorAll<HTMLButtonElement>(
-			"[data-go-step]",
-		)
-		.forEach((button) => {
-			button.addEventListener("click", () => {
-				goToStep(
-					Number(button.dataset.goStep),
+				incoming.classList.add(
+					"is-active",
+					isForward
+						? "cart-step--entering"
+						: "cart-step--entering-back",
 				);
-			});
-		});
+				incoming.hidden = false;
 
-	// ---------- PASO 1: CARRITO ----------
+				/*
+				 * El frame de espera es lo que hace que el navegador vea el
+				 * estado inicial y anime hacia el final. Si la pestaña esta
+				 * oculta no hay frames, asi que el temporizador es el que
+				 * remata la entrada: sin el, el paso entrante se quedaria en
+				 * opacidad 0 y `isStepTransitioning` bloquearia el resto de
+				 * la navegacion entre pasos.
+				 */
+				window.requestAnimationFrame(startEnter);
+				stepTransitionTimer = window.setTimeout(startEnter, 80);
+			};
 
-	const cartItemsContainer =
-		document.querySelector<HTMLElement>(
-			"#cart-items",
-		)!;
-
-	const cartEmptyState =
-		document.querySelector<HTMLElement>(
-			"#cart-empty",
-		)!;
-
-	const cartSubtotalLabel =
-		document.querySelector<HTMLElement>(
-			"#cart-subtotal",
-		)!;
-
-	const cartStockNote =
-		document.querySelector<HTMLElement>(
-			"#cart-stock-note",
-		)!;
-
-	let cartStockNoteTimer: number | undefined;
-
-	const announceCartStockLimit = (
-		title: string,
-		limit: number,
-	) => {
-		if (cartStockNoteTimer !== undefined) {
-			window.clearTimeout(cartStockNoteTimer);
-		}
-
-		cartStockNote.textContent = "";
-
-		window.requestAnimationFrame(() => {
-			cartStockNote.textContent = `${title}: alcanzaste el máximo disponible (${limit} unidad${limit === 1 ? "" : "es"}).`;
-		});
-
-		cartStockNoteTimer = window.setTimeout(() => {
-			cartStockNote.textContent = "";
-			cartStockNoteTimer = undefined;
-		}, 3000);
-	};
-
-	const goToStep2Button =
-		document.querySelector<HTMLButtonElement>(
-			"#go-to-step-2",
-		)!;
-
-	const getCartSubtotal = (items: CartItem[]) =>
-		items.reduce(
-			(total, item) =>
-				total + item.unitPrice * item.quantity,
-			0,
-		);
-
-	const variantLabelOf = (item: CartItem) =>
-		[item.woodTitle, item.sizeTitle]
-			.filter(Boolean)
-			.join(" · ");
-
-	const cartItemTemplate =
-		document.querySelector<HTMLTemplateElement>(
-			"[data-cart-item-template]",
-		)!;
-
-	const buildCartRow = (item: CartItem) => {
-		const row =
-			cartItemTemplate.content.firstElementChild!.cloneNode(
-				true,
-			) as HTMLElement;
-
-		const pick = <T extends HTMLElement>(role: string) =>
-			row.querySelector<T>(`[data-role="${role}"]`);
-
-		const image = pick<HTMLImageElement>("image");
-		const placeholder = pick("placeholder");
-
-		if (item.image && image) {
-			image.src = item.image;
-			image.alt = item.title;
-			placeholder?.remove();
-		} else {
-			image?.remove();
-		}
-
-		const title = pick("title");
-		if (title) title.textContent = item.title;
-
-		const variantLabel = variantLabelOf(item);
-		const variant = pick("variant");
-
-		if (variant) {
-			if (variantLabel) {
-				variant.textContent = variantLabel;
-			} else {
-				variant.remove();
-			}
-		}
-
-		const engraving = pick("engraving");
-
-		if (engraving) {
-			if (item.engravingText) {
-				engraving.textContent = `Grabado: “${item.engravingText}”`;
-			} else {
-				engraving.remove();
-			}
-		}
-
-		const unitPrice = pick("unit-price");
-
-		if (unitPrice) {
-			unitPrice.textContent = `${formatPEN(item.unitPrice)} c/u`;
-		}
-
-		pick("quantity")?.setAttribute(
-			"aria-label",
-			`Cantidad de ${item.title}`,
-		);
-
-		const quantityValue = pick("quantity-value");
-
-		if (quantityValue) {
-			quantityValue.textContent = String(item.quantity);
-		}
-
-		const decrease = pick<HTMLButtonElement>("decrease");
-
-		if (decrease) {
-			decrease.setAttribute(
-				"aria-label",
-				`Disminuir cantidad de ${item.title}`,
-			);
-			decrease.disabled = item.quantity <= 1;
-			decrease.addEventListener("click", () => {
-				updateQuantity(item.id, item.quantity - 1);
-			});
-		}
-
-		const increase = pick<HTMLButtonElement>("increase");
-
-		if (increase) {
-			const stockLimit =
-				typeof item.stock === "number"
-					? Math.max(0, Math.floor(item.stock))
-					: undefined;
-
-			const atMax =
-				typeof stockLimit === "number" &&
-				item.quantity >= stockLimit;
-
-			increase.disabled = atMax;
-			increase.setAttribute(
-				"aria-disabled",
-				String(atMax),
-			);
-
-			increase.setAttribute(
-				"aria-label",
-				`Aumentar cantidad de ${item.title}`,
-			);
-			increase.addEventListener("click", () => {
-				if (atMax) {
-					announceCartStockLimit(
-						item.title,
-						stockLimit as number,
-					);
+			const onExitEnd = (event: TransitionEvent) => {
+				if (
+					event.target !== outgoing ||
+					event.propertyName !== "opacity"
+				) {
 					return;
 				}
 
-				updateQuantity(item.id, item.quantity + 1);
-			});
-		}
+				finishExit();
+			};
 
-		const lineTotal = pick("line-total");
-
-		if (lineTotal) {
-			lineTotal.textContent = formatPEN(
-				item.unitPrice * item.quantity,
+			outgoing.addEventListener("transitionend", onExitEnd);
+			outgoing.classList.add("cart-step--leaving");
+			stepTransitionTimer = window.setTimeout(
+				finishExit,
+				STEP_EXIT_MS + 80,
 			);
-		}
+		};
 
-		const remove = pick<HTMLButtonElement>("remove");
+		renderStepper(1);
 
-		if (remove) {
-			remove.setAttribute(
-				"aria-label",
-				`Quitar ${item.title} del carrito`,
-			);
-			remove.addEventListener("click", () => {
-				removeItem(item.id);
-			});
-		}
-
-		return row;
-	};
-
-	const renderCartItems = () => {
-		const items = getCart();
-		const isEmpty = items.length === 0;
-
-		cartItemsContainer.replaceChildren();
-		cartEmptyState.hidden = !isEmpty;
-		goToStep2Button.disabled = isEmpty;
-
-		if (!isEmpty) {
-			const list = document.createElement("ul");
-			list.className = "cart-lines";
-
-			items.forEach((item) => {
-				list.appendChild(buildCartRow(item));
+		document
+			.querySelectorAll<HTMLButtonElement>(
+				"[data-go-step]",
+			)
+			.forEach((button) => {
+				button.addEventListener("click", () => {
+					goToStep(
+						Number(button.dataset.goStep),
+					);
+				});
 			});
 
-			cartItemsContainer.appendChild(list);
-		}
+		// ---------- PASO 1: CARRITO ----------
 
-		cartSubtotalLabel.textContent = formatPEN(
-			getCartSubtotal(items),
-		);
-	};
+		const cartItemsContainer =
+			document.querySelector<HTMLElement>(
+				"#cart-items",
+			)!;
 
-	renderCartItems();
-	onCartUpdated(renderCartItems);
+		const cartEmptyState =
+			document.querySelector<HTMLElement>(
+				"#cart-empty",
+			)!;
 
-	goToStep2Button.addEventListener("click", () => {
-		if (getCart().length === 0) return;
-		goToStep(2);
-	});
+		const cartSubtotalLabel =
+			document.querySelector<HTMLElement>(
+				"#cart-subtotal",
+			)!;
 
-	// ---------- MINI RESUMEN (PASO 2) ----------
+		const cartStockNote =
+			document.querySelector<HTMLElement>(
+				"#cart-stock-note",
+			)!;
 
-	const miniProductsSummary =
-		document.querySelector<HTMLElement>(
-			"#mini-products-summary",
-		)!;
+		let cartStockNoteTimer: number | undefined;
 
-	const miniSubtotalLabel =
-		document.querySelector<HTMLElement>(
-			"#mini-subtotal",
-		)!;
-
-	const miniShippingLabelEl =
-		document.querySelector<HTMLElement>(
-			"#mini-shipping-label",
-		)!;
-
-	const miniShippingAmountLabel =
-		document.querySelector<HTMLElement>(
-			"#mini-shipping-amount",
-		)!;
-
-	const miniTotalLabel =
-		document.querySelector<HTMLElement>(
-			"#mini-total",
-		)!;
-
-	const renderProductLines = (
-		container: HTMLElement,
-		items: CartItem[],
-	) => {
-		container.replaceChildren();
-
-		items.forEach((item) => {
-			const variant = variantLabelOf(item);
-
-			const row = document.createElement("div");
-			row.className = "order-summary__product";
-
-			const label = document.createElement("span");
-
-			label.appendChild(
-				document.createTextNode(
-					`${item.title}${variant ? ` — ${variant}` : ""} × ${item.quantity}`,
-				),
-			);
-
-			if (item.engravingText) {
-				label.appendChild(document.createElement("br"));
-
-				const small = document.createElement("small");
-				small.textContent = `Grabado: “${item.engravingText}”`;
-				label.appendChild(small);
+		const announceCartStockLimit = (
+			title: string,
+			limit: number,
+		) => {
+			if (cartStockNoteTimer !== undefined) {
+				window.clearTimeout(cartStockNoteTimer);
 			}
 
-			const price = document.createElement("strong");
-			price.textContent = formatPEN(
-				item.unitPrice * item.quantity,
+			cartStockNote.textContent = "";
+
+			window.requestAnimationFrame(() => {
+				cartStockNote.textContent = `${title}: alcanzaste el máximo disponible (${limit} unidad${limit === 1 ? "" : "es"}).`;
+			});
+
+			cartStockNoteTimer = window.setTimeout(() => {
+				cartStockNote.textContent = "";
+				cartStockNoteTimer = undefined;
+			}, 3000);
+		};
+
+		const goToStep2Button =
+			document.querySelector<HTMLButtonElement>(
+				"#go-to-step-2",
+			)!;
+
+		const getCartSubtotal = (items: CartItem[]) =>
+			items.reduce(
+				(total, item) =>
+					total + item.unitPrice * item.quantity,
+				0,
 			);
 
-			row.append(label, price);
-			container.appendChild(row);
+		const variantLabelOf = (item: CartItem) =>
+			[item.woodTitle, item.sizeTitle]
+				.filter(Boolean)
+				.join(" · ");
+
+		const cartItemTemplate =
+			document.querySelector<HTMLTemplateElement>(
+				"[data-cart-item-template]",
+			)!;
+
+		const buildCartRow = (item: CartItem) => {
+			const row =
+				cartItemTemplate.content.firstElementChild!.cloneNode(
+					true,
+				) as HTMLElement;
+
+			const pick = <T extends HTMLElement>(role: string) =>
+				row.querySelector<T>(`[data-role="${role}"]`);
+
+			const image = pick<HTMLImageElement>("image");
+			const placeholder = pick("placeholder");
+
+			if (item.image && image) {
+				image.src = item.image;
+				image.alt = item.title;
+				placeholder?.remove();
+			} else {
+				image?.remove();
+			}
+
+			const title = pick("title");
+			if (title) title.textContent = item.title;
+
+			const variantLabel = variantLabelOf(item);
+			const variant = pick("variant");
+
+			if (variant) {
+				if (variantLabel) {
+					variant.textContent = variantLabel;
+				} else {
+					variant.remove();
+				}
+			}
+
+			const engraving = pick("engraving");
+
+			if (engraving) {
+				if (item.engravingText) {
+					engraving.textContent = `Grabado: “${item.engravingText}”`;
+				} else {
+					engraving.remove();
+				}
+			}
+
+			const unitPrice = pick("unit-price");
+
+			if (unitPrice) {
+				unitPrice.textContent = `${formatPEN(item.unitPrice)} c/u`;
+			}
+
+			pick("quantity")?.setAttribute(
+				"aria-label",
+				`Cantidad de ${item.title}`,
+			);
+
+			const quantityValue = pick("quantity-value");
+
+			if (quantityValue) {
+				quantityValue.textContent = String(item.quantity);
+			}
+
+			const decrease = pick<HTMLButtonElement>("decrease");
+
+			if (decrease) {
+				decrease.setAttribute(
+					"aria-label",
+					`Disminuir cantidad de ${item.title}`,
+				);
+				decrease.disabled = item.quantity <= 1;
+				decrease.addEventListener("click", () => {
+					updateQuantity(item.id, item.quantity - 1);
+				});
+			}
+
+			const increase = pick<HTMLButtonElement>("increase");
+
+			if (increase) {
+				const stockLimit =
+					typeof item.stock === "number"
+						? Math.max(0, Math.floor(item.stock))
+						: undefined;
+
+				const atMax =
+					typeof stockLimit === "number" &&
+					item.quantity >= stockLimit;
+
+				increase.disabled = atMax;
+				increase.setAttribute(
+					"aria-disabled",
+					String(atMax),
+				);
+
+				increase.setAttribute(
+					"aria-label",
+					`Aumentar cantidad de ${item.title}`,
+				);
+				increase.addEventListener("click", () => {
+					if (atMax) {
+						announceCartStockLimit(
+							item.title,
+							stockLimit as number,
+						);
+						return;
+					}
+
+					updateQuantity(item.id, item.quantity + 1);
+				});
+			}
+
+			const lineTotal = pick("line-total");
+
+			if (lineTotal) {
+				lineTotal.textContent = formatPEN(
+					item.unitPrice * item.quantity,
+				);
+			}
+
+			const remove = pick<HTMLButtonElement>("remove");
+
+			if (remove) {
+				remove.setAttribute(
+					"aria-label",
+					`Quitar ${item.title} del carrito`,
+				);
+				remove.addEventListener("click", () => {
+					removeItem(item.id);
+				});
+			}
+
+			return row;
+		};
+
+		const renderCartItems = () => {
+			const items = getCart();
+			const isEmpty = items.length === 0;
+
+			cartItemsContainer.replaceChildren();
+			cartEmptyState.hidden = !isEmpty;
+			goToStep2Button.disabled = isEmpty;
+
+			if (!isEmpty) {
+				const list = document.createElement("ul");
+				list.className = "cart-lines";
+
+				items.forEach((item) => {
+					list.appendChild(buildCartRow(item));
+				});
+
+				cartItemsContainer.appendChild(list);
+			}
+
+			cartSubtotalLabel.textContent = formatPEN(
+				getCartSubtotal(items),
+			);
+		};
+
+		renderCartItems();
+		unsubscribeFromCart.push(onCartUpdated(renderCartItems));
+
+		goToStep2Button.addEventListener("click", () => {
+			if (getCart().length === 0) return;
+			goToStep(2);
 		});
-	};
 
-	const renderMiniSummary = () => {
-		const items = getCart();
-		const subtotal = getCartSubtotal(items);
+		// ---------- MINI RESUMEN (PASO 2) ----------
 
-		renderProductLines(miniProductsSummary, items);
-		miniSubtotalLabel.textContent = formatPEN(subtotal);
+		const miniProductsSummary =
+			document.querySelector<HTMLElement>(
+				"#mini-products-summary",
+			)!;
 
-		const departamentoValue =
-			departamentoSelect.value;
+		const miniSubtotalLabel =
+			document.querySelector<HTMLElement>(
+				"#mini-subtotal",
+			)!;
 
-		if (!departamentoValue) {
-			miniShippingLabelEl.textContent = "Envío";
-			miniShippingAmountLabel.textContent = "—";
-			miniTotalLabel.textContent = formatPEN(subtotal);
-			return;
-		}
+		const miniShippingLabelEl =
+			document.querySelector<HTMLElement>(
+				"#mini-shipping-label",
+			)!;
 
-		const isLima = isLimaMetropolitana(
-			departamentoValue,
-		);
+		const miniShippingAmountLabel =
+			document.querySelector<HTMLElement>(
+				"#mini-shipping-amount",
+			)!;
 
-		miniShippingLabelEl.textContent = isLima
-			? "Delivery (Lima)"
-			: "Envío a agencia";
+		const miniTotalLabel =
+			document.querySelector<HTMLElement>(
+				"#mini-total",
+			)!;
 
-		miniShippingAmountLabel.textContent =
-			formatPEN(SHIPPING_COST);
+		const renderProductLines = (
+			container: HTMLElement,
+			items: CartItem[],
+		) => {
+			container.replaceChildren();
 
-		miniTotalLabel.textContent = formatPEN(
-			subtotal + SHIPPING_COST,
-		);
-	};
+			items.forEach((item) => {
+				const variant = variantLabelOf(item);
 
-	// ---------- PASO 2: DATOS DE ENVIO ----------
+				const row = document.createElement("div");
+				row.className = "order-summary__product";
 
-	const shippingForm =
-		document.querySelector<HTMLFormElement>(
-			"#shipping-form",
-		)!;
+				const label = document.createElement("span");
 
-	const departamentoSelect =
-		document.querySelector<HTMLSelectElement>(
-			"#select-departamento",
-		)!;
+				label.appendChild(
+					document.createTextNode(
+						`${item.title}${variant ? ` — ${variant}` : ""} × ${item.quantity}`,
+					),
+				);
 
-	const provinciaSelect =
-		document.querySelector<HTMLSelectElement>(
-			"#select-provincia",
-		)!;
+				if (item.engravingText) {
+					label.appendChild(document.createElement("br"));
 
-	const distritoSelect =
-		document.querySelector<HTMLSelectElement>(
-			"#select-distrito",
-		)!;
+					const small = document.createElement("small");
+					small.textContent = `Grabado: “${item.engravingText}”`;
+					label.appendChild(small);
+				}
 
-	const shippingMethodPreview =
-		document.querySelector<HTMLElement>(
-			"#shipping-method-preview",
-		)!;
+				const price = document.createElement("strong");
+				price.textContent = formatPEN(
+					item.unitPrice * item.quantity,
+				);
 
-	const populateSelect = (
-		select: HTMLSelectElement,
-		options: UbigeoOption[],
-		placeholder: string,
-	) => {
-		select.innerHTML = "";
+				row.append(label, price);
+				container.appendChild(row);
+			});
+		};
 
-		const placeholderOption =
-			document.createElement("option");
+		const renderMiniSummary = () => {
+			const items = getCart();
+			const subtotal = getCartSubtotal(items);
 
-		placeholderOption.value = "";
-		placeholderOption.textContent = placeholder;
-		placeholderOption.disabled = true;
-		placeholderOption.selected = true;
+			renderProductLines(miniProductsSummary, items);
+			miniSubtotalLabel.textContent = formatPEN(subtotal);
 
-		select.appendChild(placeholderOption);
+			const departamentoValue =
+				departamentoSelect.value;
 
-		options.forEach((option) => {
-			const optionEl =
+			if (!departamentoValue) {
+				miniShippingLabelEl.textContent = "Envío";
+				miniShippingAmountLabel.textContent = "—";
+				miniTotalLabel.textContent = formatPEN(subtotal);
+				return;
+			}
+
+			const isLima = isLimaMetropolitana(
+				departamentoValue,
+			);
+
+			miniShippingLabelEl.textContent = isLima
+				? "Delivery (Lima)"
+				: "Envío a agencia";
+
+			miniShippingAmountLabel.textContent =
+				formatPEN(SHIPPING_COST);
+
+			miniTotalLabel.textContent = formatPEN(
+				subtotal + SHIPPING_COST,
+			);
+		};
+
+		// ---------- PASO 2: DATOS DE ENVIO ----------
+
+		const shippingForm =
+			document.querySelector<HTMLFormElement>(
+				"#shipping-form",
+			)!;
+
+		const departamentoSelect =
+			document.querySelector<HTMLSelectElement>(
+				"#select-departamento",
+			)!;
+
+		const provinciaSelect =
+			document.querySelector<HTMLSelectElement>(
+				"#select-provincia",
+			)!;
+
+		const distritoSelect =
+			document.querySelector<HTMLSelectElement>(
+				"#select-distrito",
+			)!;
+
+		const shippingMethodPreview =
+			document.querySelector<HTMLElement>(
+				"#shipping-method-preview",
+			)!;
+
+		const populateSelect = (
+			select: HTMLSelectElement,
+			options: UbigeoOption[],
+			placeholder: string,
+		) => {
+			select.innerHTML = "";
+
+			const placeholderOption =
 				document.createElement("option");
 
-			optionEl.value = option.id;
-			optionEl.textContent = option.name;
-			select.appendChild(optionEl);
-		});
-	};
+			placeholderOption.value = "";
+			placeholderOption.textContent = placeholder;
+			placeholderOption.disabled = true;
+			placeholderOption.selected = true;
 
-	const getShippingLabel = () => {
-		if (!departamentoSelect.value) {
-			return "Elige tu departamento para ver el método y costo de envío.";
-		}
+			select.appendChild(placeholderOption);
 
-		const isLima = isLimaMetropolitana(
-			departamentoSelect.value,
-		);
+			options.forEach((option) => {
+				const optionEl =
+					document.createElement("option");
 
-		return isLima
-			? `Delivery a domicilio (Lima Metropolitana) — ${formatPEN(SHIPPING_COST)}`
-			: `Envío a agencia en tu ciudad — ${formatPEN(SHIPPING_COST)}`;
-	};
+				optionEl.value = option.id;
+				optionEl.textContent = option.name;
+				select.appendChild(optionEl);
+			});
+		};
 
-	const updateShippingPreview = () => {
-		shippingMethodPreview.textContent =
-			getShippingLabel();
+		const getShippingLabel = () => {
+			if (!departamentoSelect.value) {
+				return "Elige tu departamento para ver el método y costo de envío.";
+			}
 
-		renderMiniSummary();
-	};
-
-	populateSelect(
-		departamentoSelect,
-		getDepartamentos(),
-		"Selecciona un departamento",
-	);
-
-	departamentoSelect.addEventListener(
-		"change",
-		() => {
-			const provincias = getProvincias(
+			const isLima = isLimaMetropolitana(
 				departamentoSelect.value,
 			);
 
-			populateSelect(
-				provinciaSelect,
-				provincias,
-				"Selecciona una provincia",
-			);
+			return isLima
+				? `Delivery a domicilio (Lima Metropolitana) — ${formatPEN(SHIPPING_COST)}`
+				: `Envío a agencia en tu ciudad — ${formatPEN(SHIPPING_COST)}`;
+		};
 
-			provinciaSelect.disabled =
-				provincias.length === 0;
+		const updateShippingPreview = () => {
+			shippingMethodPreview.textContent =
+				getShippingLabel();
+
+			renderMiniSummary();
+		};
+
+		populateSelect(
+			departamentoSelect,
+			getDepartamentos(),
+			"Selecciona un departamento",
+		);
+
+		departamentoSelect.addEventListener(
+			"change",
+			() => {
+				const provincias = getProvincias(
+					departamentoSelect.value,
+				);
+
+				populateSelect(
+					provinciaSelect,
+					provincias,
+					"Selecciona una provincia",
+				);
+
+				provinciaSelect.disabled =
+					provincias.length === 0;
+
+				populateSelect(
+					distritoSelect,
+					[],
+					"Selecciona una provincia primero",
+				);
+
+				distritoSelect.disabled = true;
+
+				updateShippingPreview();
+			},
+		);
+
+		provinciaSelect.addEventListener("change", () => {
+			const distritos = getDistritos(
+				provinciaSelect.value,
+			);
 
 			populateSelect(
 				distritoSelect,
-				[],
-				"Selecciona una provincia primero",
+				distritos,
+				"Selecciona un distrito",
 			);
 
-			distritoSelect.disabled = true;
-
-			updateShippingPreview();
-		},
-	);
-
-	provinciaSelect.addEventListener("change", () => {
-		const distritos = getDistritos(
-			provinciaSelect.value,
-		);
-
-		populateSelect(
-			distritoSelect,
-			distritos,
-			"Selecciona un distrito",
-		);
-
-		distritoSelect.disabled =
-			distritos.length === 0;
-	});
-
-	onCartUpdated(renderMiniSummary);
-	renderMiniSummary();
-
-	const goToStep3Button =
-		document.querySelector<HTMLButtonElement>(
-			"#go-to-step-3",
-		)!;
-
-	goToStep3Button.addEventListener("click", () => {
-		if (!shippingForm.reportValidity()) return;
-
-		buildOrderSummary();
-		goToStep(3);
-	});
-
-	// ---------- PASO 3: PAGO ----------
-
-	const orderCustomerSummary =
-		document.querySelector<HTMLElement>(
-			"#order-customer-summary",
-		)!;
-
-	const orderProductsSummary =
-		document.querySelector<HTMLElement>(
-			"#order-products-summary",
-		)!;
-
-	const orderSubtotalLabel =
-		document.querySelector<HTMLElement>(
-			"#order-subtotal",
-		)!;
-
-	const orderShippingLabelEl =
-		document.querySelector<HTMLElement>(
-			"#order-shipping-label",
-		)!;
-
-	const orderShippingAmountLabel =
-		document.querySelector<HTMLElement>(
-			"#order-shipping-amount",
-		)!;
-
-	const orderTotalLabel =
-		document.querySelector<HTMLElement>(
-			"#order-total",
-		)!;
-
-	const getCustomerData = () => {
-		const formData = new FormData(shippingForm);
-
-		const departamentoId = String(
-			formData.get("departamento") || "",
-		);
-
-		const provinciaId = String(
-			formData.get("provincia") || "",
-		);
-
-		const distritoId = String(
-			formData.get("distrito") || "",
-		);
-
-		return {
-			firstName: String(
-				formData.get("firstName") || "",
-			),
-			lastName: String(
-				formData.get("lastName") || "",
-			),
-			email: String(formData.get("email") || ""),
-			phone: `+51 ${String(formData.get("phone") || "")}`,
-			departamento:
-				getDepartamentoName(departamentoId),
-			provincia: getProvinciaName(provinciaId),
-			distrito: getDistritoName(distritoId),
-			direccion: String(
-				formData.get("direccion") || "",
-			),
-			referencia: String(
-				formData.get("referencia") || "",
-			),
-			giftMessage: String(
-				formData.get("giftMessage") || "",
-			),
-			isLima: isLimaMetropolitana(departamentoId),
-		};
-	};
-
-	const buildOrderSummary = () => {
-		const customer = getCustomerData();
-		const items = getCart();
-		const subtotal = getCartSubtotal(items);
-		const total = subtotal + SHIPPING_COST;
-
-		const shippingLabel = customer.isLima
-			? "Delivery a domicilio (Lima Metropolitana)"
-			: "Envío a agencia en tu ciudad";
-
-		orderCustomerSummary.replaceChildren();
-
-		const addSummaryRow = (label: string, value: string) => {
-			const row = document.createElement("div");
-			const dt = document.createElement("dt");
-			dt.textContent = label;
-
-			const dd = document.createElement("dd");
-			dd.textContent = value;
-
-			row.append(dt, dd);
-			orderCustomerSummary.appendChild(row);
-		};
-
-		addSummaryRow(
-			"Nombre",
-			`${customer.firstName} ${customer.lastName}`,
-		);
-		addSummaryRow("Correo", customer.email);
-		addSummaryRow("Teléfono", customer.phone);
-		addSummaryRow(
-			"Dirección",
-			customer.referencia
-				? `${customer.direccion} (${customer.referencia})`
-				: customer.direccion,
-		);
-		addSummaryRow(
-			"Ubicación",
-			`${customer.distrito}, ${customer.provincia}, ${customer.departamento}`,
-		);
-
-		if (customer.giftMessage) {
-			addSummaryRow(
-				"Tarjeta de regalo",
-				customer.giftMessage,
-			);
-		}
-
-		renderProductLines(orderProductsSummary, items);
-
-		orderSubtotalLabel.textContent =
-			formatPEN(subtotal);
-
-		orderShippingLabelEl.textContent = shippingLabel;
-		orderShippingAmountLabel.textContent =
-			formatPEN(SHIPPING_COST);
-
-		orderTotalLabel.textContent = formatPEN(total);
-	};
-
-	const buildWhatsAppOrderMessage = (
-		orderCode: string,
-	) =>
-		`Hola TAQTO, acabo de registrar el pedido ${orderCode}. Quisiera confirmar el pago y la personalización.`;
-
-	const buildWhatsAppReceiptMessage = (
-		orderCode: string,
-	) =>
-		`Hola TAQTO, ya yapeé el pedido ${orderCode}. Adjunto la captura del comprobante.`;
-
-	// ---------- CREAR PEDIDO EN SUPABASE ----------
-
-	let createdOrderCode: string | null = null;
-	let createdOrderSignature: string | null = null;
-	let orderCreationInFlight = false;
-
-	const ORDER_REQUEST_ID_STORAGE_KEY =
-		"taqto_order_request";
-
-	const generateRequestId = (): string => {
-		if (
-			typeof crypto !== "undefined" &&
-			typeof crypto.randomUUID === "function"
-		) {
-			return crypto.randomUUID();
-		}
-
-		// Respaldo minimo si crypto.randomUUID no esta disponible
-		// (contexto no seguro / navegador muy antiguo). Solo se usa
-		// como clave de idempotencia por intento, no con fines
-		// criptograficos.
-		return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-	};
-
-	const buildOrderSignature = (
-		items: CartItem[],
-		customer: ReturnType<typeof getCustomerData>,
-		paymentMethod: string,
-	) =>
-		JSON.stringify({
-			items: items.map((item) => ({
-				id: item.id,
-				quantity: item.quantity,
-				unitPrice: item.unitPrice,
-			})),
-			customer,
-			paymentMethod,
+			distritoSelect.disabled =
+				distritos.length === 0;
 		});
 
-	/*
-	 * El id de idempotencia se guarda en sessionStorage junto con la
-	 * firma del intento (carrito + datos + metodo de pago) para que un
-	 * recargo de pagina en medio de la creacion del pedido reutilice el
-	 * mismo id: si la insercion en Supabase ya se habia completado, el
-	 * RPC devuelve el pedido existente en vez de duplicarlo.
-	 */
-	const getClientRequestId = (signature: string): string => {
-		if (typeof window !== "undefined") {
-			try {
-				const raw = window.sessionStorage.getItem(
-					ORDER_REQUEST_ID_STORAGE_KEY,
-				);
+		unsubscribeFromCart.push(onCartUpdated(renderMiniSummary));
+		renderMiniSummary();
 
-				if (raw) {
-					const stored = JSON.parse(raw) as {
-						signature?: string;
-						requestId?: string;
-					};
+		const goToStep3Button =
+			document.querySelector<HTMLButtonElement>(
+				"#go-to-step-3",
+			)!;
 
-					if (
-						stored.signature === signature &&
-						stored.requestId
-					) {
-						return stored.requestId;
-					}
-				}
-			} catch {
-				// Se ignora: si sessionStorage falla, se genera un id
-				// nuevo valido solo en memoria para este intento.
-			}
-		}
+		goToStep3Button.addEventListener("click", () => {
+			if (!shippingForm.reportValidity()) return;
 
-		const requestId = generateRequestId();
+			buildOrderSummary();
+			goToStep(3);
+		});
 
-		if (typeof window !== "undefined") {
-			try {
-				window.sessionStorage.setItem(
-					ORDER_REQUEST_ID_STORAGE_KEY,
-					JSON.stringify({ signature, requestId }),
-				);
-			} catch {
-				// Almacenamiento no disponible; el id sigue siendo
-				// valido en memoria para este intento.
-			}
-		}
+		// ---------- PASO 3: PAGO ----------
 
-		return requestId;
-	};
+		const orderCustomerSummary =
+			document.querySelector<HTMLElement>(
+				"#order-customer-summary",
+			)!;
 
-	const clearClientRequestId = () => {
-		if (typeof window === "undefined") return;
+		const orderProductsSummary =
+			document.querySelector<HTMLElement>(
+				"#order-products-summary",
+			)!;
 
-		try {
-			window.sessionStorage.removeItem(
-				ORDER_REQUEST_ID_STORAGE_KEY,
+		const orderSubtotalLabel =
+			document.querySelector<HTMLElement>(
+				"#order-subtotal",
+			)!;
+
+		const orderShippingLabelEl =
+			document.querySelector<HTMLElement>(
+				"#order-shipping-label",
+			)!;
+
+		const orderShippingAmountLabel =
+			document.querySelector<HTMLElement>(
+				"#order-shipping-amount",
+			)!;
+
+		const orderTotalLabel =
+			document.querySelector<HTMLElement>(
+				"#order-total",
+			)!;
+
+		const getCustomerData = () => {
+			const formData = new FormData(shippingForm);
+
+			const departamentoId = String(
+				formData.get("departamento") || "",
 			);
-		} catch {
-			// Nada que limpiar si sessionStorage no esta disponible.
-		}
-	};
 
-	const orderConfirmError =
-		document.querySelector<HTMLElement>(
-			"#order-confirm-error",
-		)!;
+			const provinciaId = String(
+				formData.get("provincia") || "",
+			);
 
-	const orderCreatedBlock =
-		document.querySelector<HTMLElement>(
-			"#order-created-block",
-		)!;
+			const distritoId = String(
+				formData.get("distrito") || "",
+			);
 
-	const orderCreatedCode =
-		document.querySelector<HTMLElement>(
-			"#order-created-code",
-		)!;
-
-	const paymentMethodInputs = Array.from(
-		document.querySelectorAll<HTMLInputElement>(
-			"[data-payment-method]",
-		),
-	);
-
-	const confirmPaymentButton =
-		document.querySelector<HTMLButtonElement>(
-			"#confirm-payment",
-		)!;
-
-	const yapePanel =
-		document.querySelector<HTMLElement>(
-			"#yape-panel",
-		)!;
-
-	const yapeSendProofLink =
-		document.querySelector<HTMLAnchorElement>(
-			"#yape-send-proof",
-		)!;
-
-	/*
-	 * sanityProductId + productSku son las claves que create_order_v2
-	 * usa para buscar precio y stock reales en catalog_variants: son las
-	 * unicas dos que el RPC realmente confia. El resto (productName,
-	 * wood*, size*, dimensionsLabel, unitPrice) viaja solo como
-	 * respaldo/depuracion; el RPC los ignora como autoridad y usa lo que
-	 * encuentra en el catalogo para armar el pedido.
-	 */
-	const buildOrderItemsPayload = (items: CartItem[]) =>
-		items.map((item) => ({
-			sanityProductId: item.productId,
-			sanityProductSlug: item.slug,
-			productName: item.title,
-			productSku: item.sku,
-			woodName: item.woodTitle || null,
-			woodSlug: item.woodSlug || null,
-			sizeName: item.sizeTitle || null,
-			sizeSlug: item.sizeSlug || null,
-			dimensionsLabel: item.dimensionsLabel || null,
-			engravingText: item.engravingText || null,
-			quantity: item.quantity,
-			unitPrice: item.unitPrice,
-		}));
-
-	const ensureOrderCreated = async (
-		paymentMethod: "yape" | "cash_on_delivery",
-	): Promise<string | null> => {
-		if (orderCreationInFlight) return null;
-
-		const items = getCart();
-
-		if (items.length === 0) {
-			// El carrito puede estar vacio porque el pedido ya se creo
-			// con exito y se limpio despues: se reutiliza ese codigo en
-			// vez de tratarlo como "no hay nada que ordenar".
-			return createdOrderCode;
-		}
-
-		const customer = getCustomerData();
-
-		const signature = buildOrderSignature(
-			items,
-			customer,
-			paymentMethod,
-		);
-
-		// Carrito y datos identicos al pedido ya creado: se reutiliza
-		// sin volver a llamar al RPC (doble click, Enter repetido,
-		// volver de un paso y regresar sin cambiar nada).
-		if (
-			createdOrderCode &&
-			createdOrderSignature === signature
-		) {
-			return createdOrderCode;
-		}
-
-		if (!supabase) {
-			orderConfirmError.textContent =
-				"El registro de pedidos no está disponible en este momento. Escríbenos directo por WhatsApp para completar tu compra.";
-
-			orderConfirmError.hidden = false;
-			return null;
-		}
-
-		const clientRequestId = getClientRequestId(signature);
-
-		const payload = {
-			p_payment_method: paymentMethod,
-			p_delivery_method: customer.isLima
-				? "lima_delivery"
-				: "province_agency",
-			p_customer_first_name: customer.firstName,
-			p_customer_last_name: customer.lastName,
-			p_customer_email: customer.email,
-			p_customer_phone: customer.phone,
-			p_delivery_department: customer.departamento,
-			p_delivery_province: customer.provincia,
-			p_delivery_district: customer.distrito,
-			p_delivery_address: customer.direccion,
-			p_delivery_reference:
-				customer.referencia || null,
-			p_customer_notes: customer.giftMessage
-				? `Mensaje para la tarjeta de regalo: ${customer.giftMessage}`
-				: null,
-			// Ya no se envian p_subtotal/p_delivery_cost/p_total: el RPC
-			// endurecido los calcula el mismo desde el catalogo, no
-			// desde lo que mande el navegador.
-			p_items: buildOrderItemsPayload(items),
-			p_client_request_id: clientRequestId,
+			return {
+				firstName: String(
+					formData.get("firstName") || "",
+				),
+				lastName: String(
+					formData.get("lastName") || "",
+				),
+				email: String(formData.get("email") || ""),
+				phone: `+51 ${String(formData.get("phone") || "")}`,
+				departamento:
+					getDepartamentoName(departamentoId),
+				provincia: getProvinciaName(provinciaId),
+				distrito: getDistritoName(distritoId),
+				direccion: String(
+					formData.get("direccion") || "",
+				),
+				referencia: String(
+					formData.get("referencia") || "",
+				),
+				giftMessage: String(
+					formData.get("giftMessage") || "",
+				),
+				isLima: isLimaMetropolitana(departamentoId),
+			};
 		};
 
-		orderCreationInFlight = true;
-		orderConfirmError.hidden = true;
+		const buildOrderSummary = () => {
+			const customer = getCustomerData();
+			const items = getCart();
+			const subtotal = getCartSubtotal(items);
+			const total = subtotal + SHIPPING_COST;
 
-		confirmPaymentButton.disabled = true;
-		confirmPaymentButton.classList.add("is-loading");
+			const shippingLabel = customer.isLima
+				? "Delivery a domicilio (Lima Metropolitana)"
+				: "Envío a agencia en tu ciudad";
+
+			orderCustomerSummary.replaceChildren();
+
+			const addSummaryRow = (label: string, value: string) => {
+				const row = document.createElement("div");
+				const dt = document.createElement("dt");
+				dt.textContent = label;
+
+				const dd = document.createElement("dd");
+				dd.textContent = value;
+
+				row.append(dt, dd);
+				orderCustomerSummary.appendChild(row);
+			};
+
+			addSummaryRow(
+				"Nombre",
+				`${customer.firstName} ${customer.lastName}`,
+			);
+			addSummaryRow("Correo", customer.email);
+			addSummaryRow("Teléfono", customer.phone);
+			addSummaryRow(
+				"Dirección",
+				customer.referencia
+					? `${customer.direccion} (${customer.referencia})`
+					: customer.direccion,
+			);
+			addSummaryRow(
+				"Ubicación",
+				`${customer.distrito}, ${customer.provincia}, ${customer.departamento}`,
+			);
+
+			if (customer.giftMessage) {
+				addSummaryRow(
+					"Tarjeta de regalo",
+					customer.giftMessage,
+				);
+			}
+
+			renderProductLines(orderProductsSummary, items);
+
+			orderSubtotalLabel.textContent =
+				formatPEN(subtotal);
+
+			orderShippingLabelEl.textContent = shippingLabel;
+			orderShippingAmountLabel.textContent =
+				formatPEN(SHIPPING_COST);
+
+			orderTotalLabel.textContent = formatPEN(total);
+		};
+
+		const buildWhatsAppOrderMessage = (
+			orderCode: string,
+		) =>
+			`Hola TAQTO, acabo de registrar el pedido ${orderCode}. Quisiera confirmar el pago y la personalización.`;
+
+		const buildWhatsAppReceiptMessage = (
+			orderCode: string,
+		) =>
+			`Hola TAQTO, ya yapeé el pedido ${orderCode}. Adjunto la captura del comprobante.`;
+
+		// ---------- CREAR PEDIDO EN SUPABASE ----------
+
+		let createdOrderCode: string | null = null;
+		let createdOrderSignature: string | null = null;
+		let orderCreationInFlight = false;
+
+		const ORDER_REQUEST_ID_STORAGE_KEY =
+			"taqto_order_request";
+
+		const generateRequestId = (): string => {
+			if (
+				typeof crypto !== "undefined" &&
+				typeof crypto.randomUUID === "function"
+			) {
+				return crypto.randomUUID();
+			}
+
+			// Respaldo minimo si crypto.randomUUID no esta disponible
+			// (contexto no seguro / navegador muy antiguo). Solo se usa
+			// como clave de idempotencia por intento, no con fines
+			// criptograficos.
+			return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+		};
+
+		const buildOrderSignature = (
+			items: CartItem[],
+			customer: ReturnType<typeof getCustomerData>,
+			paymentMethod: string,
+		) =>
+			JSON.stringify({
+				items: items.map((item) => ({
+					id: item.id,
+					quantity: item.quantity,
+					unitPrice: item.unitPrice,
+				})),
+				customer,
+				paymentMethod,
+			});
 
 		/*
-		 * Unica via de escritura: create_order_v2 (ver
-		 * supabase/harden_create_order.sql). A diferencia de la version
-		 * anterior de este archivo, ya NO hay reintento contra el RPC
-		 * viejo si este falla: degradar en silencio a una version sin
-		 * validacion de catalogo ni idempotencia real seria exactamente
-		 * el problema que se esta corrigiendo.
+		 * El id de idempotencia se guarda en sessionStorage junto con la
+		 * firma del intento (carrito + datos + metodo de pago) para que un
+		 * recargo de pagina en medio de la creacion del pedido reutilice el
+		 * mismo id: si la insercion en Supabase ya se habia completado, el
+		 * RPC devuelve el pedido existente en vez de duplicarlo.
 		 */
-		const { data, error } = await supabase.rpc(
-			"create_order_v2",
-			payload,
-		);
+		const getClientRequestId = (signature: string): string => {
+			if (typeof window !== "undefined") {
+				try {
+					const raw = window.sessionStorage.getItem(
+						ORDER_REQUEST_ID_STORAGE_KEY,
+					);
 
-		orderCreationInFlight = false;
-		confirmPaymentButton.classList.remove("is-loading");
-		renderPaymentSelection();
+					if (raw) {
+						const stored = JSON.parse(raw) as {
+							signature?: string;
+							requestId?: string;
+						};
 
-		if (error || !data) {
-			if (
-				error?.code === "PGRST202" ||
-				error?.code === "PGRST203" ||
-				error?.code === "42883"
-			) {
-				// La funcion create_order_v2 todavia no existe o no se
-				// puede resolver sin ambiguedad en el proyecto remoto:
-				// falta correr supabase/catalog_mirror.sql,
-				// harden_create_order.sql y harden_permissions.sql. No
-				// hay una ruta de compra alternativa mientras tanto.
-				orderConfirmError.textContent =
-					"El checkout seguro todavía no está activo en este servidor. Escríbenos directo por WhatsApp para completar tu compra.";
-			} else if (
-				error?.message?.startsWith("IDEMPOTENCY_MISMATCH")
-			) {
-				// La clave de este intento ya se uso con otros datos: se
-				// descarta para que el proximo click genere una clave
-				// nueva en vez de volver a chocar con la misma.
-				clearClientRequestId();
-
-				orderConfirmError.textContent =
-					"Tu pedido cambió antes de confirmarse. Revisa el resumen e intenta de nuevo.";
-			} else if (error?.message) {
-				// Mensajes propios del RPC (stock insuficiente, producto
-				// ya no disponible, datos incompletos): ya estan escritos
-				// para mostrarse tal cual, sin detalle tecnico.
-				orderConfirmError.textContent = error.message;
-			} else {
-				orderConfirmError.textContent =
-					"No pudimos registrar tu pedido. Intenta de nuevo o escríbenos directo por WhatsApp.";
+						if (
+							stored.signature === signature &&
+							stored.requestId
+						) {
+							return stored.requestId;
+						}
+					}
+				} catch {
+					// Se ignora: si sessionStorage falla, se genera un id
+					// nuevo valido solo en memoria para este intento.
+				}
 			}
 
-			orderConfirmError.hidden = false;
-			return null;
-		}
+			const requestId = generateRequestId();
 
-		createdOrderCode = data as string;
-		createdOrderSignature = signature;
-		orderCreatedBlock.hidden = false;
-		orderCreatedCode.textContent = createdOrderCode;
+			if (typeof window !== "undefined") {
+				try {
+					window.sessionStorage.setItem(
+						ORDER_REQUEST_ID_STORAGE_KEY,
+						JSON.stringify({ signature, requestId }),
+					);
+				} catch {
+					// Almacenamiento no disponible; el id sigue siendo
+					// valido en memoria para este intento.
+				}
+			}
 
-		// El pedido ya quedo confirmado en Supabase: se vacia el
-		// carrito para que ni un recargo de pagina ni un nuevo intento
-		// de confirmar puedan volver a enviarlo.
-		clearCart();
-		clearClientRequestId();
+			return requestId;
+		};
 
-		return createdOrderCode;
-	};
+		const clearClientRequestId = () => {
+			if (typeof window === "undefined") return;
 
-	// El pedido y su integracion no cambian: solo se separa "elegir
-	// metodo" de "confirmar", como pide la nueva composicion del paso 3.
-	const payWithWhatsApp = async () => {
-		const code = await ensureOrderCreated(
-			"cash_on_delivery",
-		);
-
-		if (!code) return;
-
-		const message = encodeURIComponent(
-			buildWhatsAppOrderMessage(code),
-		);
-
-		window.open(
-			`https://wa.me/${WHATSAPP_NUMBER}?text=${message}`,
-			"_blank",
-			"noopener,noreferrer",
-		);
-
-		orderCreatedBlock.scrollIntoView({
-			behavior: "smooth",
-			block: "center",
-		});
-	};
-
-	const payWithYape = async () => {
-		const code = await ensureOrderCreated("yape");
-
-		if (!code) return;
-
-		yapePanel.hidden = false;
-
-		const message = encodeURIComponent(
-			buildWhatsAppReceiptMessage(code),
-		);
-
-		yapeSendProofLink.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
-
-		yapePanel.scrollIntoView({
-			behavior: "smooth",
-			block: "center",
-		});
-	};
-
-	const selectedPaymentMethod = () =>
-		paymentMethodInputs.find((input) => input.checked)?.value ?? null;
-
-	const renderPaymentSelection = () => {
-		paymentMethodInputs.forEach((input) => {
-			input
-				.closest(".payment-option")
-				?.classList.toggle("is-selected", input.checked);
-		});
-
-		confirmPaymentButton.disabled = !selectedPaymentMethod();
-	};
-
-	paymentMethodInputs.forEach((input) => {
-		input.addEventListener("change", renderPaymentSelection);
-
-		input.addEventListener("focus", () => {
-			input
-				.closest(".payment-option")
-				?.classList.toggle(
-					"is-focused",
-					input.matches(":focus-visible"),
+			try {
+				window.sessionStorage.removeItem(
+					ORDER_REQUEST_ID_STORAGE_KEY,
 				);
+			} catch {
+				// Nada que limpiar si sessionStorage no esta disponible.
+			}
+		};
+
+		const orderConfirmError =
+			document.querySelector<HTMLElement>(
+				"#order-confirm-error",
+			)!;
+
+		const orderCreatedBlock =
+			document.querySelector<HTMLElement>(
+				"#order-created-block",
+			)!;
+
+		const orderCreatedCode =
+			document.querySelector<HTMLElement>(
+				"#order-created-code",
+			)!;
+
+		const paymentMethodInputs = Array.from(
+			document.querySelectorAll<HTMLInputElement>(
+				"[data-payment-method]",
+			),
+		);
+
+		const confirmPaymentButton =
+			document.querySelector<HTMLButtonElement>(
+				"#confirm-payment",
+			)!;
+
+		const yapePanel =
+			document.querySelector<HTMLElement>(
+				"#yape-panel",
+			)!;
+
+		const yapeSendProofLink =
+			document.querySelector<HTMLAnchorElement>(
+				"#yape-send-proof",
+			)!;
+
+		/*
+		 * sanityProductId + productSku son las claves que create_order_v2
+		 * usa para buscar precio y stock reales en catalog_variants: son las
+		 * unicas dos que el RPC realmente confia. El resto (productName,
+		 * wood*, size*, dimensionsLabel, unitPrice) viaja solo como
+		 * respaldo/depuracion; el RPC los ignora como autoridad y usa lo que
+		 * encuentra en el catalogo para armar el pedido.
+		 */
+		const buildOrderItemsPayload = (items: CartItem[]) =>
+			items.map((item) => ({
+				sanityProductId: item.productId,
+				sanityProductSlug: item.slug,
+				productName: item.title,
+				productSku: item.sku,
+				woodName: item.woodTitle || null,
+				woodSlug: item.woodSlug || null,
+				sizeName: item.sizeTitle || null,
+				sizeSlug: item.sizeSlug || null,
+				dimensionsLabel: item.dimensionsLabel || null,
+				engravingText: item.engravingText || null,
+				quantity: item.quantity,
+				unitPrice: item.unitPrice,
+			}));
+
+		const ensureOrderCreated = async (
+			paymentMethod: "yape" | "cash_on_delivery",
+		): Promise<string | null> => {
+			if (orderCreationInFlight) return null;
+
+			const items = getCart();
+
+			if (items.length === 0) {
+				// El carrito puede estar vacio porque el pedido ya se creo
+				// con exito y se limpio despues: se reutiliza ese codigo en
+				// vez de tratarlo como "no hay nada que ordenar".
+				return createdOrderCode;
+			}
+
+			const customer = getCustomerData();
+
+			const signature = buildOrderSignature(
+				items,
+				customer,
+				paymentMethod,
+			);
+
+			// Carrito y datos identicos al pedido ya creado: se reutiliza
+			// sin volver a llamar al RPC (doble click, Enter repetido,
+			// volver de un paso y regresar sin cambiar nada).
+			if (
+				createdOrderCode &&
+				createdOrderSignature === signature
+			) {
+				return createdOrderCode;
+			}
+
+			if (!supabase) {
+				orderConfirmError.textContent =
+					"El registro de pedidos no está disponible en este momento. Escríbenos directo por WhatsApp para completar tu compra.";
+
+				orderConfirmError.hidden = false;
+				return null;
+			}
+
+			const clientRequestId = getClientRequestId(signature);
+
+			const payload = {
+				p_payment_method: paymentMethod,
+				p_delivery_method: customer.isLima
+					? "lima_delivery"
+					: "province_agency",
+				p_customer_first_name: customer.firstName,
+				p_customer_last_name: customer.lastName,
+				p_customer_email: customer.email,
+				p_customer_phone: customer.phone,
+				p_delivery_department: customer.departamento,
+				p_delivery_province: customer.provincia,
+				p_delivery_district: customer.distrito,
+				p_delivery_address: customer.direccion,
+				p_delivery_reference:
+					customer.referencia || null,
+				p_customer_notes: customer.giftMessage
+					? `Mensaje para la tarjeta de regalo: ${customer.giftMessage}`
+					: null,
+				// Ya no se envian p_subtotal/p_delivery_cost/p_total: el RPC
+				// endurecido los calcula el mismo desde el catalogo, no
+				// desde lo que mande el navegador.
+				p_items: buildOrderItemsPayload(items),
+				p_client_request_id: clientRequestId,
+			};
+
+			orderCreationInFlight = true;
+			orderConfirmError.hidden = true;
+
+			confirmPaymentButton.disabled = true;
+			confirmPaymentButton.classList.add("is-loading");
+
+			/*
+			 * Unica via de escritura: create_order_v2 (ver
+			 * supabase/harden_create_order.sql). A diferencia de la version
+			 * anterior de este archivo, ya NO hay reintento contra el RPC
+			 * viejo si este falla: degradar en silencio a una version sin
+			 * validacion de catalogo ni idempotencia real seria exactamente
+			 * el problema que se esta corrigiendo.
+			 */
+			const { data, error } = await supabase.rpc(
+				"create_order_v2",
+				payload,
+			);
+
+			orderCreationInFlight = false;
+			confirmPaymentButton.classList.remove("is-loading");
+			renderPaymentSelection();
+
+			if (error || !data) {
+				if (
+					error?.code === "PGRST202" ||
+					error?.code === "PGRST203" ||
+					error?.code === "42883"
+				) {
+					// La funcion create_order_v2 todavia no existe o no se
+					// puede resolver sin ambiguedad en el proyecto remoto:
+					// falta correr supabase/catalog_mirror.sql,
+					// harden_create_order.sql y harden_permissions.sql. No
+					// hay una ruta de compra alternativa mientras tanto.
+					orderConfirmError.textContent =
+						"El checkout seguro todavía no está activo en este servidor. Escríbenos directo por WhatsApp para completar tu compra.";
+				} else if (
+					error?.message?.startsWith("IDEMPOTENCY_MISMATCH")
+				) {
+					// La clave de este intento ya se uso con otros datos: se
+					// descarta para que el proximo click genere una clave
+					// nueva en vez de volver a chocar con la misma.
+					clearClientRequestId();
+
+					orderConfirmError.textContent =
+						"Tu pedido cambió antes de confirmarse. Revisa el resumen e intenta de nuevo.";
+				} else if (error?.message) {
+					// Mensajes propios del RPC (stock insuficiente, producto
+					// ya no disponible, datos incompletos): ya estan escritos
+					// para mostrarse tal cual, sin detalle tecnico.
+					orderConfirmError.textContent = error.message;
+				} else {
+					orderConfirmError.textContent =
+						"No pudimos registrar tu pedido. Intenta de nuevo o escríbenos directo por WhatsApp.";
+				}
+
+				orderConfirmError.hidden = false;
+				return null;
+			}
+
+			createdOrderCode = data as string;
+			createdOrderSignature = signature;
+			orderCreatedBlock.hidden = false;
+			orderCreatedCode.textContent = createdOrderCode;
+
+			// El pedido ya quedo confirmado en Supabase: se vacia el
+			// carrito para que ni un recargo de pagina ni un nuevo intento
+			// de confirmar puedan volver a enviarlo.
+			clearCart();
+			clearClientRequestId();
+
+			return createdOrderCode;
+		};
+
+		// El pedido y su integracion no cambian: solo se separa "elegir
+		// metodo" de "confirmar", como pide la nueva composicion del paso 3.
+		const payWithWhatsApp = async () => {
+			const code = await ensureOrderCreated(
+				"cash_on_delivery",
+			);
+
+			if (!code) return;
+
+			const message = encodeURIComponent(
+				buildWhatsAppOrderMessage(code),
+			);
+
+			window.open(
+				`https://wa.me/${WHATSAPP_NUMBER}?text=${message}`,
+				"_blank",
+				"noopener,noreferrer",
+			);
+
+			orderCreatedBlock.scrollIntoView({
+				behavior: "smooth",
+				block: "center",
+			});
+		};
+
+		const payWithYape = async () => {
+			const code = await ensureOrderCreated("yape");
+
+			if (!code) return;
+
+			yapePanel.hidden = false;
+
+			const message = encodeURIComponent(
+				buildWhatsAppReceiptMessage(code),
+			);
+
+			yapeSendProofLink.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
+
+			yapePanel.scrollIntoView({
+				behavior: "smooth",
+				block: "center",
+			});
+		};
+
+		const selectedPaymentMethod = () =>
+			paymentMethodInputs.find((input) => input.checked)?.value ?? null;
+
+		const renderPaymentSelection = () => {
+			paymentMethodInputs.forEach((input) => {
+				input
+					.closest(".payment-option")
+					?.classList.toggle("is-selected", input.checked);
+			});
+
+			confirmPaymentButton.disabled = !selectedPaymentMethod();
+		};
+
+		paymentMethodInputs.forEach((input) => {
+			input.addEventListener("change", renderPaymentSelection);
+
+			input.addEventListener("focus", () => {
+				input
+					.closest(".payment-option")
+					?.classList.toggle(
+						"is-focused",
+						input.matches(":focus-visible"),
+					);
+			});
+
+			input.addEventListener("blur", () => {
+				input
+					.closest(".payment-option")
+					?.classList.remove("is-focused");
+			});
 		});
 
-		input.addEventListener("blur", () => {
-			input
-				.closest(".payment-option")
-				?.classList.remove("is-focused");
+		renderPaymentSelection();
+
+		confirmPaymentButton.addEventListener("click", () => {
+			const method = selectedPaymentMethod();
+
+			if (method === "whatsapp") {
+				void payWithWhatsApp();
+			} else if (method === "yape") {
+				void payWithYape();
+			}
 		});
-	});
 
-	renderPaymentSelection();
+		disposeCheckout = () => {
+			unsubscribeFromCart.forEach((unsubscribe) => unsubscribe());
+			unsubscribeFromCart.length = 0;
+			disposeCheckout = null;
+		};
+	};
 
-	confirmPaymentButton.addEventListener("click", () => {
-		const method = selectedPaymentMethod();
+	initCheckout();
+	document.addEventListener("astro:page-load", initCheckout);
 
-		if (method === "whatsapp") {
-			void payWithWhatsApp();
-		} else if (method === "yape") {
-			void payWithYape();
-		}
+	// Al salir de /carrito/ el DOM desaparece: sus suscripciones tambien.
+	document.addEventListener("astro:before-swap", () => {
+		disposeCheckout?.();
 	});
 </script>
 
@@ -1979,6 +2089,16 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 	.checkout-shell {
 		width: min(calc(100% - 40px), 1360px);
 		margin-inline: auto;
+
+		/*
+		 * Curva compartida por el cambio de paso: arranque rapido y
+		 * frenada larga, sin rebote.
+		 */
+		--ease-step: cubic-bezier(0.22, 1, 0.36, 1);
+
+		/* Tintes del naranja de marca (#ff4d2a) para el paso activo. */
+		--step-accent-soft: rgba(255, 77, 42, 0.1);
+		--step-accent-ring: rgba(255, 77, 42, 0.3);
 	}
 
 	.checkout-title {
@@ -2011,7 +2131,7 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 		background: var(--color-orange);
 		transform: scaleX(0);
 		transform-origin: left center;
-		transition: transform 320ms var(--ease-in-out);
+		transition: transform 380ms var(--ease-step);
 	}
 
 	.stepper__list {
@@ -2023,21 +2143,62 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 		list-style: none;
 	}
 
+	/*
+	 * `min-width: 0` es lo que impide que un paso desborde su columna: sin
+	 * el, un item de grid conserva `min-width: auto` y una etiqueta mas
+	 * ancha que la pista (fuente de respaldo, texto del sistema mas grande)
+	 * se sale del contenedor arrastrando al Paso 3 fuera del viewport.
+	 */
 	.stepper__step {
+		min-width: 0;
 		display: flex;
 		align-items: flex-start;
 		gap: 9px;
 		color: var(--ink-35);
-		transition: color 180ms var(--ease-out);
+		transition: color 180ms var(--ease-step);
 	}
 
 	.stepper__icon-slot {
-		flex: 0 0 18px;
-		width: 18px;
-		height: 18px;
-		margin-top: 2px;
+		flex: 0 0 26px;
+		width: 26px;
+		height: 26px;
 		display: grid;
 		place-items: center;
+		border-radius: var(--radius-full);
+		background: transparent;
+		box-shadow: inset 0 0 0 1px transparent;
+		transition:
+			background-color 240ms var(--ease-step),
+			box-shadow 240ms var(--ease-step);
+	}
+
+	/* El paso activo se acentua con un disco tenue y un aro del naranja. */
+	.stepper__step.is-active .stepper__icon-slot {
+		background: var(--step-accent-soft);
+		box-shadow: inset 0 0 0 1px var(--step-accent-ring);
+	}
+
+	.stepper__step.is-complete .stepper__icon-slot {
+		background: var(--ink-08);
+	}
+
+	.stepper__icon-slot.is-popping {
+		animation: stepper-icon-pop 340ms var(--ease-step);
+	}
+
+	/* 1 -> 1.08 -> 1: se nota el cambio de paso sin rebotar. */
+	@keyframes stepper-icon-pop {
+		0% {
+			transform: scale(1);
+		}
+
+		45% {
+			transform: scale(1.08);
+		}
+
+		100% {
+			transform: scale(1);
+		}
 	}
 
 	.stepper__icon {
@@ -2064,7 +2225,7 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 		letter-spacing: 0.05em;
 		line-height: 1.4;
 		text-transform: uppercase;
-		transition: color 180ms var(--ease-out);
+		transition: color 180ms var(--ease-step);
 	}
 
 	.stepper__step.is-active .stepper__number {
@@ -2077,7 +2238,9 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 		font-size: var(--text-sm);
 		font-weight: 500;
 		line-height: var(--leading-snug);
-		transition: color 180ms var(--ease-out);
+		/* Un nombre largo parte dentro de su columna, nunca la desborda. */
+		overflow-wrap: break-word;
+		transition: color 180ms var(--ease-step);
 	}
 
 	/* Activo en naranja, completado en tinta, pendiente en gris. El
@@ -2127,34 +2290,29 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 	 */
 	.cart-step.cart-step--leaving {
 		opacity: 0;
-		transition: opacity 120ms var(--ease-out);
+		transition: opacity 130ms var(--ease-step);
 	}
 
+	/*
+	 * Avanzar entra desde abajo, retroceder desde arriba: el sentido del
+	 * desplazamiento (6px, lo justo para leerse sin desmontar la pagina)
+	 * dice si se avanza o se vuelve.
+	 */
 	.cart-step.cart-step--entering {
 		opacity: 0;
-		transform: translateX(8px);
+		transform: translateY(6px);
 	}
 
 	.cart-step.cart-step--entering-back {
-		transform: translateX(-8px);
+		transform: translateY(-6px);
 	}
 
 	.cart-step.cart-step--enter-active {
 		opacity: 1;
-		transform: translateX(0);
+		transform: translateY(0);
 		transition:
-			opacity 270ms var(--ease-out),
-			transform 270ms var(--ease-out);
-	}
-
-	@media (max-width: 760px) {
-		.cart-step.cart-step--entering {
-			transform: translateX(6px);
-		}
-
-		.cart-step.cart-step--entering-back {
-			transform: translateX(-6px);
-		}
+			opacity 300ms var(--ease-step),
+			transform 300ms var(--ease-step);
 	}
 
 	/* ---------- Layout de dos columnas ---------- */
@@ -3027,8 +3185,21 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 			gap: 5px;
 		}
 
-		.stepper__icon-slot {
-			margin-top: 0;
+		/*
+		 * Las tres columnas siguen midiendo lo mismo, pero su contenido se
+		 * ancla al tramo de barra que representa: el primero al inicio, el
+		 * ultimo al final. Asi el Paso 3 termina justo donde termina la
+		 * linea de progreso, en vez de quedar suelto a media columna con un
+		 * hueco a su derecha.
+		 */
+		.stepper__step:nth-child(2) {
+			align-items: center;
+			text-align: center;
+		}
+
+		.stepper__step:last-child {
+			align-items: flex-end;
+			text-align: right;
 		}
 	}
 
@@ -3054,9 +3225,10 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 	}
 
 	/*
-	 * Movimiento reducido: la barra del stepper salta al paso nuevo sin
-	 * transicion. La orientacion la sigue dando el indicador activo, no
-	 * el recorrido de la barra.
+	 * Movimiento reducido: desaparecen desplazamientos y escalas, y las
+	 * duraciones bajan a lo minimo. El cambio de estado se conserva (color,
+	 * icono de check, texto para lector de pantalla y avance de la barra):
+	 * la orientacion la da el indicador activo, no el recorrido.
 	 */
 	@media (prefers-reduced-motion: reduce) {
 		.stepper__progress {
@@ -3065,8 +3237,13 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 
 		.stepper__step,
 		.stepper__number,
-		.stepper__name {
+		.stepper__name,
+		.stepper__icon-slot {
 			transition: none;
+		}
+
+		.stepper__icon-slot.is-popping {
+			animation: none;
 		}
 
 		.cart-step.cart-step--leaving,
@@ -3077,11 +3254,11 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 		}
 
 		.cart-step.cart-step--leaving {
-			transition: opacity 120ms linear;
+			transition: opacity 60ms linear;
 		}
 
 		.cart-step.cart-step--enter-active {
-			transition: opacity 120ms linear;
+			transition: opacity 60ms linear;
 		}
 	}
 </style>
