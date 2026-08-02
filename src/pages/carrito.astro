@@ -216,7 +216,11 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 			<!-- PASO 2: DATOS DE ENVIO -->
 			<section class="cart-step" data-step="2" hidden>
 				<div class="checkout-grid">
-					<form class="shipping-form" id="shipping-form">
+					<form
+					class="shipping-form"
+					id="shipping-form"
+					data-astro-reload
+				>
 						<h2 class="form-group-title">
 							<UserRound aria-hidden="true" stroke-width={1.75} />
 							Datos personales y dirección

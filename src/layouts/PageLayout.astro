@@ -137,8 +137,14 @@ const {
 		background: var(--sp-tint);
 	}
 
+	/*
+	 * Cierre de página. El footer negro aporta su propio padding
+	 * superior, así que aquí solo queda la mitad del respiro: con el
+	 * valor anterior el blanco de .page-main se sumaba al del footer y
+	 * dejaba una franja clara ancha justo encima del pie.
+	 */
 	.page-main .sect--last {
-		padding-block-end: clamp(64px, 7vw, 112px);
+		padding-block-end: clamp(24px, 2.4vw, 36px);
 	}
 
 	.page-main .sect__head {
@@ -642,16 +648,30 @@ const {
 		gap: 20px;
 		min-height: 44px;
 		padding-block: 15px;
+		padding-inline: 4px;
+		margin-inline: -4px;
+		border-radius: var(--radius-sm);
 		color: var(--color-black);
 		font-size: clamp(15.5px, 1vw, 16.5px);
 		font-weight: 600;
 		line-height: 1.45;
 		list-style: none;
 		cursor: pointer;
+		transition:
+			background-color 120ms ease,
+			transform 120ms ease;
 	}
 
 	.page-main .faq summary::-webkit-details-marker {
 		display: none;
+	}
+
+	@media (hover: none) and (pointer: coarse) {
+		.page-main .faq summary:active {
+			background: var(--sp-tint, var(--ink-08));
+			transform: scale(0.98);
+			transition-duration: 100ms;
+		}
 	}
 
 	.page-main .faq summary::after {
@@ -707,6 +727,10 @@ const {
 	@media (prefers-reduced-motion: reduce) {
 		.page-main .card--link:hover {
 			transform: none;
+		}
+
+		.page-main .faq summary {
+			transition: none;
 		}
 	}
 </style>

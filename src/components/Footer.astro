@@ -5,7 +5,28 @@ import {
 	WHATSAPP_NUMBER,
 	EMPRESAS_CATEGORY_SLUG,
 } from "../lib/constants";
-import { ChevronDown, ArrowUp } from "@lucide/astro";
+import {
+	ChevronDown,
+	ArrowUp,
+	ArrowRight,
+	ShoppingBag,
+	Flame,
+	UtensilsCrossed,
+	LampDesk,
+	Gift,
+	Package,
+	Users,
+	Building2,
+	Handshake,
+	Mail,
+	Newspaper,
+	Truck,
+	SprayCan,
+	CircleQuestionMark,
+	ShieldCheck,
+	Lock,
+	Info,
+} from "@lucide/astro";
 
 interface Props {
 	whatsappNumber?: string;
@@ -37,10 +58,20 @@ const navCategories =
 		navigationCategoriesQuery,
 	);
 
+/* Icono por slug de categoria. Las categorias vienen de Sanity, asi que
+ * el mapa se consulta por slug y cae en un generico si alguna vez
+ * aparece una nueva. */
+const categoryIcons: Record<string, typeof Package> = {
+	parrilla: Flame,
+	"cocina-y-mesa": UtensilsCrossed,
+	oficina: LampDesk,
+	"kits-y-regalos": Gift,
+};
+
 /* Comprar: tienda + categorias reales de Sanity (sin "empresas", que
  * tiene su propio grupo). */
 const compraLinks = [
-	{ label: "Tienda", href: getUrl("/tienda/") },
+	{ label: "Tienda", href: getUrl("/tienda/"), icon: ShoppingBag },
 	...navCategories
 		.filter(
 			(category) => category.slug !== EMPRESAS_CATEGORY_SLUG,
@@ -48,41 +79,53 @@ const compraLinks = [
 		.map((category) => ({
 			label: category.title,
 			href: getUrl(`/categorias/${category.slug}/`),
+			icon: categoryIcons[category.slug] ?? Package,
 		})),
 ];
 
 const taqtoLinks = [
-	{ label: "Nosotros", href: getUrl("/nosotros/") },
+	{ label: "Nosotros", href: getUrl("/nosotros/"), icon: Users },
 	{
 		label: "Empresas",
 		href: getUrl(`/categorias/${EMPRESAS_CATEGORY_SLUG}/`),
+		icon: Building2,
 	},
 	{
 		label: "Regalos corporativos",
 		href: getUrl(
 			`/categorias/${EMPRESAS_CATEGORY_SLUG}/regalos-corporativos/`,
 		),
+		icon: Handshake,
 	},
-	{ label: "Contáctanos", href: getUrl("/contactanos/") },
+	{
+		label: "Contáctanos",
+		href: getUrl("/contactanos/"),
+		icon: Mail,
+	},
+	{ label: "Blog", href: getUrl("/blog/"), icon: Newspaper },
 ];
 
 const ayudaLinks = [
-	{ label: "Envíos", href: getUrl("/envios/") },
-	{ label: "Cuidados", href: getUrl("/cuidados/") },
+	{ label: "Envíos", href: getUrl("/envios/"), icon: Truck },
+	{ label: "Cuidados", href: getUrl("/cuidados/"), icon: SprayCan },
 	{
 		label: "Preguntas frecuentes",
 		href: getUrl("/preguntas-frecuentes/"),
+		icon: CircleQuestionMark,
 	},
 	{
 		label: "Garantía de productos",
 		href: getUrl("/garantia/"),
+		icon: ShieldCheck,
 	},
 ];
 
+/* El icono del encabezado solo se pinta en el acordeon movil; en
+ * escritorio los titulos siguen siendo texto limpio. */
 const navGroups = [
-	{ title: "Comprar", links: compraLinks },
-	{ title: "TAQTO", links: taqtoLinks },
-	{ title: "Ayuda", links: ayudaLinks },
+	{ title: "Comprar", links: compraLinks, icon: ShoppingBag },
+	{ title: "TAQTO", links: taqtoLinks, icon: Info },
+	{ title: "Ayuda", links: ayudaLinks, icon: CircleQuestionMark },
 ];
 
 const formattedWhatsappMsg =
@@ -120,150 +163,265 @@ const currentYear = new Date().getFullYear();
 				aria-label="Navegación del pie de página"
 			>
 				{
-					navGroups.map((group) => (
+					navGroups.map((group, index) => (
 						<div class="footer-nav-group">
-							<h3>{group.title}</h3>
+							<h3 id={`footer-nav-title-${index}`}>
+								{group.title}
+							</h3>
 
-							<ul>
-								{group.links.map((link) => (
-									<li>
-										<a href={link.href}>
-											{link.label}
-										</a>
-									</li>
-								))}
+							<ul
+								aria-labelledby={`footer-nav-title-${index}`}
+							>
+								{group.links.map((link) => {
+									const Icon = link.icon;
+
+									return (
+										<li>
+											<a
+												class="footer-link"
+												href={link.href}
+												data-footer-link
+											>
+												<Icon
+													class="footer-link__icon"
+													aria-hidden="true"
+													stroke-width={1.75}
+												/>
+
+												<span class="footer-link__label">
+													{link.label}
+												</span>
+											</a>
+										</li>
+									);
+								})}
 							</ul>
 						</div>
 					))
 				}
 			</nav>
 
-			<div
+			<nav
 				class="footer-nav-mobile"
 				aria-label="Navegación del pie de página"
 			>
-				{
-					navGroups.map((group) => (
-						<details class="footer-accordion">
-							<summary>
-								{group.title}
+				<div class="footer-accordions">
+					{navGroups.map((group, index) => {
+						const GroupIcon = group.icon;
+						const panelId = `footer-accordion-panel-${index}`;
 
-								<ChevronDown
-									class="footer-accordion__chevron"
-									aria-hidden="true"
-									stroke-width={1.75}
-								/>
-							</summary>
+						return (
+							<details class="footer-accordion">
+								<summary
+									aria-expanded="false"
+									aria-controls={panelId}
+								>
+									<span class="footer-accordion__title">
+										<GroupIcon
+											class="footer-accordion__icon"
+											aria-hidden="true"
+											stroke-width={1.75}
+										/>
 
-							<ul>
-								{group.links.map((link) => (
-									<li>
-										<a href={link.href}>
-											{link.label}
-										</a>
-									</li>
-								))}
-							</ul>
-						</details>
-					))
-				}
-			</div>
+										{group.title}
+									</span>
+
+									<ChevronDown
+										class="footer-accordion__chevron"
+										aria-hidden="true"
+										stroke-width={1.75}
+									/>
+								</summary>
+
+								<div
+									class="footer-accordion__panel"
+									id={panelId}
+								>
+									<div class="footer-accordion__panel-inner">
+										<ul>
+											{group.links.map((link) => {
+												const Icon = link.icon;
+
+												return (
+													<li>
+														<a
+															class="footer-link"
+															href={link.href}
+															data-footer-link
+														>
+															<Icon
+																class="footer-link__icon"
+																aria-hidden="true"
+																stroke-width={1.75}
+															/>
+
+															<span class="footer-link__label">
+																{link.label}
+															</span>
+														</a>
+													</li>
+												);
+											})}
+										</ul>
+									</div>
+								</div>
+							</details>
+						);
+					})}
+				</div>
+			</nav>
 
 			<div class="footer-brand">
-				<a
-					class="footer-brand__logo"
-					href={getUrl("/")}
-					aria-label="TAQTO, volver al inicio"
-				>
-					<img
-						src={footerLogo}
-						alt="TAQTO — Diseño con alma de madera"
-						width="694"
-						height="553"
-						loading="lazy"
-						decoding="async"
-					/>
-				</a>
+				{/*
+				 * Marca de agua editorial: el isotipo oficial reutilizado en
+				 * linea (misma geometria que
+				 * /brand/isotipo/isotipo-colornegro.svg) para poder pintarlo
+				 * con `currentColor` en negro profundo sin tocar el asset ni
+				 * crear uno nuevo. Solo escritorio.
+				 */}
+				<div class="footer-brand__watermark" aria-hidden="true">
+					{/* viewBox completo del isotipo oficial (ave + base),
+					sin recortar. `preserveAspectRatio` por defecto escala
+					en modo "contain": la figura entra entera y conserva su
+					proporción sea cual sea la caja. */}
+					<svg
+						viewBox="0 0 510.8 424.75"
+						preserveAspectRatio="xMidYMid meet"
+						fill="currentColor"
+						focusable="false"
+					>
+						<rect
+							x="127.05"
+							y="398.63"
+							width="258.59"
+							height="26.12"
+							rx="1.49"
+							ry="1.49"></rect>
+						<path
+							d="M509.31,0h-150.3c-14.24,0-28.07,4.81-39.24,13.64l-25.14,19.88c-8.57,6.78-18.72,11.27-29.5,13.05l-63.5,13.42c-.69.15-1.18.75-1.18,1.46,0,.74.55,1.37,1.28,1.48l70.12,9.86c22.24,2.2,42.22,14.57,54.1,33.51l1.77,2.82L.59,358.81c-1.13.87-.52,2.68.9,2.68h257.98c96.01,0,173.84-77.83,173.84-173.84V61.37l57.09-43.58,9.55-7.29h0l10.25-7.82c1.13-.87.52-2.68-.9-2.68ZM330.85,317.01c-21.16,11.7-45.49,18.36-71.38,18.36H74.35l84.87-64.78c23.25,16.67,51.72,26.52,82.52,26.52,78.31,0,141.8-63.48,141.8-141.8,0-17.31-3.12-33.89-8.8-49.22l.27-.21c4.82,5.92,9.59,13.05,13.87,21.66,34.21,68.85,9.26,152.26-58.01,189.47Z"
+						></path>
+					</svg>
+				</div>
 
-				<a
-					class="whatsapp-cta"
-					href={whatsappUrl}
-					target="_blank"
-					rel="noopener noreferrer"
-				>
-					<img
-						src={getUrl("/icons/icon-whastapp.svg")}
-						alt=""
-						width="20"
-						height="20"
-					/>
-					<span>Escríbenos por WhatsApp</span>
-				</a>
+				<div class="footer-brand__content">
+					<a
+						class="footer-brand__logo"
+						href={getUrl("/")}
+						aria-label="TAQTO, volver al inicio"
+					>
+						<img
+							src={footerLogo}
+							alt="TAQTO — Diseño con alma de madera"
+							width="694"
+							height="553"
+							loading="lazy"
+							decoding="async"
+						/>
+					</a>
 
-				<div
-					class="footer-socials"
-					aria-label="Redes sociales de TAQTO"
-				>
-					{
-						socialLinks.map((social) => (
-							<a
-								class="social-button"
-								href={social.href}
-								target="_blank"
-								rel="noopener noreferrer"
-								aria-label={social.label}
-							>
-								{social.icon === "instagram" && (
-									<svg
-										viewBox="0 0 24 24"
-										aria-hidden="true"
-										class="icon-stroke"
-									>
-										<rect
-											x="3"
-											y="3"
-											width="18"
-											height="18"
-											rx="5"
-										></rect>
+					<a
+						class="footer-whatsapp-cta"
+						href={whatsappUrl}
+						target="_blank"
+						rel="noopener noreferrer"
+					>
+						<span
+							class="footer-whatsapp-cta__icon"
+							aria-hidden="true"
+						>
+							<img
+								src={getUrl("/icons/icon-whastapp.svg")}
+								alt=""
+								width="20"
+								height="20"
+								loading="lazy"
+								decoding="async"
+							/>
+						</span>
 
-										<circle
-											cx="12"
-											cy="12"
-											r="4"
-										></circle>
+						<span class="footer-whatsapp-cta__copy">
+							<span class="footer-whatsapp-cta__eyebrow">
+								Atención personalizada
+							</span>
 
-										<circle
-											cx="17.5"
-											cy="6.5"
-											r="0.8"
-											class="social-dot"
-										></circle>
-									</svg>
-								)}
+							<span class="footer-whatsapp-cta__label">
+								Escríbenos por WhatsApp
+							</span>
+						</span>
 
-								{social.icon === "facebook" && (
-									<svg
-										viewBox="0 0 24 24"
-										aria-hidden="true"
-										class="icon-fill"
-									>
-										<path d="M14 8h4V3h-4c-3 0-5 2-5 5v3H6v5h3v5h5v-5h4l1-5h-5V8Z"></path>
-									</svg>
-								)}
+						<ArrowRight
+							class="footer-whatsapp-cta__arrow"
+							aria-hidden="true"
+							stroke-width={1.75}
+						/>
+					</a>
 
-								{social.icon === "tiktok" && (
-									<svg
-										viewBox="0 0 24 24"
-										aria-hidden="true"
-										class="icon-fill"
-									>
-										<path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 1 1-2.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 1 0 5.55 6.29V9.11a8.3 8.3 0 0 0 4.22 1.13V6.76a4.8 4.8 0 0 1-.45-.07z"></path>
-									</svg>
-								)}
-							</a>
-						))
-					}
+					<div
+						class="footer-socials"
+						role="group"
+						aria-label="Redes sociales de TAQTO"
+					>
+						{
+							socialLinks.map((social) => (
+								<a
+									class="social-button"
+									href={social.href}
+									target="_blank"
+									rel="noopener noreferrer"
+									aria-label={social.label}
+								>
+									{social.icon === "instagram" && (
+										<svg
+											viewBox="0 0 24 24"
+											aria-hidden="true"
+											class="icon-stroke"
+										>
+											<rect
+												x="3"
+												y="3"
+												width="18"
+												height="18"
+												rx="5"
+											></rect>
+
+											<circle
+												cx="12"
+												cy="12"
+												r="4"
+											></circle>
+
+											<circle
+												cx="17.5"
+												cy="6.5"
+												r="0.8"
+												class="social-dot"
+											></circle>
+										</svg>
+									)}
+
+									{social.icon === "facebook" && (
+										<svg
+											viewBox="0 0 24 24"
+											aria-hidden="true"
+											class="icon-fill"
+										>
+											<path d="M14 8h4V3h-4c-3 0-5 2-5 5v3H6v5h3v5h5v-5h4l1-5h-5V8Z"></path>
+										</svg>
+									)}
+
+									{social.icon === "tiktok" && (
+										<svg
+											viewBox="0 0 24 24"
+											aria-hidden="true"
+											class="icon-fill"
+										>
+											<path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 1 1-2.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 1 0 5.55 6.29V9.11a8.3 8.3 0 0 0 4.22 1.13V6.76a4.8 4.8 0 0 1-.45-.07z"></path>
+										</svg>
+									)}
+								</a>
+							))
+						}
+					</div>
 				</div>
 			</div>
 		</div>
@@ -290,10 +448,19 @@ const currentYear = new Date().getFullYear();
 				</p>
 
 				<a
-					class="footer-legal__privacy"
+					class="footer-link footer-link--sm footer-legal__privacy"
 					href={getUrl("/privacidad/")}
+					data-footer-link
 				>
-					Política de privacidad
+					<Lock
+						class="footer-link__icon"
+						aria-hidden="true"
+						stroke-width={1.75}
+					/>
+
+					<span class="footer-link__label">
+						Política de privacidad
+					</span>
 				</a>
 			</div>
 
@@ -309,15 +476,122 @@ const currentYear = new Date().getFullYear();
 	</div>
 </footer>
 
+<script>
+	/*
+	 * El <footer> lleva `transition:persist`, asi que sobrevive a las
+	 * navegaciones del ClientRouter: marcar el enlace activo en el
+	 * servidor lo dejaria congelado en la primera pagina visitada. Se
+	 * recalcula en cada carga con el evento que ya usa el resto del
+	 * proyecto.
+	 */
+	const markCurrentFooterLink = () => {
+		const current = window.location.pathname.replace(/\/+$/, "");
+
+		document
+			.querySelectorAll<HTMLAnchorElement>("[data-footer-link]")
+			.forEach((link) => {
+				const target = new URL(
+					link.href,
+					window.location.origin,
+				).pathname.replace(/\/+$/, "");
+
+				if (target === current) {
+					link.setAttribute("aria-current", "page");
+				} else {
+					link.removeAttribute("aria-current");
+				}
+			});
+	};
+
+	markCurrentFooterLink();
+	document.addEventListener("astro:page-load", markCurrentFooterLink);
+
+	/*
+	 * Acordeones moviles. El <details> nativo es la unica fuente de
+	 * verdad: el clic no se intercepta (sin `preventDefault`), asi que
+	 * el toggle de `open` lo maneja el navegador. El panel nunca usa
+	 * `display: none` (la regla de UA queda sobreescrita en CSS), asi
+	 * que no hay salto de `display` que evitar con reflow forzado: el
+	 * propio atributo `[open]` dispara la transicion de
+	 * `grid-template-rows` en CSS. El script solo sincroniza
+	 * `aria-expanded` con el evento nativo `toggle`, que se dispara
+	 * ante cualquier cambio de `open` (clic, teclado, buscar en la
+	 * pagina, boton atras).
+	 */
+	const setupFooterAccordions = () => {
+		const nav = document.querySelector<HTMLElement>(
+			".footer-nav-mobile",
+		);
+
+		// El footer lleva transition:persist: se enlaza una sola vez.
+		if (!nav || nav.dataset.bound === "true") return;
+
+		nav.dataset.bound = "true";
+
+		nav.querySelectorAll<HTMLDetailsElement>(".footer-accordion").forEach(
+			(details) => {
+				const summary = details.querySelector("summary");
+
+				if (!summary) return;
+
+				const syncAria = () => {
+					summary.setAttribute(
+						"aria-expanded",
+						String(details.open),
+					);
+				};
+
+				details.addEventListener("toggle", syncAria);
+				syncAria();
+			},
+		);
+	};
+
+	setupFooterAccordions();
+	document.addEventListener("astro:page-load", setupFooterAccordions);
+</script>
+
 <style>
 	.site-footer {
-		background: var(--color-black);
+		/*
+		 * Un único negro para todo el footer: el fondo es negro puro y
+		 * todas las superficies internas son veladuras blancas sobre él
+		 * (interna ~#060606, elevada ~#0d0d0d). No hay varios negros
+		 * conviviendo: solo este y sus veladuras.
+		 */
+		--footer-bg: #000000;
+		--footer-surface-1: rgba(255, 255, 255, 0.025);
+		--footer-surface-2: rgba(255, 255, 255, 0.05);
+		--footer-sunken: rgba(0, 0, 0, 0.3);
+		--footer-line: rgba(255, 255, 255, 0.09);
+		--footer-line-soft: rgba(255, 255, 255, 0.07);
+		/* Página actual: ~#0b0b0b sobre negro. Se percibe al buscarlo,
+		 * no salta a la vista. */
+		--footer-current: rgba(255, 255, 255, 0.045);
+		/*
+		 * Acento naranja: lavado de fondo y anillo de 1px uniforme en los
+		 * cuatro lados. Nunca una barra en un solo costado, que hacía que
+		 * un lado concentrase todo el naranja.
+		 */
+		--footer-accent-wash: rgba(255, 77, 42, 0.05);
+		--footer-accent-wash-strong: rgba(255, 77, 42, 0.09);
+		--footer-accent-line: rgba(255, 77, 42, 0.16);
+		--footer-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+		/* El negro llega de borde a borde: el color vive en el <footer>,
+		 * no en un contenedor interior, así que no hay franjas. */
+		background-color: var(--footer-bg);
 		color: var(--color-beige);
 	}
 
+	/*
+	 * Foco con outline (no box-shadow): sigue el radio real de cada
+	 * elemento, no obliga a una capsula y no compite con los fondos de
+	 * acento de los enlaces.
+	 */
 	.site-footer :focus-visible {
-		box-shadow: var(--focus-ring-on-dark);
-		border-radius: var(--radius-full);
+		outline: 2px solid var(--cream-80);
+		outline-offset: 2px;
 	}
 
 	.footer-inner {
@@ -326,24 +600,55 @@ const currentYear = new Date().getFullYear();
 			1560px
 		);
 		margin-inline: auto;
-		padding-block: var(--space-xl) var(--space-lg);
+		padding-block: var(--space-xl) clamp(32px, 3.6vw, 44px);
 	}
 
 	/* Nivel 1: navegación (izquierda) + marca (derecha), según croquis */
 	.footer-top {
+		--footer-gap: clamp(32px, 4.5vw, 64px);
+		--footer-rule: var(--footer-line-soft);
+
 		display: grid;
-		grid-template-columns: minmax(0, 2fr) minmax(280px, 0.8fr);
+		grid-template-columns: minmax(0, 1.85fr) minmax(320px, 1fr);
 		grid-template-areas: "nav brand";
-		align-items: start;
-		gap: clamp(32px, 5vw, 72px);
+		align-items: stretch;
+		gap: var(--footer-gap);
 	}
 
 	.footer-nav {
+		--footer-nav-gap: clamp(24px, 3.25vw, 44px);
+
 		grid-area: nav;
 		min-width: 0;
+		/* La navegación se alinea arriba: así los divisores verticales
+		 * miden lo que mide la propia navegación y no atraviesan el
+		 * hueco que deja la columna de marca, más alta. */
+		align-self: start;
 		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: clamp(24px, 4vw, 48px);
+		/* Proporciones ligeramente distintas: TAQTO y Ayuda llevan
+		 * las etiquetas más largas. */
+		grid-template-columns:
+			minmax(0, 0.95fr)
+			minmax(0, 1.1fr)
+			minmax(0, 1fr);
+		gap: var(--footer-nav-gap);
+	}
+
+	.footer-nav-group {
+		position: relative;
+	}
+
+	/* Divisores verticales sutiles, centrados en el hueco de la
+	 * cuadrícula. La columna de marca ya no lleva divisor: la marca de
+	 * agua es quien separa esa zona. */
+	.footer-nav-group + .footer-nav-group::before {
+		content: "";
+		position: absolute;
+		inset-block: 2px 4px;
+		inset-inline-start: calc(var(--footer-nav-gap) / -2);
+		width: 1px;
+		background: var(--footer-rule);
+		pointer-events: none;
 	}
 
 	.footer-nav-mobile {
@@ -351,11 +656,12 @@ const currentYear = new Date().getFullYear();
 	}
 
 	.footer-nav-group h3 {
-		margin: 0 0 var(--space-sm);
-		color: var(--color-beige);
-		font-size: var(--text-sm);
-		font-weight: 600;
-		letter-spacing: 0.01em;
+		margin: 0 0 var(--space-xs);
+		color: var(--cream-50);
+		font-size: 0.75rem;
+		font-weight: 700;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
 	}
 
 	.footer-nav-group ul {
@@ -364,98 +670,366 @@ const currentYear = new Date().getFullYear();
 		list-style: none;
 		display: flex;
 		flex-direction: column;
+		gap: 2px;
+	}
+
+	/*
+	 * Enlaces con icono. El estado vive en la superficie completa (fondo
+	 * + línea lateral), nunca en el color de la letra: el texto se
+	 * mantiene blanco cálido en todos los estados.
+	 */
+	.footer-link {
+		display: flex;
+		/* `flex-start` mantiene el icono junto a la primera linea
+		 * cuando una etiqueta larga hace wrap en tablet. */
+		align-items: flex-start;
+		/* La superficie se ajusta a la etiqueta: el acento no deja una
+		 * banda vacía atravesando la columna. */
+		width: fit-content;
+		max-width: 100%;
 		gap: 10px;
-	}
-
-	.footer-nav-group a {
-		color: var(--cream-70);
+		padding: 7px 10px;
+		/* Compensa el padding para que el texto siga alineado con el
+		 * encabezado de la columna. */
+		margin-inline: -10px;
+		border-radius: 10px;
+		background-color: transparent;
+		/* Anillo interior de 1px: mismo grosor en los cuatro lados y
+		 * dentro de la superficie, nunca sobresale ni se duplica. */
+		box-shadow: inset 0 0 0 1px transparent;
+		color: var(--cream-80);
 		font-size: clamp(1rem, 0.98rem + 0.1vw, 1.0625rem);
-		line-height: var(--leading-normal);
+		line-height: var(--leading-snug);
 		text-decoration: none;
-		transition: color 180ms ease;
+		transition:
+			background-color 200ms var(--footer-ease),
+			box-shadow 200ms var(--footer-ease),
+			color 200ms var(--footer-ease),
+			transform 160ms var(--footer-ease);
 	}
 
-	.footer-nav-group a:hover {
-		color: var(--color-beige);
-		text-decoration: underline;
-		text-underline-offset: 3px;
+	.footer-link:hover,
+	.footer-link:focus-visible,
+	.footer-link:active {
+		text-decoration: none;
 	}
+
+	.footer-link__icon {
+		flex-shrink: 0;
+		width: 15px;
+		height: 15px;
+		/* Centra el icono opticamente sobre la primera linea de texto. */
+		margin-top: 0.24em;
+		color: var(--color-orange);
+		opacity: 0.6;
+		transition:
+			opacity 200ms var(--footer-ease),
+			transform 200ms var(--footer-ease);
+	}
+
+	.footer-link__label {
+		min-width: 0;
+	}
+
+	.footer-link:hover,
+	.footer-link:focus-visible {
+		background-color: var(--footer-accent-wash);
+		box-shadow: inset 0 0 0 1px var(--footer-accent-line);
+		color: var(--color-beige);
+	}
+
+	.footer-link:hover .footer-link__icon,
+	.footer-link:focus-visible .footer-link__icon {
+		opacity: 0.92;
+		transform: translateX(3px);
+	}
+
+	/*
+	 * Página actual: un solo recurso, un fondo apenas más claro que el
+	 * footer. Sin línea de acento y sin borde, para que no se lea como
+	 * un botón pulsado. El icono naranja tenue es el que diferencia.
+	 */
+	.footer-link[aria-current="page"] {
+		background-color: var(--footer-current);
+		color: var(--color-beige);
+	}
+
+	.footer-link[aria-current="page"] .footer-link__icon {
+		opacity: 0.8;
+	}
+
+	/* Hover y foco siguen mandando sobre la página actual: si no, el
+	 * enlace activo parecería inerte al pasar por encima. */
+	.footer-link[aria-current="page"]:hover,
+	.footer-link[aria-current="page"]:focus-visible {
+		background-color: var(--footer-accent-wash);
+		box-shadow: inset 0 0 0 1px var(--footer-accent-line);
+	}
+
+	/* Respuesta tactil: el hover no existe, asi que el acento de la
+	 * superficie y el micro-hundimiento se enganchan a `:active`. */
+	@media (hover: none) and (pointer: coarse) {
+		.footer-link:hover,
+		.footer-link[aria-current="page"]:hover {
+			background-color: transparent;
+			box-shadow: inset 0 0 0 1px transparent;
+			color: var(--cream-80);
+		}
+
+		.footer-link:hover .footer-link__icon {
+			opacity: 0.6;
+			transform: none;
+		}
+
+		.footer-link[aria-current="page"],
+		.footer-link[aria-current="page"]:hover {
+			background-color: var(--footer-current);
+			color: var(--color-beige);
+		}
+
+		.footer-link[aria-current="page"] .footer-link__icon {
+			opacity: 0.8;
+		}
+
+		/* `:active` solo mientras dura la pulsación: es un estado del
+		 * navegador, no una clase, así que no queda pegado al navegar. */
+		.footer-link:active,
+		.footer-link[aria-current="page"]:active {
+			background-color: var(--footer-accent-wash-strong);
+			box-shadow: inset 0 0 0 1px var(--footer-accent-line);
+			color: var(--color-beige);
+			transform: scale(0.985);
+			transition-duration: 140ms;
+		}
+
+		.footer-link:active .footer-link__icon {
+			opacity: 0.92;
+			transition-duration: 140ms;
+		}
+	}
+
+	.footer-link--sm {
+		align-items: center;
+		gap: 8px;
+		padding: 6px 10px;
+		margin-inline: 0;
+		font-size: var(--text-xs);
+	}
+
+	.footer-link--sm .footer-link__icon {
+		width: 14px;
+		height: 14px;
+		margin-top: 0;
+	}
+
+	/* ---------- Columna de marca ---------- */
 
 	.footer-brand {
 		grid-area: brand;
+		position: relative;
+		isolation: isolate;
+		min-width: 0;
+		display: flex;
+		/* `clip` recorta la marca de agua sin crear un contenedor de
+		 * scroll: el footer nunca captura el desplazamiento. */
+		overflow: clip;
+	}
+
+	/*
+	 * Caja de la marca de agua: alto completo de la columna. El ancho es
+	 * `auto` — lo decide el propio SVG a partir de su alto y su relacion
+	 * de aspecto, nunca al reves — asi que el pajaro nunca se estira ni
+	 * se recorta. `align-items: center` centra el 92% de alto dentro
+	 * del 100% de la caja, dejando margen arriba y abajo. `overflow:
+	 * clip` en `.footer-brand` es la unica red de seguridad: no hace
+	 * falta porque el SVG nunca excede la altura de la columna.
+	 */
+	.footer-brand__watermark {
+		position: absolute;
+		z-index: 0;
+		inset-block: 0;
+		inset-inline-end: clamp(6px, 1vw, 16px);
+		width: auto;
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		/* Negro elevado un punto sobre el fondo: se percibe al mirarla,
+		 * nunca compite con el logo ni con el CTA. Sin naranja, sin
+		 * bordes, sin glow. */
+		color: rgba(255, 255, 255, 0.05);
+		pointer-events: none;
+	}
+
+	.footer-brand__watermark svg {
+		display: block;
+		height: 92%;
+		width: auto;
+		max-width: none;
+	}
+
+	.footer-brand__content {
+		position: relative;
+		z-index: 1;
 		min-width: 0;
 		display: flex;
 		flex-direction: column;
-		align-items: center;
-		text-align: center;
+		align-items: flex-start;
 		gap: var(--space-sm);
 	}
 
 	.footer-brand__logo {
 		display: block;
-		margin-bottom: var(--space-3xs);
 	}
 
 	.footer-brand__logo img {
 		display: block;
-		width: clamp(240px, 15vw, 290px);
+		width: clamp(230px, 14vw, 280px);
 		max-width: 100%;
 		height: auto;
 		object-fit: contain;
 	}
 
-	.whatsapp-cta {
-		min-height: 44px;
-		padding: 0 var(--space-sm);
-		display: inline-flex;
+	/* ---------- CTA de WhatsApp ---------- */
+
+	.footer-whatsapp-cta {
+		display: grid;
+		grid-template-columns: auto 1fr auto;
 		align-items: center;
-		gap: var(--space-2xs);
-		border: 1px solid var(--line-on-dark-strong);
-		border-radius: 10px;
-		background: transparent;
+		gap: 0.7rem;
+		width: min(100%, 19rem);
+		padding: 0.8rem 0.9rem;
+		border: 1px solid rgba(55, 190, 95, 0.28);
+		border-radius: 12px;
+		background: rgba(16, 42, 24, 0.5);
 		color: var(--color-beige);
-		font-size: var(--text-xs);
-		font-weight: 600;
-		letter-spacing: 0.01em;
 		text-decoration: none;
 		transition:
-			background-color 180ms ease,
-			border-color 180ms ease;
+			background-color 180ms var(--footer-ease),
+			border-color 180ms var(--footer-ease),
+			transform 180ms var(--footer-ease);
 	}
 
-	.whatsapp-cta:hover {
-		background: var(--fill-on-dark-1);
-		border-color: var(--cream-70);
+	.footer-whatsapp-cta:hover,
+	.footer-whatsapp-cta:focus-visible {
+		background: rgba(20, 56, 31, 0.64);
+		border-color: rgba(55, 190, 95, 0.48);
+		text-decoration: none;
 	}
 
-	.whatsapp-cta img {
-		width: 18px;
-		height: 18px;
+	.footer-whatsapp-cta__icon {
+		display: grid;
+		place-items: center;
 	}
+
+	.footer-whatsapp-cta__icon img {
+		display: block;
+		width: 20px;
+		height: 20px;
+	}
+
+	.footer-whatsapp-cta__copy {
+		min-width: 0;
+		display: grid;
+		gap: 1px;
+	}
+
+	.footer-whatsapp-cta__eyebrow {
+		display: block;
+		color: var(--cream-50);
+		font-size: 0.625rem;
+		font-weight: 600;
+		letter-spacing: 0.1em;
+		line-height: 1.4;
+		text-transform: uppercase;
+	}
+
+	.footer-whatsapp-cta__label {
+		display: block;
+		color: var(--color-beige);
+		font-size: var(--text-sm);
+		font-weight: 700;
+		line-height: var(--leading-snug);
+	}
+
+	.footer-whatsapp-cta__arrow {
+		flex-shrink: 0;
+		width: 16px;
+		height: 16px;
+		color: var(--cream-60);
+		transition:
+			transform 180ms var(--footer-ease),
+			color 180ms var(--footer-ease);
+	}
+
+	.footer-whatsapp-cta:hover .footer-whatsapp-cta__arrow,
+	.footer-whatsapp-cta:focus-visible .footer-whatsapp-cta__arrow {
+		color: var(--cream-90);
+		transform: translateX(3px);
+	}
+
+	@media (hover: none) and (pointer: coarse) {
+		.footer-whatsapp-cta:hover {
+			background: rgba(16, 42, 24, 0.5);
+			border-color: rgba(55, 190, 95, 0.28);
+		}
+
+		.footer-whatsapp-cta:hover .footer-whatsapp-cta__arrow {
+			color: var(--cream-60);
+			transform: none;
+		}
+
+		.footer-whatsapp-cta:active {
+			background: rgba(20, 56, 31, 0.64);
+			border-color: rgba(55, 190, 95, 0.48);
+			transform: scale(0.985);
+			transition-duration: 140ms;
+		}
+	}
+
+	/* ---------- Redes ---------- */
 
 	.footer-socials {
 		display: flex;
 		align-items: center;
-		gap: 10px;
+		gap: 8px;
 	}
 
 	.social-button {
-		width: 44px;
-		height: 44px;
+		width: 42px;
+		height: 42px;
 		display: grid;
 		place-items: center;
-		border: 1px solid var(--line-on-dark);
+		border: 1px solid var(--footer-line);
 		border-radius: var(--radius-full);
-		color: var(--cream-70);
+		color: var(--cream-60);
 		text-decoration: none;
 		transition:
-			background-color 180ms ease,
-			color 180ms ease;
+			background-color 180ms var(--footer-ease),
+			border-color 180ms var(--footer-ease),
+			color 180ms var(--footer-ease),
+			transform 160ms var(--footer-ease);
 	}
 
-	.social-button:hover {
-		background: var(--fill-on-dark-1);
+	.social-button:hover,
+	.social-button:focus-visible {
+		background: var(--footer-surface-2);
+		border-color: var(--line-on-dark);
 		color: var(--color-beige);
+	}
+
+	@media (hover: none) and (pointer: coarse) {
+		.social-button:hover {
+			background: transparent;
+			border-color: var(--footer-line);
+			color: var(--cream-60);
+		}
+
+		.social-button:active {
+			background: var(--footer-surface-2);
+			color: var(--color-beige);
+			transform: scale(0.985);
+			transition-duration: 140ms;
+		}
 	}
 
 	.social-button svg {
@@ -482,19 +1056,20 @@ const currentYear = new Date().getFullYear();
 		stroke: none;
 	}
 
+	/* ---------- Franja legal ---------- */
+
 	.footer-divider {
 		height: 1px;
-		margin-block: clamp(28px, 4vw, 40px);
-		background: var(--line-on-dark);
+		margin-block: clamp(28px, 4vw, 40px) clamp(20px, 2.6vw, 28px);
+		background: var(--footer-line-soft);
 	}
 
-	/* Nivel 2: franja legal */
 	.footer-legal {
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
 		justify-content: space-between;
-		gap: 12px 24px;
+		gap: 8px 24px;
 		color: var(--cream-50);
 		font-size: var(--text-xs);
 	}
@@ -503,7 +1078,7 @@ const currentYear = new Date().getFullYear();
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
-		gap: 8px 24px;
+		gap: 4px 20px;
 	}
 
 	.footer-made {
@@ -517,6 +1092,7 @@ const currentYear = new Date().getFullYear();
 		width: 13px;
 		height: 13px;
 		fill: var(--color-orange);
+		opacity: 0.8;
 	}
 
 	.footer-legal__copyright {
@@ -524,13 +1100,7 @@ const currentYear = new Date().getFullYear();
 	}
 
 	.footer-legal__privacy {
-		color: inherit;
-		text-decoration: none;
-		transition: color 180ms ease;
-	}
-
-	.footer-legal__privacy:hover {
-		color: var(--color-beige);
+		color: var(--cream-50);
 	}
 
 	.footer-back-top {
@@ -538,13 +1108,21 @@ const currentYear = new Date().getFullYear();
 		display: inline-flex;
 		align-items: center;
 		gap: 6px;
+		padding-inline: 10px;
+		margin-inline-end: -10px;
+		border-radius: 10px;
 		color: inherit;
 		text-decoration: none;
-		transition: color 180ms ease;
+		transition:
+			background-color 180ms var(--footer-ease),
+			color 180ms var(--footer-ease);
 	}
 
-	.footer-back-top:hover {
+	.footer-back-top:hover,
+	.footer-back-top:focus-visible {
+		background-color: var(--footer-surface-1);
 		color: var(--color-beige);
+		text-decoration: none;
 	}
 
 	.footer-back-top__arrow {
@@ -557,91 +1135,253 @@ const currentYear = new Date().getFullYear();
 		stroke-linejoin: round;
 	}
 
-	/* Acordeones móviles (Comprar / TAQTO / Ayuda) */
-	.footer-accordion {
-		border-bottom: 1px solid var(--line-on-dark);
+	@media (hover: none) and (pointer: coarse) {
+		.footer-back-top:hover {
+			background-color: transparent;
+			color: inherit;
+		}
+
+		.footer-back-top:active {
+			background-color: var(--footer-surface-1);
+			color: var(--color-beige);
+		}
+	}
+
+	/* ---------- Acordeones móviles ---------- */
+
+	/*
+	 * Un único contenedor oscuro con divisores solo entre filas.
+	 * `overflow: clip` recorta las esquinas sin crear un contenedor de
+	 * scroll: el desplazamiento siempre pertenece al documento.
+	 */
+	.footer-accordions {
+		border: 1px solid var(--footer-line);
+		border-radius: 14px;
+		background: var(--footer-surface-1);
+		overflow: clip;
+	}
+
+	.footer-accordion + .footer-accordion {
+		border-top: 1px solid var(--footer-line-soft);
 	}
 
 	.footer-accordion summary {
 		list-style: none;
-		min-height: 44px;
+		min-height: 54px;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		gap: var(--space-sm);
-		padding-block: var(--space-xs);
+		padding: var(--space-xs) 14px;
+		background-color: transparent;
+		box-shadow: inset 0 0 0 1px transparent;
 		color: var(--color-beige);
 		font-size: var(--text-sm);
 		font-weight: 600;
 		cursor: pointer;
+		transition:
+			background-color 220ms var(--footer-ease),
+			box-shadow 220ms var(--footer-ease);
 	}
 
 	.footer-accordion summary::-webkit-details-marker {
 		display: none;
 	}
 
+	/* El contenedor recorta: el anillo de foco se dibuja hacia dentro
+	 * para que no quede cortado. */
+	.footer-accordion summary:focus-visible {
+		outline-offset: -3px;
+	}
+
+	.footer-accordion__title {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		min-width: 0;
+	}
+
+	.footer-accordion__icon {
+		flex-shrink: 0;
+		width: 16px;
+		height: 16px;
+		color: var(--color-orange);
+		opacity: 0.6;
+		transition: opacity 220ms var(--footer-ease);
+	}
+
 	.footer-accordion__chevron {
 		flex-shrink: 0;
-		width: 14px;
-		height: 14px;
+		width: 15px;
+		height: 15px;
+		color: var(--cream-50);
 		fill: none;
 		stroke: currentColor;
 		stroke-width: 1.6;
 		stroke-linecap: round;
 		stroke-linejoin: round;
-		transition: transform 180ms ease;
+		transition:
+			transform 400ms var(--footer-ease),
+			color 220ms var(--footer-ease);
+	}
+
+	@media (hover: none) and (pointer: coarse) {
+		.footer-accordion summary:active {
+			background-color: var(--footer-accent-wash-strong);
+			transition-duration: 140ms;
+		}
+	}
+
+	/*
+	 * Altura del panel: fila de rejilla de 0fr (cerrado) a 1fr
+	 * (abierto) — la altura real del contenido, nunca un pixel fijo, así
+	 * que el panel crece con lo que contiene y el footer con el
+	 * documento. `display: grid` se aplica siempre, con o sin `[open]`:
+	 * esto pisa la regla nativa del navegador que pondría el panel en
+	 * `display: none` al cerrar, y es lo que permite animar la apertura
+	 * sin necesidad de forzar un reflow por JS.
+	 */
+	.footer-accordion__panel {
+		display: grid;
+		grid-template-rows: 0fr;
+		overflow: clip;
+		background: var(--footer-sunken);
+		transition: grid-template-rows 360ms var(--footer-ease);
+	}
+
+	.footer-accordion[open] .footer-accordion__panel {
+		grid-template-rows: 1fr;
+	}
+
+	.footer-accordion__panel-inner {
+		min-height: 0;
+		opacity: 0;
+		transform: translateY(-6px);
+		transition:
+			opacity 220ms var(--footer-ease),
+			transform 280ms var(--footer-ease);
+	}
+
+	.footer-accordion[open] .footer-accordion__panel-inner {
+		opacity: 1;
+		transform: none;
+		transition-delay: 80ms;
+	}
+
+	/* 4px + los 10px de padding del enlace dejan el icono del enlace
+	 * alineado con el icono del encabezado (14px). */
+	.footer-accordion ul {
+		margin: 0;
+		padding: 6px 4px var(--space-xs);
+		list-style: none;
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	/* En el acordeón la fila táctil ocupa todo el ancho: el acento debe
+	 * cubrir la fila completa, no solo la etiqueta. */
+	.footer-accordion a {
+		width: auto;
+		min-height: 44px;
+		/* El area tactil de 44px manda aqui: el contenido se centra en
+		 * ella en lugar de anclarse a la primera linea. */
+		align-items: center;
+		margin-inline: 0;
+	}
+
+	.footer-accordion .footer-link__icon {
+		margin-top: 0;
+	}
+
+	/* Encabezado abierto: se acentúa la superficie, no la letra. Una
+	 * sola fuente de verdad, el atributo nativo `[open]`. */
+	.footer-accordion[open] > summary {
+		background-color: var(--footer-surface-2);
+		box-shadow: inset 0 0 0 1px var(--footer-accent-line);
+	}
+
+	.footer-accordion[open] > summary .footer-accordion__icon {
+		opacity: 0.9;
 	}
 
 	.footer-accordion[open] .footer-accordion__chevron {
 		transform: rotate(180deg);
+		color: var(--cream-80);
 	}
 
-	.footer-accordion ul {
-		margin: 0;
-		padding: 0 0 var(--space-sm);
-		list-style: none;
-		display: flex;
-		flex-direction: column;
-		gap: 10px;
+	/* ---------- TABLET ANCHA ---------- */
+
+	/* La columna de marca se estrecha antes que la navegación: la marca
+	 * de agua baja de altura con ella para que su ancho (derivado de la
+	 * relación de aspecto) siga cabiendo sin recortarse. */
+	@media (max-width: 1200px) and (min-width: 901px) {
+		.footer-brand__watermark svg {
+			height: 78%;
+		}
 	}
 
-	.footer-accordion a {
-		display: block;
-		min-height: 44px;
-		display: flex;
-		align-items: center;
-		color: var(--cream-70);
-		font-size: clamp(1rem, 0.98rem + 0.1vw, 1.0625rem);
-		text-decoration: none;
-	}
+	/* ---------- TABLET ---------- */
 
-	.footer-accordion a:hover {
-		color: var(--color-beige);
-	}
-
-	/* TABLET: apila marca (primero) y navegación (después) */
+	/* Apila marca (primero) y navegación (después) en una cuadrícula
+	 * estable de tres columnas. La marca de agua se retira: en este
+	 * ancho invadiría la navegación. */
 	@media (max-width: 900px) {
 		.footer-top {
 			grid-template-columns: 1fr;
 			grid-template-areas: "brand" "nav";
-			gap: clamp(40px, 6vw, 56px);
+			gap: clamp(32px, 5vw, 44px);
+		}
+
+		.footer-nav {
+			--footer-nav-gap: clamp(20px, 3vw, 36px);
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+
+		.footer-brand__watermark {
+			display: none;
+		}
+
+		.footer-brand__content {
+			width: 100%;
+			align-items: center;
+			text-align: center;
+		}
+
+		.footer-whatsapp-cta {
+			text-align: start;
 		}
 	}
 
-	/* MÓVIL: logo, CTA, redes, navegación en acordeón, legal */
+	/* ---------- MÓVIL ---------- */
+
+	/* Logo, CTA, redes, navegación en acordeón y bloque legal. Sin
+	 * divisores verticales: el acordeón ya aporta los horizontales. */
 	@media (max-width: 680px) {
 		.footer-inner {
-			padding-block: 48px 28px;
+			/* El botón flotante de WhatsApp vive abajo a la derecha:
+			 * el colchón inferior evita que tape la franja legal. */
+			padding-block: 36px 88px;
+		}
+
+		.footer-top {
+			gap: 28px;
+		}
+
+		.footer-nav-group + .footer-nav-group::before {
+			content: none;
+		}
+
+		.footer-brand__content {
+			gap: 14px;
 		}
 
 		.footer-brand__logo img {
-			width: clamp(170px, 45vw, 200px);
+			width: clamp(160px, 42vw, 190px);
 		}
 
-		.whatsapp-cta {
-			width: 100%;
-			max-width: 320px;
-			justify-content: center;
+		.footer-whatsapp-cta {
+			width: min(100%, 20rem);
 		}
 
 		.footer-nav {
@@ -652,24 +1392,67 @@ const currentYear = new Date().getFullYear();
 			display: block;
 		}
 
+		.footer-divider {
+			margin-block: 26px 20px;
+		}
+
 		.footer-legal {
+			flex-direction: column;
 			justify-content: center;
 			text-align: center;
+			gap: 10px;
 		}
 
 		.footer-legal__group {
-			justify-content: center;
+			width: 100%;
+			flex-direction: column;
+			align-items: center;
+			gap: 4px;
+		}
+
+		.footer-back-top {
+			margin-inline-end: 0;
 		}
 	}
 
+	/* ---------- Movimiento reducido ---------- */
+
 	@media (prefers-reduced-motion: reduce) {
-		.whatsapp-cta,
+		.footer-whatsapp-cta,
+		.footer-whatsapp-cta__arrow,
 		.social-button,
-		.footer-nav-group a,
-		.footer-legal__privacy,
 		.footer-back-top,
-		.footer-accordion__chevron {
-			transition: none;
+		.footer-accordion summary,
+		.footer-accordion__chevron,
+		.footer-accordion__icon,
+		.footer-link,
+		.footer-link__icon {
+			transition-duration: 1ms;
+		}
+
+		/* La apertura deja de ser un movimiento: cambia la superficie y
+		 * el foco, pero sin recorrido ni escala. */
+		.footer-accordion__panel,
+		.footer-accordion__panel-inner {
+			transition-duration: 1ms;
+			transition-delay: 0ms;
+		}
+
+		.footer-accordion[open] .footer-accordion__panel-inner {
+			opacity: 1;
+			transform: none;
+		}
+
+		.footer-link:hover,
+		.footer-link:active,
+		.footer-link:hover .footer-link__icon,
+		.footer-link:focus-visible .footer-link__icon,
+		.footer-link:active .footer-link__icon,
+		.footer-whatsapp-cta:active,
+		.footer-whatsapp-cta:hover .footer-whatsapp-cta__arrow,
+		.footer-whatsapp-cta:focus-visible .footer-whatsapp-cta__arrow,
+		.social-button:active {
+			transform: none;
 		}
 	}
 </style>

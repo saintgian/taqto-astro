@@ -101,7 +101,11 @@ const getCategoryIcon = (slug: string) =>
 	categoryIcons[slug] || LayoutGrid;
 ---
 
-<header class="site-header" data-site-header>
+<header
+	class="site-header"
+	data-site-header
+	transition:persist="site-header"
+>
 	<div class="header-shell">
 		<div class="announcement">
 			<p class="announcement__item">
@@ -1065,6 +1069,66 @@ const getCategoryIcon = (slug: string) =>
 	initMinicart();
 	document.addEventListener("astro:page-load", initMinicart);
 
+	/*
+	 * Reset duro y sincrono del menu movil. Vive fuera de
+	 * `initializeHeaders` porque el <header> lleva `transition:persist`:
+	 * sobrevive a las navegaciones del ClientRouter, asi que su estado
+	 * abierto tambien lo haria si nadie lo limpiase. Es idempotente y no
+	 * anima nada -- se usa justo antes de navegar, cuando el panel debe
+	 * desaparecer de inmediato, no acompanar al fade.
+	 */
+	const resetMobileMenus = () => {
+		document.body.classList.remove("menu-is-open");
+
+		document
+			.querySelectorAll<HTMLElement>("[data-site-header]")
+			.forEach((header) => {
+				header
+					.querySelector<HTMLElement>("[data-navigation]")
+					?.classList.remove("is-open");
+
+				header
+					.querySelector<HTMLButtonElement>("[data-menu-toggle]")
+					?.setAttribute("aria-expanded", "false");
+
+				header
+					.querySelectorAll<HTMLElement>("[data-dropdown]")
+					.forEach((dropdown) => {
+						dropdown.classList.remove("is-open");
+
+						dropdown
+							.querySelector<HTMLButtonElement>(
+								"[data-dropdown-toggle]",
+							)
+							?.setAttribute("aria-expanded", "false");
+
+						const panel =
+							dropdown.querySelector<HTMLElement>(
+								"[data-dropdown-menu]",
+							);
+
+						/*
+						 * La animacion de altura deja estilos en linea;
+						 * hay que borrarlos o el panel reaparece con una
+						 * altura fija en la siguiente pagina.
+						 */
+						if (panel) {
+							panel.style.height = "";
+							panel.style.transition = "";
+						}
+					});
+			});
+	};
+
+	/*
+	 * Doble red de seguridad alrededor de cada navegacion del router:
+	 * antes de intercambiar el documento y despues de cargarlo. Se
+	 * registran a nivel de modulo (una sola vez por carga completa), no
+	 * dentro del bucle de headers, para no acumular listeners.
+	 */
+	document.addEventListener("astro:before-swap", resetMobileMenus);
+	document.addEventListener("astro:after-swap", resetMobileMenus);
+
 	const initializeHeaders = () => {
 		const headers =
 			document.querySelectorAll<HTMLElement>("[data-site-header]");
@@ -1084,7 +1148,93 @@ const getCategoryIcon = (slug: string) =>
 				header.querySelectorAll<HTMLElement>("[data-dropdown]"),
 			);
 
+			const isMobileNav = () => window.innerWidth <= 1180;
+
+			const prefersReducedMotion = () =>
+				window.matchMedia(
+					"(prefers-reduced-motion: reduce)",
+				).matches;
+
+			/*
+			 * El panel movil vive en el flujo del documento (no es un
+			 * overlay absoluto como en desktop), asi que abrir/cerrar
+			 * anima su altura real -- medida en cada uso, nunca un
+			 * numero grande arbitrario -- en vez de solo alternar
+			 * visibilidad.
+			 */
+			const animateDropdownOpen = (panel: HTMLElement) => {
+				if (!isMobileNav() || prefersReducedMotion()) return;
+
+				const target = panel.scrollHeight;
+
+				panel.style.transition = "none";
+				panel.style.height = "0px";
+				void panel.offsetHeight;
+
+				requestAnimationFrame(() => {
+					panel.style.transition = "height 220ms ease";
+					panel.style.height = `${target}px`;
+				});
+
+				const onEnd = (event: TransitionEvent) => {
+					if (
+						event.propertyName !== "height" ||
+						event.target !== panel
+					) {
+						return;
+					}
+
+					panel.style.height = "";
+					panel.style.transition = "";
+					panel.removeEventListener(
+						"transitionend",
+						onEnd,
+					);
+				};
+
+				panel.addEventListener("transitionend", onEnd);
+			};
+
+			const animateDropdownClose = (panel: HTMLElement) => {
+				if (!isMobileNav() || prefersReducedMotion()) return;
+
+				const startHeight = panel.offsetHeight;
+
+				panel.style.transition = "none";
+				panel.style.height = `${startHeight}px`;
+				void panel.offsetHeight;
+
+				requestAnimationFrame(() => {
+					panel.style.transition = "height 200ms ease";
+					panel.style.height = "0px";
+				});
+
+				const onEnd = (event: TransitionEvent) => {
+					if (
+						event.propertyName !== "height" ||
+						event.target !== panel
+					) {
+						return;
+					}
+
+					panel.style.height = "";
+					panel.style.transition = "";
+					panel.removeEventListener(
+						"transitionend",
+						onEnd,
+					);
+				};
+
+				panel.addEventListener("transitionend", onEnd);
+			};
+
 			const closeDropdown = (dropdown: HTMLElement) => {
+				if (!dropdown.classList.contains("is-open")) return;
+
+				const panel = dropdown.querySelector<HTMLElement>(
+					"[data-dropdown-menu]",
+				);
+
 				dropdown.classList.remove("is-open");
 
 				dropdown
@@ -1092,6 +1242,8 @@ const getCategoryIcon = (slug: string) =>
 						"[data-dropdown-toggle]",
 					)
 					?.setAttribute("aria-expanded", "false");
+
+				if (panel) animateDropdownClose(panel);
 			};
 
 			const closeAllDropdowns = (
@@ -1189,6 +1341,15 @@ const getCategoryIcon = (slug: string) =>
 						"aria-expanded",
 						String(willOpen),
 					);
+
+					if (willOpen) {
+						const panel =
+							dropdown.querySelector<HTMLElement>(
+								"[data-dropdown-menu]",
+							);
+
+						if (panel) animateDropdownOpen(panel);
+					}
 				});
 
 				dropdown.addEventListener(
@@ -1210,6 +1371,46 @@ const getCategoryIcon = (slug: string) =>
 						}
 					},
 				);
+			});
+
+			/*
+			 * Causa del bug original: el unico cierre por click vivia en
+			 * el listener de "click fuera del header", y los enlaces del
+			 * menu estan *dentro* del header. Al navegar, el panel seguia
+			 * abierto por encima del fade. Delegacion sobre el propio
+			 * panel: un solo listener, valido tambien para el teclado
+			 * (Enter sobre un enlace dispara "click").
+			 */
+			navigation?.addEventListener("click", (event) => {
+				if (!isMobileNav()) return;
+
+				const link =
+					event.target instanceof Element
+						? event.target.closest<HTMLAnchorElement>("a[href]")
+						: null;
+
+				if (!link || !navigation.contains(link)) return;
+
+				/*
+				 * Clicks que no navegan en esta pestana (nueva pestana,
+				 * descarga, click con modificador o boton central): el
+				 * usuario se queda donde esta, cerrar el menu seria
+				 * inesperado.
+				 */
+				if (
+					event.defaultPrevented ||
+					event.metaKey ||
+					event.ctrlKey ||
+					event.shiftKey ||
+					event.altKey ||
+					("button" in event && event.button !== 0) ||
+					link.hasAttribute("download") ||
+					(link.target && link.target !== "_self")
+				) {
+					return;
+				}
+
+				resetMobileMenus();
 			});
 
 			document.addEventListener("click", (event) => {
@@ -1502,16 +1703,24 @@ const getCategoryIcon = (slug: string) =>
 		display: grid;
 		place-items: center;
 		border: 0;
+		border-radius: var(--radius-sm);
 		background: transparent;
 		color: var(--ink-55);
 		cursor: pointer;
-		transition: color 180ms ease;
+		transition:
+			color 180ms ease,
+			background-color 120ms ease,
+			transform 120ms ease;
 	}
 
 	.navigation__dropdown-toggle:hover,
 	.navigation__item.is-open
 		.navigation__dropdown-toggle {
 		color: var(--color-black);
+	}
+
+	.navigation__item.is-open .navigation__dropdown-toggle {
+		background: var(--ink-08);
 	}
 
 	.navigation__dropdown-toggle svg {
@@ -1802,9 +2011,22 @@ const getCategoryIcon = (slug: string) =>
 		flex-direction: column;
 		gap: 5px;
 		border: 0;
+		border-radius: var(--radius-sm);
 		background: transparent;
 		color: var(--color-black);
 		cursor: pointer;
+		transition:
+			background-color 120ms ease,
+			transform 120ms ease;
+	}
+
+	@media (hover: none) and (pointer: coarse) {
+		.menu-toggle:active,
+		.navigation__dropdown-toggle:active {
+			background: var(--ink-08);
+			transform: scale(0.96);
+			transition-duration: 100ms;
+		}
 	}
 
 	.menu-toggle span {
@@ -1873,7 +2095,6 @@ const getCategoryIcon = (slug: string) =>
 			width: 100%;
 			height: auto;
 			max-height: calc(100svh - 124px);
-			display: none;
 			overflow-y: auto;
 			overscroll-behavior: contain;
 			padding: 16px 14px 22px;
@@ -1882,10 +2103,25 @@ const getCategoryIcon = (slug: string) =>
 			border-radius: 0 0 var(--radius-lg) var(--radius-lg);
 			background: var(--surface);
 			box-shadow: var(--shadow-lg);
+			visibility: hidden;
+			opacity: 0;
+			pointer-events: none;
+			transform: translateY(-6px);
+			transition:
+				opacity 200ms ease,
+				transform 200ms ease,
+				visibility 0s linear 200ms;
 		}
 
 		.navigation.is-open {
-			display: block;
+			visibility: visible;
+			opacity: 1;
+			pointer-events: auto;
+			transform: translateY(0);
+			transition:
+				opacity 200ms ease,
+				transform 200ms ease,
+				visibility 0s linear 0s;
 		}
 
 		.navigation__list {
@@ -1930,23 +2166,33 @@ const getCategoryIcon = (slug: string) =>
 			.dropdown {
 			position: static;
 			width: 100%;
-			display: none;
-			margin: 0 0 13px;
+			height: 0;
+			margin: 0;
 			padding: 14px;
-			border: 1px solid var(--ink-15);
+			border: 1px solid transparent;
 			border-radius: var(--radius-md);
 			background: var(--ink-08);
 			box-shadow: none;
-			opacity: 1;
+			opacity: 0;
 			visibility: visible;
-			pointer-events: auto;
+			pointer-events: none;
 			transform: none;
+			overflow: hidden;
+			transition:
+				height 220ms ease,
+				opacity 180ms ease,
+				margin-bottom 220ms ease,
+				border-color 180ms ease;
 		}
 
 		.navigation__item.is-open .dropdown,
 		.navigation__item:not(:nth-last-child(-n + 2)).is-open
 			.dropdown {
-			display: block;
+			height: auto;
+			margin-bottom: 13px;
+			border-color: var(--ink-15);
+			opacity: 1;
+			pointer-events: auto;
 			transform: none;
 		}
 
@@ -2028,9 +2274,12 @@ const getCategoryIcon = (slug: string) =>
 
 	@media (prefers-reduced-motion: reduce) {
 		.navigation__link::after,
+		.navigation__dropdown-toggle,
 		.navigation__dropdown-toggle svg,
+		.navigation,
 		.dropdown,
 		.icon-button,
+		.menu-toggle,
 		.menu-toggle span {
 			transition: none;
 		}

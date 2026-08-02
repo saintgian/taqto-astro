@@ -1,4 +1,5 @@
 ---
+import { ClientRouter } from "astro:transitions";
 import Footer from "../components/Footer.astro";
 import WhatsAppFloatButton from "../components/WhatsAppFloatButton.astro";
 
@@ -184,15 +185,209 @@ const fontFaceCss = `
 				<script type="application/ld+json" set:html={JSON.stringify(schema)} />
 			))
 		}
+		<ClientRouter />
 	</head>
 
 	<body id="top">
 		<slot />
 
-		<Footer />
-		<WhatsAppFloatButton />
+		<Footer transition:persist="site-footer" />
+		<WhatsAppFloatButton transition:persist="site-whatsapp-float" />
 	</body>
 </html>
+
+<style is:global>
+	/*
+	 * Fade entre paginas (View Transitions de Astro). Se sobreescribe la
+	 * animacion por defecto del framework con una version perceptible
+	 * (300ms de salida / 380ms de entrada, solapadas) y un
+	 * desplazamiento vertical minimo, igual en ambos sentidos
+	 * (adelante/atras). `::view-transition-old`
+	 * y `::view-transition-new` operan sobre el `root` completo, pero
+	 * Header y Footer llevan `transition:persist` y quedan fuera de esta
+	 * animacion (no se desmontan ni vuelven a pintarse).
+	 */
+	@media (prefers-reduced-motion: no-preference) {
+		::view-transition-old(root),
+		::view-transition-new(root) {
+			animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+		}
+
+		/*
+		 * La salida es mas corta que la entrada: ambas se solapan, asi
+		 * que el total percibido lo marca la entrada (~380ms) mientras
+		 * la pagina saliente ya ha desaparecido antes, sin pantalla
+		 * blanca intermedia.
+		 */
+		::view-transition-old(root) {
+			animation-name: taqto-fade-out;
+			animation-duration: 300ms;
+		}
+
+		::view-transition-new(root) {
+			animation-name: taqto-fade-in;
+			animation-duration: 380ms;
+		}
+
+		@keyframes taqto-fade-out {
+			from {
+				opacity: 1;
+				transform: translateY(0);
+			}
+
+			to {
+				opacity: 0;
+				transform: translateY(-4px);
+			}
+		}
+
+		@keyframes taqto-fade-in {
+			from {
+				opacity: 0;
+				transform: translateY(6px);
+			}
+
+			to {
+				opacity: 1;
+				transform: translateY(0);
+			}
+		}
+	}
+
+	/*
+	 * Movimiento reducido: Astro ya desactiva sus animaciones por
+	 * defecto en este caso, pero se fija explicitamente un cambio casi
+	 * instantaneo para no depender de ese comportamiento implicito.
+	 */
+	@media (prefers-reduced-motion: reduce) {
+		::view-transition-group(*),
+		::view-transition-old(*),
+		::view-transition-new(*) {
+			animation: none !important;
+		}
+	}
+</style>
+
+<script>
+	/*
+	 * Apertura/cierre suave para todo <details> de disclosure semantico
+	 * (FAQ de paginas editoriales y acordeon movil del Footer). Tecnica
+	 * estandar de animacion de altura con la Web Animations API: sin
+	 * JS, el <details> nativo sigue funcionando (abre/cierra al
+	 * instante), asi que esto es una mejora progresiva, no un
+	 * reemplazo.
+	 */
+	const ANIMATED_DETAILS_SELECTOR =
+		".page-main .faq > details, .footer-accordion";
+
+	const prefersReducedMotion = () =>
+		window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+	class AnimatedDisclosure {
+		el: HTMLDetailsElement;
+		summary: HTMLElement;
+		content: HTMLElement | null;
+		animation: Animation | null = null;
+		isClosing = false;
+		isExpanding = false;
+
+		constructor(el: HTMLDetailsElement) {
+			this.el = el;
+			this.summary = el.querySelector(":scope > summary")!;
+			this.content = el.querySelector(":scope > summary ~ *");
+
+			this.summary.addEventListener("click", (event) =>
+				this.onClick(event),
+			);
+		}
+
+		onClick(event: MouseEvent) {
+			if (!this.content || prefersReducedMotion()) return;
+
+			event.preventDefault();
+			this.el.style.overflow = "hidden";
+
+			if (this.isClosing || !this.el.open) {
+				this.open();
+			} else if (this.isExpanding || this.el.open) {
+				this.shrink();
+			}
+		}
+
+		shrink() {
+			this.isClosing = true;
+
+			const startHeight = `${this.el.offsetHeight}px`;
+			const endHeight = `${this.summary.offsetHeight}px`;
+
+			this.animation?.cancel();
+
+			this.animation = this.el.animate(
+				{ height: [startHeight, endHeight] },
+				{ duration: 200, easing: "ease-out" },
+			);
+
+			this.animation.onfinish = () => this.onFinish(false);
+			this.animation.oncancel = () => {
+				this.isClosing = false;
+			};
+		}
+
+		open() {
+			this.el.style.height = `${this.el.offsetHeight}px`;
+			this.el.open = true;
+
+			window.requestAnimationFrame(() => this.expand());
+		}
+
+		expand() {
+			this.isExpanding = true;
+
+			const startHeight = `${this.el.offsetHeight}px`;
+			const endHeight = `${
+				this.summary.offsetHeight +
+				(this.content?.offsetHeight ?? 0)
+			}px`;
+
+			this.animation?.cancel();
+
+			this.animation = this.el.animate(
+				{ height: [startHeight, endHeight] },
+				{ duration: 220, easing: "ease-out" },
+			);
+
+			this.animation.onfinish = () => this.onFinish(true);
+			this.animation.oncancel = () => {
+				this.isExpanding = false;
+			};
+		}
+
+		onFinish(open: boolean) {
+			this.el.open = open;
+			this.animation = null;
+			this.isClosing = false;
+			this.isExpanding = false;
+			this.el.style.height = "";
+			this.el.style.overflow = "";
+		}
+	}
+
+	const initAnimatedDetails = () => {
+		document
+			.querySelectorAll<HTMLDetailsElement>(
+				ANIMATED_DETAILS_SELECTOR,
+			)
+			.forEach((el) => {
+				if (el.dataset.animatedDisclosure === "true") return;
+
+				el.dataset.animatedDisclosure = "true";
+				new AnimatedDisclosure(el);
+			});
+	};
+
+	initAnimatedDetails();
+	document.addEventListener("astro:page-load", initAnimatedDetails);
+</script>
 
 <style is:global>
 	:root {
