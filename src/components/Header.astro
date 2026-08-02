@@ -437,6 +437,7 @@ const getCategoryIcon = (slug: string) =>
 				<a
 					class="btn btn--primary btn--full minicart__checkout"
 					href={cartHref}
+					data-minicart-close
 				>
 					<LockKeyhole aria-hidden="true" stroke-width={1.75} />
 					Ir a pagar
@@ -548,6 +549,14 @@ const getCategoryIcon = (slug: string) =>
 
 	const OVERLAY_ID = "minicart";
 	const FILL_ANIMATION_MS = 560;
+
+	/*
+	 * El <header> lleva `transition:persist`, asi que `initMinicart` solo
+	 * corre una vez de verdad; esta referencia permite que la red de
+	 * seguridad de navegacion (mas abajo) reutilice el mismo `closeMinicart`
+	 * sin duplicar su logica.
+	 */
+	let closeMinicartRef: (() => void) | null = null;
 
 	const variantLabelOf = (item: CartItem) =>
 		[item.woodTitle, item.sizeTitle]
@@ -952,6 +961,8 @@ const getCategoryIcon = (slug: string) =>
 			closeOverlay(OVERLAY_ID);
 		};
 
+		closeMinicartRef = closeMinicart;
+
 		const openMinicart = (trigger: HTMLElement) => {
 			if (isOpen()) return;
 
@@ -1125,9 +1136,20 @@ const getCategoryIcon = (slug: string) =>
 	 * antes de intercambiar el documento y despues de cargarlo. Se
 	 * registran a nivel de modulo (una sola vez por carga completa), no
 	 * dentro del bucle de headers, para no acumular listeners.
+	 *
+	 * El minicarrito se suma aqui como refuerzo: los enlaces reales que
+	 * navegan fuera de el ya lo cierran al click (`data-minicart-close`),
+	 * pero como el <header> sobrevive a la navegacion via
+	 * `transition:persist`, esta red evita que quede abierto si el router
+	 * dispara un swap por otra via.
 	 */
-	document.addEventListener("astro:before-swap", resetMobileMenus);
-	document.addEventListener("astro:after-swap", resetMobileMenus);
+	const resetMinicartOnNavigate = () => {
+		resetMobileMenus();
+		closeMinicartRef?.();
+	};
+
+	document.addEventListener("astro:before-swap", resetMinicartOnNavigate);
+	document.addEventListener("astro:after-swap", resetMinicartOnNavigate);
 
 	const initializeHeaders = () => {
 		const headers =
