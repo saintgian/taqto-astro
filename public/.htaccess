@@ -1,0 +1,4 @@
+RewriteEngine On
+
+RewriteCond %{HTTP_HOST} ^www\.taqto\.com\.pe$ [NC]
+RewriteRule ^(.*)$ https://taqto.com.pe/$1 [R=301,L]

@@ -1,15 +1,10 @@
 import { defineConfig } from "astro/config";
 import tailwindcss from "@tailwindcss/vite";
 
-const isProduction =
-	process.env.NODE_ENV === "production";
-
 export default defineConfig({
-	site: "https://saintgian.github.io",
+	site: "https://taqto.com.pe",
 
-	base: isProduction
-		? "/taqto-astro/"
-		: "/",
+	base: "/",
 
 	vite: {
 		plugins: [tailwindcss()],

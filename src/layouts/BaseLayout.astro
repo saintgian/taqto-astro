@@ -16,13 +16,6 @@ interface Props {
 	jsonLd?: Record<string, unknown>[];
 }
 
-/*
- * En localhost normalmente será:
- * /taqto-astro/
- *
- * En GitHub Pages:
- * /taqto-astro/
- */
 const rawBase = import.meta.env.BASE_URL;
 
 const base = rawBase.endsWith("/")
@@ -50,10 +43,9 @@ const resolvedTitle = title.includes("TAQTO")
 	: `${title} | TAQTO`;
 
 /*
- * Astro.site ya esta configurado en astro.config.mjs (GitHub Pages). No
- * se inventa ni se hardcodea un dominio nuevo aqui: si `site` no esta
- * disponible en el contexto de build, canonical/og:url simplemente no
- * se emiten.
+ * Astro.site ya esta configurado en astro.config.mjs. No se inventa ni
+ * se hardcodea un dominio nuevo aqui: si `site` no esta disponible en
+ * el contexto de build, canonical/og:url simplemente no se emiten.
  */
 const canonicalURL = Astro.site
 	? new URL(Astro.url.pathname, Astro.site).toString()
@@ -474,13 +466,13 @@ const fontFaceCss = `
 		 * lg: H3 (22-28px). 2xl: H2 (27-42px, contenido a propósito).
 		 * 3xl: H1/display (38-64px).
 		 */
-		--text-xs: clamp(0.875rem, 0.85rem + 0.1vw, 0.9375rem);
-		--text-sm: clamp(0.9375rem, 0.9rem + 0.15vw, 1rem);
-		--text-base: clamp(1.0625rem, 1.03rem + 0.15vw, 1.125rem);
-		--text-md: clamp(1.125rem, 1.08rem + 0.2vw, 1.25rem);
-		--text-lg: clamp(1.375rem, 1.25rem + 0.6vw, 1.75rem);
-		--text-2xl: clamp(1.6875rem, 1.5rem + 1vw, 2.625rem);
-		--text-3xl: clamp(2.375rem, 1.85rem + 2.4vw, 4rem);
+		--text-xs: clamp(0.84rem, 0.82rem + 0.1vw, 0.9rem);
+		--text-sm: clamp(0.91rem, 0.87rem + 0.14vw, 0.97rem);
+		--text-base: clamp(1.02rem, 0.99rem + 0.14vw, 1.08rem);
+		--text-md: clamp(1.09rem, 1.05rem + 0.19vw, 1.21rem);
+		--text-lg: clamp(1.27rem, 1.15rem + 0.61vw, 1.65rem);
+		--text-2xl: clamp(1.52rem, 1.35rem + 0.96vw, 2.42rem);
+		--text-3xl: clamp(2.08rem, 1.62rem + 2.25vw, 3.6rem);
 
 		--leading-tight: 1.15;
 		--leading-snug: 1.35;
