@@ -36,7 +36,7 @@ const products = await sanityClient.fetch<Product[]>(
 
 			<div class="featured-products__grid">
 				{products.map((product) => (
-					<ProductCard product={product} />
+					<ProductCard product={product} hoverGallery />
 				))}
 			</div>
 		</section>

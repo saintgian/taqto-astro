@@ -413,11 +413,11 @@ const modeLabels: Record<string, string> = {
 		opacity: 0;
 	}
 
-	@media (hover: hover) and (pointer: fine) {
-		.product-card__media--hover-gallery img {
-			transition: opacity 240ms ease;
-		}
+	.product-card__media--hover-gallery img {
+		transition: opacity 280ms cubic-bezier(0.22, 1, 0.36, 1);
+	}
 
+	@media (hover: hover) and (pointer: fine) {
 		.product-card__media--hover-gallery:hover
 			.product-card__image--primary,
 		.product-card__media--hover-gallery:focus-within
@@ -433,11 +433,19 @@ const modeLabels: Record<string, string> = {
 		}
 	}
 
-	@media not all and (hover: hover) and (pointer: fine) {
-		.product-card__media--hover-gallery
-			.product-card__image--secondary {
-			display: none;
-		}
+	/*
+	 * Vista previa tactil: activada por JS via pointerdown/up/cancel/leave
+	 * (solo pointerType "touch"), no por CSS `:hover`, asi que funciona
+	 * igual en dispositivos hibridos con mouse y pantalla tactil.
+	 */
+	.product-card__media--hover-gallery.is-touch-preview
+		.product-card__image--primary {
+		opacity: 0;
+	}
+
+	.product-card__media--hover-gallery.is-touch-preview
+		.product-card__image--secondary {
+		opacity: 1;
 	}
 
 	.product-card:focus-within {
@@ -510,3 +518,55 @@ const modeLabels: Record<string, string> = {
 		}
 	}
 </style>
+
+<script>
+	/*
+	 * Vista previa tactil de la segunda imagen: solo pointerType "touch",
+	 * asi que mouse y teclado siguen su propio camino (hover / focus-within
+	 * en CSS). Sin preventDefault en ningun punto: el scroll vertical y el
+	 * tap que abre la ficha no se tocan. Cuando el gesto se convierte en
+	 * scroll el navegador dispara "pointercancel" antes del "click", asi
+	 * que la vista se cierra sola y no hay navegacion accidental.
+	 */
+	const bindTouchPreview = (
+		media: HTMLElement,
+	) => {
+		if (media.dataset.touchPreviewBound === "true") return;
+		media.dataset.touchPreviewBound = "true";
+
+		const show = (event: PointerEvent) => {
+			if (event.pointerType !== "touch") return;
+			media.classList.add("is-touch-preview");
+		};
+
+		const hide = () => {
+			media.classList.remove("is-touch-preview");
+		};
+
+		media.addEventListener("pointerdown", show);
+		media.addEventListener("pointerup", hide);
+		media.addEventListener("pointercancel", hide);
+		media.addEventListener("pointerleave", hide);
+	};
+
+	const initTouchPreviews = () => {
+		document
+			.querySelectorAll<HTMLElement>(
+				".product-card__media--hover-gallery",
+			)
+			.forEach(bindTouchPreview);
+	};
+
+	initTouchPreviews();
+	document.addEventListener("astro:page-load", initTouchPreviews);
+
+	// Red de seguridad: ninguna tarjeta debe volver de una navegacion (o de
+	// la cache del navegador al ir atras) con la imagen secundaria pegada.
+	document.addEventListener("astro:before-swap", () => {
+		document
+			.querySelectorAll(".is-touch-preview")
+			.forEach((element) => {
+				element.classList.remove("is-touch-preview");
+			});
+	});
+</script>
