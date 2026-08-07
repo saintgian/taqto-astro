@@ -1,0 +1,253 @@
+---
+/*
+ * Indice de /productos/.
+ *
+ * Las fichas individuales viven en /productos/[slug]/, asi que el
+ * directorio /productos/ existe siempre en el build; sin un index.html
+ * propio el servidor responde 403 (listado de directorios desactivado).
+ * Esta pagina cubre esa ruta con un listado simple de todas las piezas
+ * publicadas.
+ *
+ * Deliberadamente NO duplica el catalogo filtrable de /tienda/: reusa la
+ * misma consulta (catalogQuery) y la misma tarjeta (ProductCard), sin
+ * filtros, orden ni estado en cliente. Quien quiera filtrar entra a
+ * /tienda/ desde el enlace de esta misma pagina.
+ */
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Header from "../../components/Header.astro";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import ProductCard from "../../components/ProductCard.astro";
+
+import { sanityClient } from "../../lib/sanity";
+import { catalogQuery } from "../../lib/catalogQuery";
+import { buildBreadcrumbJsonLd } from "../../lib/seo";
+
+interface Product {
+	_id: string;
+	title: string;
+	slug: string;
+	[key: string]: unknown;
+}
+
+const base = import.meta.env.BASE_URL;
+
+const products = await sanityClient.fetch<Product[]>(catalogQuery);
+
+const storeHref = `${base}tienda/`;
+
+const pageTitle = "Productos de madera TAQTO | Catálogo completo";
+const pageDescription =
+	"Listado completo de las piezas TAQTO publicadas: tablas, posavasos, soportes y organizadores de madera peruana con opción de grabado personalizado.";
+
+const productsUrl = Astro.site
+	? new URL(`${base}productos/`, Astro.site).toString()
+	: undefined;
+
+const productsBreadcrumbJsonLd = buildBreadcrumbJsonLd(
+	[
+		{ label: "Inicio", href: base },
+		{ label: "Productos" },
+	],
+	Astro.site,
+	productsUrl,
+);
+
+const productsJsonLd = productsBreadcrumbJsonLd
+	? [productsBreadcrumbJsonLd]
+	: [];
+---
+
+<BaseLayout
+	title={pageTitle}
+	description={pageDescription}
+	jsonLd={productsJsonLd}
+>
+	<Header />
+
+	<main class="products-page">
+		<Breadcrumbs
+			items={[
+				{ label: "Inicio", href: base },
+				{ label: "Productos" },
+			]}
+		/>
+
+		<div class="products-header">
+			<p class="section-label">Catálogo completo</p>
+
+			<h1>Todos los productos TAQTO</h1>
+
+			{
+				products.length > 0 && (
+					<p class="products-header__count">
+						{products.length}
+						{" "}
+						{products.length === 1 ? "pieza publicada" : "piezas publicadas"}
+						{" · "}
+						<a href={storeHref}>Ver la tienda con filtros</a>
+					</p>
+				)
+			}
+		</div>
+
+		{
+			products.length > 0 ? (
+				<div class="product-grid">
+					{
+						products.map((product) => (
+							<ProductCard
+								product={product}
+								hoverGallery
+							/>
+						))
+					}
+				</div>
+			) : (
+				<div class="products-empty">
+					<h2>Catálogo en preparación</h2>
+
+					<p>
+						Aún no hay productos publicados. Vuelve
+						pronto o escríbenos para consultar por una
+						pieza en particular.
+					</p>
+
+					<a href={`${base}contactanos/`}>Contáctanos</a>
+				</div>
+			)
+		}
+	</main>
+</BaseLayout>
+
+<style>
+	.products-page {
+		min-height: 100vh;
+		padding-block:
+			clamp(20px, 2.4vw, 32px)
+			clamp(80px, 9vw, 140px);
+		background: #ffffff;
+		color: #141414;
+	}
+
+	.products-page > :global(nav.breadcrumbs),
+	.products-header,
+	.product-grid,
+	.products-empty {
+		max-width: var(--container-comercial, 1520px);
+		margin-inline: auto;
+		padding-inline: var(--container-gutter, clamp(16px, 4vw, 64px));
+	}
+
+	.section-label {
+		margin: 0 0 14px;
+		color: #ff4d2a;
+		font-size: 12px;
+		font-weight: 700;
+		letter-spacing: 0.15em;
+		text-transform: uppercase;
+	}
+
+	.products-header {
+		margin-top: 24px;
+	}
+
+	.products-header h1 {
+		margin: 0;
+		font-size: clamp(24.5px, 2.85vw, 37.8px);
+		font-weight: 600;
+		line-height: 1.04;
+		letter-spacing: -0.03em;
+	}
+
+	.products-header__count {
+		margin: 14px 0 0;
+		color: rgba(20, 20, 20, 0.6);
+		font-size: 13px;
+	}
+
+	.products-header__count a {
+		color: #5b312a;
+		font-weight: 600;
+		text-decoration: underline;
+	}
+
+	.products-header__count a:hover {
+		color: #ff4d2a;
+	}
+
+	.products-header__count a:focus-visible {
+		outline: 2px solid #ff4d2a;
+		outline-offset: 2px;
+	}
+
+	.product-grid {
+		margin-top: clamp(28px, 3.5vw, 46px);
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: clamp(20px, 2vw, 26px);
+	}
+
+	.products-empty {
+		margin-top: clamp(28px, 3.5vw, 46px);
+		padding: 70px 25px;
+		text-align: center;
+	}
+
+	.products-empty h2 {
+		margin: 0;
+		font-size: 26.3px;
+		font-weight: 600;
+		letter-spacing: -0.02em;
+	}
+
+	.products-empty p {
+		margin: 12px auto 20px;
+		max-width: 46ch;
+		color: rgba(20, 20, 20, 0.58);
+	}
+
+	.products-empty a {
+		display: inline-flex;
+		align-items: center;
+		min-height: 46px;
+		padding: 0 22px;
+		border-radius: 10px;
+		background: #5b312a;
+		color: #fff6ed;
+		font-size: 12px;
+		font-weight: 700;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		text-decoration: none;
+	}
+
+	.products-empty a:focus-visible {
+		outline: 2px solid #ff4d2a;
+		outline-offset: 2px;
+	}
+
+	@media (max-width: 1080px) {
+		.product-grid {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+	}
+
+	@media (max-width: 800px) {
+		.product-grid {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+
+	@media (max-width: 560px) {
+		.products-page {
+			padding-block: 20px 75px;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.product-grid {
+			grid-template-columns: 1fr;
+			gap: 20px 16px;
+		}
+	}
+</style>
