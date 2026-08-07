@@ -13,6 +13,7 @@
     "sync:catalog": "node --env-file=.env scripts/sync-catalog.mjs"
   },
   "dependencies": {
+    "@astrojs/sitemap": "^3.7.3",
     "@lucide/astro": "^1.28.0",
     "@sanity/client": "^7.24.0",
     "@sanity/image-url": "^2.1.1",

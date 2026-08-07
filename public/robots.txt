@@ -7,7 +7,4 @@
 User-agent: *
 Allow: /
 
-# Sitemap: pendiente para una fase posterior. Requiere autorizar la
-# dependencia @astrojs/sitemap (o un generador propio) y confirmar el
-# dominio definitivo de despliegue; no se publica una URL de sitemap
-# hasta entonces para evitar referenciar una ruta inexistente.
+Sitemap: https://taqto.com.pe/sitemap-index.xml
