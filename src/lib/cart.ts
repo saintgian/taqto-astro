@@ -61,7 +61,13 @@ function stockCapOf(item: Pick<CartItem, "stock">): number | undefined {
  * Corrige en el propio storage las cantidades guardadas antes de tener
  * `stock`, o que quedaron por encima del stock capturado en un alta
  * posterior del mismo producto (variante que se agoto entre visitas).
- * Tambien normaliza decimales y descarta lineas que ya no tienen cupo.
+ * Tambien normaliza decimales y descarta lineas invalidas.
+ *
+ * Un `stock` de exactamente 0 (item sin disponibilidad, confirmado por
+ * `applyAvailability` o por un alta con cap 0) NO se toca aqui: ni se
+ * fuerza la cantidad a 0 ni se elimina la linea. El carrito debe seguir
+ * mostrandolo como "Temporalmente agotado" en vez de hacerlo desaparecer
+ * en silencio.
  */
 function clampToStock(items: CartItem[]): {
 	items: CartItem[];
@@ -74,7 +80,7 @@ function clampToStock(items: CartItem[]): {
 		const cap = stockCapOf(item);
 		let quantity = Math.floor(item.quantity);
 
-		if (cap !== undefined && quantity > cap) {
+		if (cap !== undefined && cap > 0 && quantity > cap) {
 			quantity = cap;
 		}
 
@@ -262,6 +268,93 @@ export function getSubtotal(): number {
 			total + item.unitPrice * item.quantity,
 		0,
 	);
+}
+
+/**
+ * IDs de producto (Sanity) distintos presentes en el carrito, en el orden
+ * en que aparecen. El carrito puede tener varias variantes del mismo
+ * producto (mismo `productId`, distinto `sku`); esto evita pedir la misma
+ * disponibilidad dos veces.
+ */
+export function getDistinctProductIds(): string[] {
+	const seen = new Set<string>();
+	const ids: string[] = [];
+
+	for (const item of readStorage()) {
+		if (!seen.has(item.productId)) {
+			seen.add(item.productId);
+			ids.push(item.productId);
+		}
+	}
+
+	return ids;
+}
+
+export interface AvailabilityAdjustment {
+	id: string;
+	title: string;
+	from: number;
+	to: number;
+}
+
+export interface AvailabilityUpdateResult {
+	adjusted: AvailabilityAdjustment[];
+	outOfStock: Array<{ id: string; title: string }>;
+}
+
+/**
+ * Cruza el carrito guardado contra disponibilidad real obtenida de
+ * `public_variant_availability` (sku -> stock_quantity), para los
+ * `queriedProductIds` que sí se pudieron consultar. Los items cuyo
+ * `productId` no esta en `queriedProductIds` (RPC fallida o no consultada)
+ * se dejan intactos: no hay base real para tocarlos.
+ *
+ * Un sku ausente del mapa (variante/producto inactivo) se trata igual que
+ * stock 0: create_order_v2 tampoco lo aceptaria.
+ */
+export function applyAvailability(
+	availability: Map<string, number>,
+	queriedProductIds: Set<string>,
+): AvailabilityUpdateResult {
+	const items = readStorage();
+	const adjusted: AvailabilityAdjustment[] = [];
+	const outOfStock: AvailabilityUpdateResult["outOfStock"] = [];
+	let changed = false;
+
+	const next = items.map((item) => {
+		if (!queriedProductIds.has(item.productId)) return item;
+
+		const stock = availability.has(item.sku)
+			? Math.max(0, Math.floor(availability.get(item.sku)!))
+			: 0;
+
+		let quantity = item.quantity;
+
+		if (stock > 0 && quantity > stock) {
+			adjusted.push({
+				id: item.id,
+				title: item.title,
+				from: quantity,
+				to: stock,
+			});
+			quantity = stock;
+		}
+
+		if (stock <= 0) {
+			outOfStock.push({ id: item.id, title: item.title });
+		}
+
+		if (stock === item.stock && quantity === item.quantity) {
+			return item;
+		}
+
+		changed = true;
+		return { ...item, stock, quantity };
+	});
+
+	if (changed) writeStorage(next);
+
+	return { adjusted, outOfStock };
 }
 
 export function onCartUpdated(

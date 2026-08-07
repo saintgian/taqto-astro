@@ -1,7 +1,6 @@
 ---
 import { WHATSAPP_NUMBER } from "../lib/constants";
-
-const base = import.meta.env.BASE_URL;
+import WhatsAppIcon from "./icons/WhatsAppIcon.astro";
 
 const whatsappMessage = encodeURIComponent(
 	"Hola TAQTO, quisiera pedir información sobre sus productos.",
@@ -23,12 +22,7 @@ const isCartPage =
 	rel="noopener noreferrer"
 	aria-label="Pedir por WhatsApp"
 >
-	<img
-		src={`${base}icons/icon-whastapp.svg`}
-		alt=""
-		width="26"
-		height="26"
-	/>
+	<WhatsAppIcon width={26} height={26} />
 
 	<span class="whatsapp-float__label">Pedir por WhatsApp</span>
 </a>
@@ -62,7 +56,8 @@ const isCartPage =
 		box-shadow: 0 18px 42px rgba(0, 0, 0, 0.4);
 	}
 
-	.whatsapp-float img {
+	.whatsapp-float img,
+	.whatsapp-float svg {
 		display: block;
 		width: 26px;
 		height: 26px;

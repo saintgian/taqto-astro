@@ -74,6 +74,36 @@ const hasHoverGallery =
 	Boolean(secondaryImageUrl) &&
 	secondaryImageUrl !== imageUrl;
 
+const mobileGalleryImages = (() => {
+	const seen = new Set<string>();
+	const images: { url: string; alt: string }[] = [];
+
+	(product.gallery || []).forEach(
+		(image: any, index: number) => {
+			if (!image?.asset) return;
+
+			const url = urlForImage(image)
+				.width(900)
+				.height(1200)
+				.fit("crop")
+				.auto("format")
+				.url();
+
+			if (!url || seen.has(url)) return;
+
+			seen.add(url);
+			images.push({
+				url,
+				alt: index === 0 ? imageAlt : "",
+			});
+		},
+	);
+
+	return images;
+})();
+
+const hasMobileGallery = mobileGalleryImages.length > 1;
+
 const priceRange =
 	getProductPriceRange(product);
 
@@ -109,6 +139,7 @@ const modeLabels: Record<string, string> = {
 		class:list={[
 			"product-card__media",
 			{ "product-card__media--hover-gallery": hasHoverGallery },
+			{ "product-card__media--mobile-gallery": hasMobileGallery },
 		]}
 		href={productHref}
 		aria-label={`Ver ${product.title}`}
@@ -144,6 +175,64 @@ const modeLabels: Record<string, string> = {
 					decoding="async"
 					aria-hidden="true"
 				/>
+			)
+		}
+
+		{
+			hasHoverGallery && (
+				<div class="product-card__dots" aria-hidden="true">
+					<span class="product-card__dot product-card__dot--primary" />
+					<span class="product-card__dot product-card__dot--secondary" />
+				</div>
+			)
+		}
+
+		{
+			hasMobileGallery && (
+				<div
+					class="product-card__mobile-gallery"
+					data-product-card-gallery
+				>
+					<div
+						class="product-card__mobile-track"
+						data-product-card-track
+					>
+						{
+							mobileGalleryImages.map((image, index) => (
+								<div
+									class="product-card__mobile-slide"
+									data-slide-index={index}
+								>
+									<img
+										src={image.url}
+										alt={image.alt}
+										width="900"
+										height="1200"
+										loading="lazy"
+										decoding="async"
+									/>
+								</div>
+							))
+						}
+					</div>
+
+					<div
+						class="product-card__gallery-dots"
+						aria-hidden="true"
+						data-product-card-dots
+					>
+						{
+							mobileGalleryImages.map((_, index) => (
+								<span
+									class:list={[
+										"product-card__gallery-dot",
+										{ "is-active": index === 0 },
+									]}
+								/>
+							))
+						}
+					</div>
+				</div>
 			)
 		}
 
@@ -400,7 +489,8 @@ const modeLabels: Record<string, string> = {
 		font-size: clamp(12.25px, 0.83vw, 13.2px);
 	}
 
-	.product-card__media--hover-gallery img {
+	.product-card__media--hover-gallery .product-card__image--primary,
+	.product-card__media--hover-gallery .product-card__image--secondary {
 		position: absolute;
 		inset: 0;
 	}
@@ -413,8 +503,9 @@ const modeLabels: Record<string, string> = {
 		opacity: 0;
 	}
 
-	.product-card__media--hover-gallery img {
-		transition: opacity 280ms cubic-bezier(0.22, 1, 0.36, 1);
+	.product-card__media--hover-gallery .product-card__image--primary,
+	.product-card__media--hover-gallery .product-card__image--secondary {
+		transition: opacity 320ms cubic-bezier(0.22, 1, 0.36, 1);
 	}
 
 	@media (hover: hover) and (pointer: fine) {
@@ -433,19 +524,111 @@ const modeLabels: Record<string, string> = {
 		}
 	}
 
-	/*
-	 * Vista previa tactil: activada por JS via pointerdown/up/cancel/leave
-	 * (solo pointerType "touch"), no por CSS `:hover`, asi que funciona
-	 * igual en dispositivos hibridos con mouse y pantalla tactil.
-	 */
-	.product-card__media--hover-gallery.is-touch-preview
-		.product-card__image--primary {
-		opacity: 0;
+	.product-card__dots {
+		position: absolute;
+		z-index: 2;
+		bottom: 10px;
+		left: 50%;
+		display: flex;
+		gap: 5px;
+		pointer-events: none;
+		transform: translateX(-50%);
 	}
 
-	.product-card__media--hover-gallery.is-touch-preview
-		.product-card__image--secondary {
-		opacity: 1;
+	.product-card__dot {
+		width: 4.5px;
+		height: 4.5px;
+		border-radius: 50%;
+		background: rgba(20, 20, 20, 0.22);
+		transition: background-color 220ms ease;
+	}
+
+	.product-card__dot--primary {
+		background: rgba(20, 20, 20, 0.42);
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.product-card__media--hover-gallery:hover
+			.product-card__dot--primary,
+		.product-card__media--hover-gallery:focus-within
+			.product-card__dot--primary {
+			background: rgba(20, 20, 20, 0.22);
+		}
+
+		.product-card__media--hover-gallery:hover
+			.product-card__dot--secondary,
+		.product-card__media--hover-gallery:focus-within
+			.product-card__dot--secondary {
+			background: #ff4d2a;
+		}
+	}
+
+	.product-card__mobile-gallery {
+		display: none;
+	}
+
+	@media (hover: none), (pointer: coarse) {
+		.product-card__media--mobile-gallery .product-card__image--primary,
+		.product-card__media--mobile-gallery .product-card__image--secondary,
+		.product-card__media--mobile-gallery .product-card__dots {
+			display: none;
+		}
+
+		.product-card__media--mobile-gallery .product-card__mobile-gallery {
+			position: absolute;
+			inset: 0;
+			display: block;
+			width: 100%;
+			height: 100%;
+		}
+	}
+
+	.product-card__mobile-track {
+		display: flex;
+		width: 100%;
+		height: 100%;
+		overflow-x: auto;
+		overflow-y: hidden;
+		scroll-snap-type: x mandatory;
+		overscroll-behavior-inline: contain;
+		scrollbar-width: none;
+		-webkit-overflow-scrolling: touch;
+	}
+
+	.product-card__mobile-track::-webkit-scrollbar {
+		display: none;
+	}
+
+	.product-card__mobile-slide {
+		flex: 0 0 100%;
+		min-width: 0;
+		height: 100%;
+		scroll-snap-align: start;
+		scroll-snap-stop: always;
+	}
+
+	.product-card__gallery-dots {
+		position: absolute;
+		z-index: 2;
+		bottom: 10px;
+		left: 50%;
+		display: flex;
+		gap: 5px;
+		pointer-events: none;
+		transform: translateX(-50%);
+	}
+
+	.product-card__gallery-dot {
+		width: 5px;
+		height: 5px;
+		border-radius: 50%;
+		background: rgba(255, 255, 255, 0.55);
+		box-shadow: 0 0 0 1px rgba(20, 20, 20, 0.12);
+		transition: background-color 220ms ease;
+	}
+
+	.product-card__gallery-dot.is-active {
+		background: #ff4d2a;
 	}
 
 	.product-card:focus-within {
@@ -512,6 +695,8 @@ const modeLabels: Record<string, string> = {
 	@media (prefers-reduced-motion: reduce) {
 		.product-card,
 		.product-card__media img,
+		.product-card__dot,
+		.product-card__gallery-dot,
 		.product-card__link,
 		.product-card__title a {
 			transition: none;
@@ -521,52 +706,114 @@ const modeLabels: Record<string, string> = {
 
 <script>
 	/*
-	 * Vista previa tactil de la segunda imagen: solo pointerType "touch",
-	 * asi que mouse y teclado siguen su propio camino (hover / focus-within
-	 * en CSS). Sin preventDefault en ningun punto: el scroll vertical y el
-	 * tap que abre la ficha no se tocan. Cuando el gesto se convierte en
-	 * scroll el navegador dispara "pointercancel" antes del "click", asi
-	 * que la vista se cierra sola y no hay navegacion accidental.
+	 * Galeria movil deslizable de cada Product Card: el desplazamiento
+	 * horizontal lo resuelve el navegador via scroll-snap nativo (sin
+	 * transformaciones manuales ni autoplay). Este script solo (1)
+	 * actualiza el punto activo mientras se desliza y (2) suprime el
+	 * click de navegacion cuando ese click llega justo despues de un
+	 * swipe horizontal real, comparando el scrollLeft del track antes y
+	 * despues del gesto. En escritorio la galeria queda en
+	 * display:none (ver CSS), por lo que nunca recibe eventos de
+	 * puntero y este script no tiene efecto ahi.
 	 */
-	const bindTouchPreview = (
-		media: HTMLElement,
-	) => {
-		if (media.dataset.touchPreviewBound === "true") return;
-		media.dataset.touchPreviewBound = "true";
+	const SWIPE_THRESHOLD = 10;
 
-		const show = (event: PointerEvent) => {
-			if (event.pointerType !== "touch") return;
-			media.classList.add("is-touch-preview");
-		};
+	let controller: AbortController | undefined;
 
-		const hide = () => {
-			media.classList.remove("is-touch-preview");
-		};
+	const initMobileGalleries = () => {
+		controller?.abort();
+		controller = new AbortController();
+		const { signal } = controller;
 
-		media.addEventListener("pointerdown", show);
-		media.addEventListener("pointerup", hide);
-		media.addEventListener("pointercancel", hide);
-		media.addEventListener("pointerleave", hide);
+		const galleries = document.querySelectorAll<HTMLElement>(
+			"[data-product-card-gallery]",
+		);
+
+		galleries.forEach((gallery) => {
+			const track = gallery.querySelector<HTMLElement>(
+				"[data-product-card-track]",
+			);
+			const dots = Array.from(
+				gallery.querySelectorAll<HTMLElement>(
+					".product-card__gallery-dot",
+				),
+			);
+			const link = gallery.closest<HTMLAnchorElement>(
+				".product-card__media",
+			);
+
+			if (!track) return;
+
+			// Cada carga/restauracion de pagina empieza en la primera
+			// imagen, sin arrastrar el desplazamiento de otra tarjeta.
+			track.scrollLeft = 0;
+			dots.forEach((dot, index) =>
+				dot.classList.toggle("is-active", index === 0),
+			);
+
+			const updateActiveDot = () => {
+				if (!dots.length || track.clientWidth === 0) return;
+				const index = Math.round(
+					track.scrollLeft / track.clientWidth,
+				);
+				dots.forEach((dot, dotIndex) =>
+					dot.classList.toggle(
+						"is-active",
+						dotIndex === index,
+					),
+				);
+			};
+
+			let ticking = false;
+			track.addEventListener(
+				"scroll",
+				() => {
+					if (ticking) return;
+					ticking = true;
+					window.requestAnimationFrame(() => {
+						updateActiveDot();
+						ticking = false;
+					});
+				},
+				{ passive: true, signal },
+			);
+
+			if (!link) return;
+
+			let startScrollLeft = track.scrollLeft;
+
+			track.addEventListener(
+				"pointerdown",
+				() => {
+					startScrollLeft = track.scrollLeft;
+				},
+				{ passive: true, signal },
+			);
+
+			// El click llega despues de que el navegador ya aplico el
+			// scroll del gesto: comparar contra el scrollLeft de inicio
+			// basta para distinguir un swipe real de un toque normal, sin
+			// depender de pointerup/pointercancel (poco fiables en touch).
+			link.addEventListener(
+				"click",
+				(event) => {
+					const delta = Math.abs(
+						track.scrollLeft - startScrollLeft,
+					);
+					if (delta > SWIPE_THRESHOLD) {
+						event.preventDefault();
+					}
+				},
+				{ capture: true, signal },
+			);
+		});
 	};
 
-	const initTouchPreviews = () => {
-		document
-			.querySelectorAll<HTMLElement>(
-				".product-card__media--hover-gallery",
-			)
-			.forEach(bindTouchPreview);
-	};
+	initMobileGalleries();
+	document.addEventListener("astro:page-load", initMobileGalleries);
 
-	initTouchPreviews();
-	document.addEventListener("astro:page-load", initTouchPreviews);
-
-	// Red de seguridad: ninguna tarjeta debe volver de una navegacion (o de
-	// la cache del navegador al ir atras) con la imagen secundaria pegada.
 	document.addEventListener("astro:before-swap", () => {
-		document
-			.querySelectorAll(".is-touch-preview")
-			.forEach((element) => {
-				element.classList.remove("is-touch-preview");
-			});
+		controller?.abort();
+		controller = undefined;
 	});
 </script>

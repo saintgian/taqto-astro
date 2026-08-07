@@ -1,0 +1,5831 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import {
+	LogOut,
+	RefreshCw,
+	X,
+	AlertTriangle,
+	Loader2,
+	Menu,
+	LayoutGrid,
+	ClipboardList,
+	Package,
+	Wallet,
+	CalendarDays,
+	PackageX,
+	ChevronDown,
+} from "@lucide/astro";
+---
+
+<BaseLayout
+	title="Panel administrativo | TAQTO"
+	description="Panel administrativo interno de TAQTO."
+	robots="noindex, nofollow"
+>
+	<main class="admin-orders" data-admin-orders>
+		<!-- No hay datos administrativos en este HTML: todo el contenido del
+			panel se rellena en el navegador via RPC autenticados, despues
+			de confirmar que la sesion es de un administrador. -->
+
+		<section class="admin-config-error" data-admin-config-error hidden>
+			<p>
+				El panel no esta disponible: falta configuracion de Supabase
+				en este entorno.
+			</p>
+		</section>
+
+		<section class="admin-login" data-admin-login hidden>
+			<div class="admin-login__card admin-glass">
+				<p class="admin-login__eyebrow">TAQTO</p>
+				<h1 class="admin-login__title">Panel administrativo</h1>
+				<p class="admin-login__subtitle">
+					Acceso exclusivo para administradores.
+				</p>
+
+				<form
+					class="admin-login__form"
+					data-admin-login-form
+					novalidate
+				>
+					<label class="admin-login__label" for="admin-email"
+						>Correo</label
+					>
+					<input
+						class="admin-login__input"
+						type="email"
+						id="admin-email"
+						name="email"
+						autocomplete="username"
+						required
+					/>
+
+					<label class="admin-login__label" for="admin-password"
+						>Contraseña</label
+					>
+					<input
+						class="admin-login__input"
+						type="password"
+						id="admin-password"
+						name="password"
+						autocomplete="current-password"
+						required
+					/>
+
+					<p
+						class="admin-login__error"
+						data-admin-login-error
+						role="alert"
+						hidden
+					>
+					</p>
+
+					<button
+						class="btn btn--primary btn--full admin-login__submit"
+						type="submit"
+						data-admin-login-submit
+					>
+						<Loader2
+							class="admin-login__spinner"
+							aria-hidden="true"
+							data-admin-login-spinner
+							hidden
+						/>
+						<span data-admin-login-submit-label
+							>Iniciar sesión</span
+						>
+					</button>
+				</form>
+			</div>
+		</section>
+
+		<section class="admin-forbidden" data-admin-forbidden hidden>
+			<div class="admin-forbidden__card admin-glass">
+				<AlertTriangle aria-hidden="true" />
+				<p>No tienes autorización para acceder.</p>
+				<button
+					class="btn btn--secondary"
+					type="button"
+					data-admin-forbidden-back
+				>
+					Volver a iniciar sesión
+				</button>
+			</div>
+		</section>
+
+		<div class="admin-shell" data-admin-dashboard hidden>
+			<div
+				class="admin-sidebar-backdrop"
+				data-admin-sidebar-backdrop
+				hidden
+			>
+			</div>
+
+			<nav
+				class="admin-sidebar admin-glass"
+				id="admin-sidebar"
+				data-admin-sidebar
+				aria-label="Navegación administrativa"
+			>
+				<div class="admin-sidebar__brand">
+					<p class="admin-sidebar__brand-mark">TAQTO</p>
+					<p class="admin-sidebar__brand-sub">
+						Panel administrativo
+					</p>
+				</div>
+
+				<ul class="admin-sidebar__nav">
+					<li>
+						<a
+							class="admin-sidebar__link"
+							href="#resumen"
+							data-admin-nav="resumen"
+						>
+							<LayoutGrid aria-hidden="true" />
+							<span>Resumen</span>
+						</a>
+					</li>
+					<li>
+						<a
+							class="admin-sidebar__link"
+							href="#pedidos"
+							data-admin-nav="pedidos"
+						>
+							<ClipboardList aria-hidden="true" />
+							<span>Pedidos</span>
+						</a>
+					</li>
+					<li>
+						<a
+							class="admin-sidebar__link"
+							href="#inventario"
+							data-admin-nav="inventario"
+						>
+							<Package aria-hidden="true" />
+							<span>Inventario</span>
+						</a>
+					</li>
+				</ul>
+
+				<div class="admin-sidebar__footer">
+					<div class="admin-sidebar__profile">
+						<div
+							class="admin-sidebar__profile-avatar"
+							data-admin-sidebar-avatar
+							aria-hidden="true"
+						>
+						</div>
+						<p
+							class="admin-sidebar__profile-name"
+							data-admin-sidebar-name
+						>
+							Administrador
+						</p>
+					</div>
+
+					<button
+						class="admin-sidebar__logout"
+						type="button"
+						data-admin-logout
+					>
+						<LogOut aria-hidden="true" />
+						<span>Cerrar sesión</span>
+					</button>
+				</div>
+			</nav>
+
+			<div class="admin-main">
+				<header class="admin-topbar admin-glass" data-admin-topbar>
+					<button
+						class="admin-menu-toggle"
+						type="button"
+						data-admin-menu-toggle
+						aria-label="Abrir menú"
+						aria-expanded="false"
+						aria-controls="admin-sidebar"
+					>
+						<Menu aria-hidden="true" />
+					</button>
+
+					<div class="admin-topbar__welcome">
+						<h1 class="admin-topbar__title" data-admin-topbar-title
+							>Resumen</h1
+						>
+						<p
+							class="admin-topbar__subtitle"
+							data-admin-topbar-subtitle
+						>
+							Bienvenido, <strong data-admin-user-name
+								>Administrador</strong
+							>. Aquí tienes el resumen de TAQTO.
+						</p>
+					</div>
+
+					<div class="admin-topbar__meta">
+						<p class="admin-topbar__updated" data-admin-updated>
+						</p>
+						<button
+							class="btn btn--secondary admin-topbar__refresh"
+							type="button"
+							data-admin-refresh
+						>
+							<RefreshCw
+								aria-hidden="true"
+								data-admin-refresh-icon
+							/>
+							<span>Actualizar</span>
+						</button>
+						<div
+							class="admin-avatar"
+							data-admin-avatar
+							aria-hidden="true"
+						>
+						</div>
+					</div>
+				</header>
+
+				<section
+					class="admin-view"
+					data-admin-panel="resumen"
+					aria-labelledby="admin-view-resumen-title"
+				>
+					<h2 class="sr-only" id="admin-view-resumen-title"
+						>Resumen</h2
+					>
+
+					<div class="admin-metrics-row" data-admin-resumen-metrics>
+					</div>
+
+					<p
+						class="admin-panel__error"
+						data-admin-resumen-error
+						role="alert"
+						hidden
+					>
+					</p>
+
+					<div class="admin-charts-grid" data-admin-resumen-charts>
+					</div>
+
+					<div class="admin-resumen-grid">
+						<section
+							class="admin-panel admin-glass"
+							aria-labelledby="admin-recent-orders-title"
+						>
+							<div class="admin-panel__head">
+								<h3 id="admin-recent-orders-title"
+									>Pedidos recientes</h3
+								>
+								<button
+									class="btn btn--tertiary"
+									type="button"
+									data-admin-goto="pedidos"
+								>
+									Ver todos los pedidos
+								</button>
+							</div>
+							<div data-admin-recent-orders>
+								<p class="admin-panel__loading"
+									>Cargando…</p
+								>
+							</div>
+						</section>
+
+						<section
+							class="admin-panel admin-glass"
+							aria-labelledby="admin-low-stock-title"
+						>
+							<div class="admin-panel__head">
+								<h3 id="admin-low-stock-title"
+									>Stock que requiere atención</h3
+								>
+								<button
+									class="btn btn--tertiary"
+									type="button"
+									data-admin-goto="inventario"
+								>
+									Ver inventario
+								</button>
+							</div>
+							<div data-admin-low-stock>
+								<p class="admin-panel__loading"
+									>Cargando…</p
+								>
+							</div>
+						</section>
+					</div>
+				</section>
+
+				<section
+					class="admin-view"
+					data-admin-panel="pedidos"
+					hidden
+					aria-labelledby="admin-view-pedidos-title"
+				>
+					<h2 class="sr-only" id="admin-view-pedidos-title"
+						>Pedidos</h2
+					>
+
+					<section
+						class="admin-metrics admin-glass"
+						aria-label="Métricas de pedidos"
+						data-admin-metrics
+					>
+					</section>
+
+					<section class="admin-filters admin-glass" data-admin-filters>
+						<button
+							class="admin-filters__toggle"
+							type="button"
+							data-admin-filters-toggle
+							aria-expanded="false"
+							aria-controls="admin-filters-panel"
+						>
+							Filtros
+						</button>
+
+						<div
+							class="admin-filters__panel"
+							id="admin-filters-panel"
+							data-admin-filters-panel
+						>
+							<div class="admin-filters__row admin-filters__row--search">
+								<div class="admin-filters__field admin-filters__field--search">
+									<label for="admin-filter-search">Buscar</label>
+									<input
+										type="search"
+										id="admin-filter-search"
+										data-admin-filter="search"
+										placeholder="Número, nombre, email o teléfono"
+										autocomplete="off"
+									/>
+								</div>
+							</div>
+
+							<div class="admin-filters__row admin-filters__row--grid">
+								<div class="admin-filters__field">
+									<label for="admin-filter-status">Estado</label>
+									<select id="admin-filter-status" data-admin-filter="status">
+										<option value="">Todos</option>
+										<option value="received">Recibido</option>
+										<option value="payment_pending">Pago pendiente</option>
+										<option value="payment_verified">Pago verificado</option>
+										<option value="mockup_pending">Boceto pendiente</option>
+										<option value="mockup_sent">Boceto enviado</option>
+										<option value="mockup_approved">Boceto aprobado</option>
+										<option value="in_production">En producción</option>
+										<option value="ready_to_ship">Listo para enviar</option>
+										<option value="shipped">Enviado</option>
+										<option value="delivered">Entregado</option>
+										<option value="cancelled">Cancelado</option>
+									</select>
+								</div>
+
+								<div class="admin-filters__field">
+									<label for="admin-filter-payment">Pago</label>
+									<select id="admin-filter-payment" data-admin-filter="payment">
+										<option value="">Todos</option>
+										<option value="yape">Yape</option>
+										<option value="plin">Plin</option>
+										<option value="bank_transfer">Transferencia bancaria</option>
+										<option value="card">Tarjeta</option>
+										<option value="cash_on_delivery">Contra entrega</option>
+									</select>
+								</div>
+
+								<div class="admin-filters__field">
+									<label for="admin-filter-delivery">Entrega</label>
+									<select id="admin-filter-delivery" data-admin-filter="delivery">
+										<option value="">Todas</option>
+										<option value="lima_delivery">Delivery Lima</option>
+										<option value="province_agency">Agencia (provincia)</option>
+										<option value="store_pickup">Recojo en tienda</option>
+									</select>
+								</div>
+
+								<div class="admin-filters__field">
+									<label for="admin-filter-from">Desde</label>
+									<input type="date" id="admin-filter-from" data-admin-filter="from" />
+								</div>
+
+								<div class="admin-filters__field">
+									<label for="admin-filter-to">Hasta</label>
+									<input type="date" id="admin-filter-to" data-admin-filter="to" />
+								</div>
+
+								<button
+									class="btn btn--tertiary admin-filters__clear"
+									type="button"
+									data-admin-filters-clear
+								>
+									Limpiar filtros
+								</button>
+							</div>
+						</div>
+					</section>
+
+					<section class="admin-table-wrap admin-glass" data-admin-table-wrap>
+						<table class="admin-table" data-admin-table>
+							<thead>
+								<tr>
+									<th scope="col"><span class="sr-only">Expandir</span></th>
+									<th scope="col">Pedido</th>
+									<th scope="col">Cliente</th>
+									<th scope="col">Producto</th>
+									<th scope="col">Distrito / Entrega</th>
+									<th scope="col">Pago</th>
+									<th scope="col">Estado</th>
+									<th scope="col" class="admin-table__num">Unidades</th>
+									<th scope="col" class="admin-table__num">Total</th>
+									<th scope="col"><span class="sr-only">Acción</span></th>
+								</tr>
+							</thead>
+							<tbody data-admin-table-body></tbody>
+						</table>
+
+						<p class="admin-table__empty" data-admin-empty hidden>
+							No se encontraron pedidos con estos filtros.
+						</p>
+
+						<p class="admin-table__error" data-admin-error role="alert" hidden>
+						</p>
+					</section>
+
+					<nav
+						class="admin-pagination"
+						data-admin-pagination
+						aria-label="Paginación de pedidos"
+					>
+						<button
+							class="btn btn--secondary"
+							type="button"
+							data-admin-prev
+							disabled
+						>
+							Anterior
+						</button>
+						<span data-admin-page-info aria-live="polite"></span>
+						<button
+							class="btn btn--secondary"
+							type="button"
+							data-admin-next
+							disabled
+						>
+							Siguiente
+						</button>
+					</nav>
+				</section>
+
+				<section
+					class="admin-view"
+					data-admin-panel="inventario"
+					hidden
+					aria-labelledby="admin-view-inventario-title"
+				>
+					<h2 class="sr-only" id="admin-view-inventario-title"
+						>Inventario</h2
+					>
+
+					<section class="admin-filters admin-glass" data-admin-inv-filters>
+						<div class="admin-filters__panel admin-filters__panel--static">
+							<div class="admin-filters__field admin-filters__field--search">
+								<label for="admin-inv-search">Buscar</label>
+								<input
+									type="search"
+									id="admin-inv-search"
+									data-admin-inv-filter="search"
+									placeholder="Producto, SKU, madera o tamaño"
+									autocomplete="off"
+								/>
+							</div>
+
+							<div class="admin-filters__field">
+								<label for="admin-inv-stock">Estado de stock</label>
+								<select id="admin-inv-stock" data-admin-inv-filter="stock">
+									<option value="">Todos</option>
+									<option value="available">Disponible</option>
+									<option value="low">Stock bajo</option>
+									<option value="out">Sin stock</option>
+								</select>
+							</div>
+
+							<div class="admin-filters__field">
+								<label for="admin-inv-active">Producto</label>
+								<select id="admin-inv-active" data-admin-inv-filter="active">
+									<option value="">Todos</option>
+									<option value="true">Activo</option>
+									<option value="false">Inactivo</option>
+								</select>
+							</div>
+
+							<button
+								class="btn btn--tertiary admin-filters__clear"
+								type="button"
+								data-admin-inv-clear
+							>
+								Limpiar filtros
+							</button>
+						</div>
+					</section>
+
+					<section class="admin-table-wrap admin-glass" data-admin-inv-table-wrap>
+						<table class="admin-table admin-table--inventory" data-admin-inv-table>
+							<thead>
+								<tr>
+									<th scope="col">Producto</th>
+									<th scope="col">Variante</th>
+									<th scope="col">SKU</th>
+									<th scope="col">Estado</th>
+									<th scope="col">Stock</th>
+									<th scope="col">Precio</th>
+									<th scope="col">Estado de stock</th>
+								</tr>
+							</thead>
+							<tbody data-admin-inv-table-body></tbody>
+						</table>
+
+						<p class="admin-table__empty" data-admin-inv-empty hidden>
+							No se encontraron variantes con estos filtros.
+						</p>
+
+						<p class="admin-table__error" data-admin-inv-error role="alert" hidden>
+						</p>
+					</section>
+
+					<nav
+						class="admin-pagination"
+						data-admin-inv-pagination
+						aria-label="Paginación de inventario"
+					>
+						<button
+							class="btn btn--secondary"
+							type="button"
+							data-admin-inv-prev
+							disabled
+						>
+							Anterior
+						</button>
+						<span data-admin-inv-page-info aria-live="polite"></span>
+						<button
+							class="btn btn--secondary"
+							type="button"
+							data-admin-inv-next
+							disabled
+						>
+							Siguiente
+						</button>
+					</nav>
+				</section>
+			</div>
+		</div>
+
+		<div
+			class="admin-drawer-backdrop"
+			data-admin-drawer-backdrop
+			hidden
+		>
+		</div>
+
+		<div
+			class="admin-drawer"
+			id="admin-order-drawer"
+			data-admin-drawer
+			role="dialog"
+			aria-modal="true"
+			aria-labelledby="admin-drawer-title"
+			aria-describedby="admin-drawer-subtitle"
+			hidden
+		>
+			<div class="admin-drawer__head">
+				<div class="admin-drawer__head-main">
+					<h2 id="admin-drawer-title" data-admin-drawer-title>
+						Detalle del pedido
+					</h2>
+					<p
+						id="admin-drawer-subtitle"
+						class="admin-drawer__subtitle"
+						data-admin-drawer-subtitle
+					>
+					</p>
+				</div>
+				<div class="admin-drawer__chips" data-admin-drawer-chips>
+				</div>
+				<button
+					class="btn btn--icon admin-drawer__close"
+					type="button"
+					data-admin-drawer-close
+					aria-label="Cerrar detalle del pedido"
+				>
+					<X aria-hidden="true" />
+				</button>
+			</div>
+			<div class="admin-drawer__body" data-admin-drawer-body></div>
+		</div>
+
+		<!-- Etiqueta del paquete. Vive fuera del drawer (no dentro) para
+			poder imprimirla sin arrastrar el scroll ni los estilos del
+			panel, y se vacia al cerrarse para que nunca conserve datos
+			del pedido anterior. -->
+		<div
+			class="admin-label-backdrop"
+			data-admin-label-backdrop
+			hidden
+		>
+		</div>
+
+		<div
+			class="admin-label-modal"
+			data-admin-label-modal
+			role="dialog"
+			aria-modal="true"
+			aria-labelledby="admin-label-modal-title"
+			hidden
+		>
+			<div class="admin-label-modal__head">
+				<h2 id="admin-label-modal-title">Etiqueta del pedido</h2>
+				<button
+					class="btn btn--icon"
+					type="button"
+					data-admin-label-close
+					aria-label="Cerrar etiqueta"
+				>
+					<X aria-hidden="true" />
+				</button>
+			</div>
+
+			<div class="admin-label-modal__scroll">
+				<div class="admin-label" data-admin-label-sheet></div>
+			</div>
+
+			<p
+				class="admin-label-modal__feedback"
+				data-admin-label-feedback
+				role="status"
+				hidden
+			>
+			</p>
+
+			<div class="admin-label-modal__actions">
+				<button
+					class="btn btn--primary"
+					type="button"
+					data-admin-label-copy
+				>
+					Copiar texto
+				</button>
+				<button
+					class="btn btn--secondary"
+					type="button"
+					data-admin-label-print
+				>
+					Imprimir etiqueta
+				</button>
+				<button
+					class="btn btn--tertiary"
+					type="button"
+					data-admin-label-close
+				>
+					Cerrar
+				</button>
+			</div>
+		</div>
+	</main>
+</BaseLayout>
+
+<script>
+	import { supabase } from "../../lib/supabase";
+	import { openOverlay, closeOverlay } from "../../lib/overlay";
+	import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
+
+	const ORDER_STATUS_LABELS: Record<string, string> = {
+		received: "Recibido",
+		payment_pending: "Pago pendiente",
+		payment_verified: "Pago verificado",
+		mockup_pending: "Boceto pendiente",
+		mockup_sent: "Boceto enviado",
+		mockup_approved: "Boceto aprobado",
+		in_production: "En producción",
+		ready_to_ship: "Listo para enviar",
+		shipped: "Enviado",
+		delivered: "Entregado",
+		cancelled: "Cancelado",
+	};
+
+	const PAYMENT_METHOD_LABELS: Record<string, string> = {
+		yape: "Yape",
+		plin: "Plin",
+		bank_transfer: "Transferencia bancaria",
+		card: "Tarjeta",
+		cash_on_delivery: "Contra entrega",
+	};
+
+	const DELIVERY_METHOD_LABELS: Record<string, string> = {
+		lima_delivery: "Delivery Lima",
+		province_agency: "Agencia (provincia)",
+		store_pickup: "Recojo en tienda",
+	};
+
+	const PAYMENT_STATUS_LABELS: Record<string, string> = {
+		pending: "Pendiente",
+		reported: "Reportado",
+		verified: "Verificado",
+		rejected: "Rechazado",
+		refunded: "Reembolsado",
+	};
+
+	const STOCK_STATUS_LABELS: Record<string, string> = {
+		available: "Disponible",
+		low: "Stock bajo",
+		out: "Sin stock",
+	};
+
+	const PAGE_SIZE = 20;
+	const INVENTORY_PAGE_SIZE = 20;
+	const AUTO_REFRESH_MS = 60_000;
+	// Umbral de stock bajo del panel. Ninguna regla comercial lo fija
+	// todavia (ver admin_inventory_dashboard_production.sql): 5 es el
+	// mismo default que usa el RPC, centralizado aqui para no repetirlo.
+	const LOW_STOCK_THRESHOLD = 5;
+	// Cuanto tiempo se considera "reciente" la ultima carga de una vista
+	// para no repetir la llamada al solo cambiar de pestana.
+	const VIEW_FRESH_MS = 20_000;
+
+	const VALID_VIEWS = new Set(["resumen", "pedidos", "inventario"]);
+	type ViewName = "resumen" | "pedidos" | "inventario";
+
+	const currencyFormatter = new Intl.NumberFormat("es-PE", {
+		style: "currency",
+		currency: "PEN",
+	});
+
+	const dateTimeFormatter = new Intl.DateTimeFormat("es-PE", {
+		timeZone: "America/Lima",
+		dateStyle: "medium",
+		timeStyle: "short",
+	});
+
+	const updatedAtFormatter = new Intl.DateTimeFormat("es-PE", {
+		timeZone: "America/Lima",
+		dateStyle: "short",
+		timeStyle: "medium",
+	});
+
+	const limaDateFormatter = new Intl.DateTimeFormat("en-CA", {
+		timeZone: "America/Lima",
+		year: "numeric",
+		month: "2-digit",
+		day: "2-digit",
+	});
+
+	function escapeHtml(value: unknown): string {
+		if (value === null || value === undefined) return "";
+		return String(value)
+			.replace(/&/g, "&amp;")
+			.replace(/</g, "&lt;")
+			.replace(/>/g, "&gt;")
+			.replace(/"/g, "&quot;")
+			.replace(/'/g, "&#39;");
+	}
+
+	function formatDate(value: string | null | undefined): string {
+		if (!value) return "—";
+		const date = new Date(value);
+		if (Number.isNaN(date.getTime())) return "—";
+		return dateTimeFormatter.format(date);
+	}
+
+	function formatMoney(value: number | string | null | undefined): string {
+		const num = Number(value ?? 0);
+		return currencyFormatter.format(Number.isFinite(num) ? num : 0);
+	}
+
+	function limaTodayISO(): string {
+		return limaDateFormatter.format(new Date());
+	}
+
+	const dayShortFormatter = new Intl.DateTimeFormat("es-PE", {
+		timeZone: "America/Lima",
+		day: "2-digit",
+		month: "2-digit",
+	});
+
+	// Etiqueta corta ("lun 04") para el eje del grafico de ventas de 7 dias.
+	function dayLabel(isoDate: string): string {
+		// Mediodia UTC evita que el corrimiento de zona horaria mueva la
+		// fecha al dia anterior al formatear en America/Lima.
+		const date = new Date(`${isoDate}T12:00:00Z`);
+		if (Number.isNaN(date.getTime())) return isoDate;
+		return dayShortFormatter.format(date);
+	}
+
+	/*
+	 * Mismo criterio de "venta confirmada" que admin_orders_metrics
+	 * (admin_dashboard_summary_v3_production.sql, sin cambios): pedidos
+	 * no-COD con order_status >= payment_verified en el flujo real, o
+	 * pedidos COD ya delivered. cancelled nunca cuenta. Se reutiliza aqui
+	 * solo para mostrar una etiqueta derivada de "etapa de pago" en la
+	 * tabla, sin inventar un campo de estado de pago que no existe en el
+	 * esquema.
+	 */
+	const ORDER_FLOW = [
+		"received",
+		"payment_pending",
+		"payment_verified",
+		"mockup_pending",
+		"mockup_sent",
+		"mockup_approved",
+		"in_production",
+		"ready_to_ship",
+		"shipped",
+		"delivered",
+	];
+
+	function isConfirmedSale(paymentMethod: string, orderStatus: string): boolean {
+		if (orderStatus === "cancelled") return false;
+		if (paymentMethod === "cash_on_delivery") return orderStatus === "delivered";
+		return ORDER_FLOW.indexOf(orderStatus) >= ORDER_FLOW.indexOf("payment_verified");
+	}
+
+	function paymentStageLabel(paymentMethod: string, orderStatus: string): string {
+		if (orderStatus === "cancelled") return "Cancelado";
+		return isConfirmedSale(paymentMethod, orderStatus)
+			? "Pago confirmado"
+			: "Pago pendiente";
+	}
+
+	/*
+	 * Iconos de las tarjetas del Resumen, como marcado SVG crudo (mismos
+	 * trazos que @lucide/astro, tomados de node_modules/@lucide/astro):
+	 * los componentes de Astro solo se pueden usar en el frontmatter/HTML
+	 * servido por el servidor, no dentro de este <script> de cliente que
+	 * genera HTML por texto.
+	 */
+	const SVG_ICON_ATTRS =
+		'xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"';
+
+	const WALLET_ICON = `<svg ${SVG_ICON_ATTRS}><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg>`;
+
+	const CLIPBOARD_ICON = `<svg ${SVG_ICON_ATTRS}><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>`;
+
+	const CALENDAR_ICON = `<svg ${SVG_ICON_ATTRS}><path d="M8 2v3"/><path d="M16 2v3"/><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M8 13h.01"/><path d="M12 13h.01"/><path d="M16 13h.01"/><path d="M8 17h.01"/><path d="M12 17h.01"/><path d="M16 17h.01"/></svg>`;
+
+	const PACKAGE_X_ICON = `<svg ${SVG_ICON_ATTRS}><path d="M12 22V12"/><path d="m16.5 14.5 5 5"/><path d="m16.5 19.5 5-5"/><path d="M21 10.5V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.729l7 4a2 2 0 0 0 2 .001l.13-.074"/><path d="M3.29 7 12 12l8.71-5"/><path d="m7.5 4.27 8.997 5.148"/></svg>`;
+
+	const CHEVRON_DOWN_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="admin-table__toggle-icon"><path d="m6 9 6 6 6-6"/></svg>`;
+
+	function isForbiddenError(error: { message?: string } | null): boolean {
+		return !!error?.message && error.message.includes("ADMIN_FORBIDDEN");
+	}
+
+	function isNotFoundError(error: { message?: string } | null): boolean {
+		return !!error?.message && error.message.includes("ORDER_NOT_FOUND");
+	}
+
+	function hasSignal(
+		error: { message?: string } | null,
+		signal: string,
+	): boolean {
+		return !!error?.message && error.message.includes(signal);
+	}
+
+	interface OrderRow {
+		id: string;
+		order_number: string;
+		created_at: string;
+		order_status: string;
+		customer_full_name: string;
+		customer_email: string;
+		customer_phone: string;
+		delivery_district: string | null;
+		payment_method: string;
+		delivery_method: string;
+		total: number;
+		item_count: number;
+		unit_count: number;
+		has_engraving: boolean;
+		total_count: number;
+		// Columnas nuevas de admin_list_orders_v2 (ver
+		// supabase/admin_list_orders_v2_production.sql). No presentes en
+		// admin_list_orders v1, por eso son opcionales: el listado de
+		// pedidos recientes del Resumen sigue usando v1.
+		first_item_product_name?: string | null;
+		first_item_variant_label?: string | null;
+		first_item_quantity?: number | null;
+		items_extra_count?: number | null;
+	}
+
+	interface MetricsRow {
+		total_orders: number;
+		orders_today: number;
+		orders_by_status: Record<string, number>;
+		confirmed_sales_total: number;
+		confirmed_sales_count: number;
+	}
+
+	interface InventoryRow {
+		variant_id: string;
+		product_id: string;
+		product_title: string;
+		product_slug: string;
+		product_active: boolean;
+		wood_title: string | null;
+		size_title: string | null;
+		dimensions_label: string | null;
+		sku: string;
+		variant_active: boolean;
+		stock_quantity: number;
+		price: number;
+		sale_price: number | null;
+		effective_price: number;
+		stock_status: "available" | "low" | "out";
+		total_count: number;
+	}
+
+	interface OrderDetail {
+		order: Record<string, any>;
+		items: Record<string, any>[];
+		history: Record<string, any>[];
+	}
+
+	// Un dia de la serie de "pedidos activos" (no cancelados) de los
+	// ultimos 7 dias, tal como la devuelve admin_dashboard_summary_v4().
+	interface ActiveOrdersDayRow {
+		date: string;
+		amount: number;
+		orders_count: number;
+	}
+
+	// Un estado del enum order_status con su conteo, tal como lo devuelve
+	// admin_dashboard_summary_v4() en status_counts (arreglo, no objeto:
+	// asi el backend puede ordenarlo y el frontend no depende de que
+	// object key order se preserve).
+	interface StatusCountRow {
+		status: string;
+		count: number;
+	}
+
+	// Forma exacta del jsonb que devuelve admin_dashboard_summary_v4()
+	// (ver supabase/admin_dashboard_summary_v4_production.sql). Una sola
+	// llamada reemplaza, solo para el Resumen, a admin_orders_metrics +
+	// admin_inventory_metrics + admin_dashboard_analytics. Contrato plano
+	// (sin objeto "inventory" anidado) para que un campo faltante o mal
+	// tipado sea facil de detectar. inventory_error viene poblado solo
+	// cuando el catalogo no se pudo leer; en ese caso los inventory_* de
+	// arriba vienen en 0, pero el resto del resumen (pedidos/dinero) sigue
+	// siendo valido.
+	interface DashboardSummaryV4 {
+		active_orders_value: number;
+		active_orders_count: number;
+		confirmed_sales_value: number;
+		confirmed_sales_count: number;
+		orders_today: number;
+		orders_total: number;
+		status_counts: StatusCountRow[];
+		daily_active_orders: ActiveOrdersDayRow[];
+		inventory_total_products: number;
+		inventory_total_variants: number;
+		inventory_total_units: number;
+		inventory_low_stock: number;
+		inventory_out_of_stock: number;
+		inventory_available: number;
+		inventory_error: string | null;
+	}
+
+	interface OrderFilters {
+		search: string;
+		status: string;
+		payment: string;
+		delivery: string;
+		from: string;
+		to: string;
+	}
+
+	interface InventoryFilters {
+		search: string;
+		stock: string;
+		active: string;
+	}
+
+	const initAdminDashboard = () => {
+		const root = document.querySelector<HTMLElement>(
+			"[data-admin-orders]",
+		);
+
+		if (!root || root.dataset.adminReady === "true") return;
+		root.dataset.adminReady = "true";
+
+		const configErrorView = root.querySelector<HTMLElement>(
+			"[data-admin-config-error]",
+		)!;
+		const loginView =
+			root.querySelector<HTMLElement>("[data-admin-login]")!;
+		const forbiddenView = root.querySelector<HTMLElement>(
+			"[data-admin-forbidden]",
+		)!;
+		const shellView = root.querySelector<HTMLElement>(
+			"[data-admin-dashboard]",
+		)!;
+
+		if (!supabase) {
+			configErrorView.hidden = false;
+			return;
+		}
+
+		// ---------- Login ----------
+
+		const loginForm = root.querySelector<HTMLFormElement>(
+			"[data-admin-login-form]",
+		)!;
+		const loginEmailInput =
+			root.querySelector<HTMLInputElement>("#admin-email")!;
+		const loginPasswordInput =
+			root.querySelector<HTMLInputElement>("#admin-password")!;
+		const loginErrorEl = root.querySelector<HTMLElement>(
+			"[data-admin-login-error]",
+		)!;
+		const loginSubmitButton = root.querySelector<HTMLButtonElement>(
+			"[data-admin-login-submit]",
+		)!;
+		const loginSubmitLabel = root.querySelector<HTMLElement>(
+			"[data-admin-login-submit-label]",
+		)!;
+		const loginSpinner = root.querySelector<HTMLElement>(
+			"[data-admin-login-spinner]",
+		)!;
+		const forbiddenBackButton = root.querySelector<HTMLButtonElement>(
+			"[data-admin-forbidden-back]",
+		)!;
+
+		// ---------- Shell: sidebar + topbar ----------
+
+		const sidebar =
+			root.querySelector<HTMLElement>("[data-admin-sidebar]")!;
+		const sidebarBackdrop = root.querySelector<HTMLElement>(
+			"[data-admin-sidebar-backdrop]",
+		)!;
+		const menuToggle = root.querySelector<HTMLButtonElement>(
+			"[data-admin-menu-toggle]",
+		)!;
+		const navLinks = Array.from(
+			root.querySelectorAll<HTMLAnchorElement>("[data-admin-nav]"),
+		);
+		const logoutButton = root.querySelector<HTMLButtonElement>(
+			"[data-admin-logout]",
+		)!;
+		const avatarEl =
+			root.querySelector<HTMLElement>("[data-admin-avatar]")!;
+		const sidebarAvatarEl = root.querySelector<HTMLElement>(
+			"[data-admin-sidebar-avatar]",
+		)!;
+		const sidebarNameEl = root.querySelector<HTMLElement>(
+			"[data-admin-sidebar-name]",
+		)!;
+		const topbarTitleEl = root.querySelector<HTMLElement>(
+			"[data-admin-topbar-title]",
+		)!;
+		const topbarSubtitleEl = root.querySelector<HTMLElement>(
+			"[data-admin-topbar-subtitle]",
+		)!;
+		const updatedEl = root.querySelector<HTMLElement>(
+			"[data-admin-updated]",
+		)!;
+		const refreshButton = root.querySelector<HTMLButtonElement>(
+			"[data-admin-refresh]",
+		)!;
+		const refreshIcon = root.querySelector<HTMLElement>(
+			"[data-admin-refresh-icon]",
+		)!;
+
+		const viewSections = new Map<ViewName, HTMLElement>(
+			(
+				Array.from(
+					root.querySelectorAll<HTMLElement>("[data-admin-panel]"),
+				) as HTMLElement[]
+			).map((el) => [el.dataset.adminPanel as ViewName, el]),
+		);
+
+		// ---------- Resumen ----------
+
+		const resumenMetricsEl = root.querySelector<HTMLElement>(
+			"[data-admin-resumen-metrics]",
+		)!;
+		const resumenChartsEl = root.querySelector<HTMLElement>(
+			"[data-admin-resumen-charts]",
+		)!;
+		const resumenErrorEl = root.querySelector<HTMLElement>(
+			"[data-admin-resumen-error]",
+		)!;
+		const recentOrdersEl = root.querySelector<HTMLElement>(
+			"[data-admin-recent-orders]",
+		)!;
+		const lowStockEl = root.querySelector<HTMLElement>(
+			"[data-admin-low-stock]",
+		)!;
+		const gotoButtons = Array.from(
+			root.querySelectorAll<HTMLButtonElement>("[data-admin-goto]"),
+		);
+
+		// ---------- Pedidos ----------
+
+		const metricsEl =
+			root.querySelector<HTMLElement>("[data-admin-metrics]")!;
+
+		const filtersToggle = root.querySelector<HTMLButtonElement>(
+			"[data-admin-filters-toggle]",
+		)!;
+		const filtersPanel = root.querySelector<HTMLElement>(
+			"[data-admin-filters-panel]",
+		)!;
+		const filtersClearButton = root.querySelector<HTMLButtonElement>(
+			"[data-admin-filters-clear]",
+		)!;
+		const filterInputs = Array.from(
+			root.querySelectorAll<HTMLInputElement | HTMLSelectElement>(
+				"[data-admin-filter]",
+			),
+		);
+
+		const tableWrap = root.querySelector<HTMLElement>(
+			"[data-admin-table-wrap]",
+		)!;
+		const tableBody = root.querySelector<HTMLTableSectionElement>(
+			"[data-admin-table-body]",
+		)!;
+		const emptyEl =
+			root.querySelector<HTMLElement>("[data-admin-empty]")!;
+		const errorEl =
+			root.querySelector<HTMLElement>("[data-admin-error]")!;
+
+		const prevButton = root.querySelector<HTMLButtonElement>(
+			"[data-admin-prev]",
+		)!;
+		const nextButton = root.querySelector<HTMLButtonElement>(
+			"[data-admin-next]",
+		)!;
+		const pageInfoEl = root.querySelector<HTMLElement>(
+			"[data-admin-page-info]",
+		)!;
+
+		// ---------- Inventario ----------
+
+		const invFilterInputs = Array.from(
+			root.querySelectorAll<HTMLInputElement | HTMLSelectElement>(
+				"[data-admin-inv-filter]",
+			),
+		);
+		const invClearButton = root.querySelector<HTMLButtonElement>(
+			"[data-admin-inv-clear]",
+		)!;
+		const invTableWrap = root.querySelector<HTMLElement>(
+			"[data-admin-inv-table-wrap]",
+		)!;
+		const invTableBody = root.querySelector<HTMLTableSectionElement>(
+			"[data-admin-inv-table-body]",
+		)!;
+		const invEmptyEl = root.querySelector<HTMLElement>(
+			"[data-admin-inv-empty]",
+		)!;
+		const invErrorEl = root.querySelector<HTMLElement>(
+			"[data-admin-inv-error]",
+		)!;
+		const invPrevButton = root.querySelector<HTMLButtonElement>(
+			"[data-admin-inv-prev]",
+		)!;
+		const invNextButton = root.querySelector<HTMLButtonElement>(
+			"[data-admin-inv-next]",
+		)!;
+		const invPageInfoEl = root.querySelector<HTMLElement>(
+			"[data-admin-inv-page-info]",
+		)!;
+
+		// ---------- Drawer / etiqueta ----------
+
+		const drawerBackdrop = root.querySelector<HTMLElement>(
+			"[data-admin-drawer-backdrop]",
+		)!;
+		const drawer =
+			root.querySelector<HTMLElement>("[data-admin-drawer]")!;
+		const drawerTitle = root.querySelector<HTMLElement>(
+			"[data-admin-drawer-title]",
+		)!;
+		const drawerSubtitle = root.querySelector<HTMLElement>(
+			"[data-admin-drawer-subtitle]",
+		)!;
+		const drawerChips = root.querySelector<HTMLElement>(
+			"[data-admin-drawer-chips]",
+		)!;
+		const drawerBody = root.querySelector<HTMLElement>(
+			"[data-admin-drawer-body]",
+		)!;
+		const drawerCloseButton = root.querySelector<HTMLButtonElement>(
+			"[data-admin-drawer-close]",
+		)!;
+
+		const labelBackdrop = root.querySelector<HTMLElement>(
+			"[data-admin-label-backdrop]",
+		)!;
+		const labelModal = root.querySelector<HTMLElement>(
+			"[data-admin-label-modal]",
+		)!;
+		const labelSheet = root.querySelector<HTMLElement>(
+			"[data-admin-label-sheet]",
+		)!;
+		const labelFeedbackEl = root.querySelector<HTMLElement>(
+			"[data-admin-label-feedback]",
+		)!;
+		const labelCopyButton = root.querySelector<HTMLButtonElement>(
+			"[data-admin-label-copy]",
+		)!;
+		const labelPrintButton = root.querySelector<HTMLButtonElement>(
+			"[data-admin-label-print]",
+		)!;
+		const labelCloseButtons = Array.from(
+			root.querySelectorAll<HTMLButtonElement>("[data-admin-label-close]"),
+		);
+
+		const DRAWER_OVERLAY_ID = "admin-order-drawer";
+		const SIDEBAR_OVERLAY_ID = "admin-sidebar-drawer";
+
+		let currentPage = 0;
+		let totalCount = 0;
+		let isLoadingList = false;
+		let isLoadingMetrics = false;
+		let searchDebounceTimer: number | undefined;
+
+		let invCurrentPage = 0;
+		let invTotalCount = 0;
+		let isLoadingInventory = false;
+		let invSearchDebounceTimer: number | undefined;
+
+		let isLoadingResumen = false;
+
+		let autoRefreshTimer: number | undefined;
+		let authSubscription: { unsubscribe: () => void } | null = null;
+
+		// Pedido abierto en el drawer. `currentOrderStatus` es el estado
+		// que el administrador tiene delante: es exactamente lo que se
+		// manda como p_expected_status, para que el RPC detecte si otra
+		// pestana lo cambio mientras tanto.
+		let currentOrderId: string | null = null;
+		let currentOrderStatus: string | null = null;
+		let currentOrderDetail: OrderDetail | null = null;
+		let pendingStatusConfirm: string | null = null;
+		let isSavingStatus = false;
+		let labelTrigger: HTMLElement | null = null;
+		let labelKeydownHandler: ((event: KeyboardEvent) => void) | null =
+			null;
+		let labelFeedbackTimer: number | undefined;
+
+		const filters: OrderFilters = {
+			search: "",
+			status: "",
+			payment: "",
+			delivery: "",
+			from: "",
+			to: "",
+		};
+
+		const invFilters: InventoryFilters = {
+			search: "",
+			stock: "",
+			active: "",
+		};
+
+		// ---------- Estado de vista activa ----------
+
+		let activeView: ViewName = "resumen";
+		let forceNextLoad = false;
+		const viewLoadedAt: Record<ViewName, number> = {
+			resumen: 0,
+			pedidos: 0,
+			inventario: 0,
+		};
+		let lastOrdersMetrics: MetricsRow | null = null;
+		// Solo para el Resumen (ver loadResumen): payload unico de
+		// admin_dashboard_summary_v4(). No se comparte con la pestana
+		// Pedidos, que sigue usando lastOrdersMetrics/admin_orders_metrics.
+		let lastDashboardSummary: DashboardSummaryV4 | null = null;
+
+		function showOnly(view: HTMLElement) {
+			[loginView, forbiddenView, shellView].forEach((el) => {
+				el.hidden = el !== view;
+			});
+		}
+
+		function setLoginLoading(loading: boolean) {
+			loginSubmitButton.disabled = loading;
+			loginSpinner.hidden = !loading;
+			loginSubmitLabel.textContent = loading
+				? "Iniciando sesión…"
+				: "Iniciar sesión";
+		}
+
+		function showLoginError(message: string) {
+			loginErrorEl.textContent = message;
+			loginErrorEl.hidden = false;
+		}
+
+		function clearLoginError() {
+			loginErrorEl.hidden = true;
+			loginErrorEl.textContent = "";
+		}
+
+		function stopAutoRefresh() {
+			if (autoRefreshTimer !== undefined) {
+				window.clearInterval(autoRefreshTimer);
+				autoRefreshTimer = undefined;
+			}
+		}
+
+		function startAutoRefresh() {
+			stopAutoRefresh();
+			autoRefreshTimer = window.setInterval(() => {
+				if (document.visibilityState !== "visible") return;
+				if (isLoadingList || isLoadingMetrics || isLoadingInventory || isLoadingResumen)
+					return;
+				void ensureView(activeView, true);
+			}, AUTO_REFRESH_MS);
+		}
+
+		function resetDashboardState() {
+			currentPage = 0;
+			totalCount = 0;
+			filters.search = "";
+			filters.status = "";
+			filters.payment = "";
+			filters.delivery = "";
+			filters.from = "";
+			filters.to = "";
+			filterInputs.forEach((input) => {
+				input.value = "";
+			});
+			tableBody.innerHTML = "";
+			metricsEl.innerHTML = "";
+			emptyEl.hidden = true;
+			errorEl.hidden = true;
+			expandedOrderRowId = null;
+
+			invCurrentPage = 0;
+			invTotalCount = 0;
+			invFilters.search = "";
+			invFilters.stock = "";
+			invFilters.active = "";
+			invFilterInputs.forEach((input) => {
+				input.value = "";
+			});
+			invTableBody.innerHTML = "";
+			invEmptyEl.hidden = true;
+			invErrorEl.hidden = true;
+
+			resumenMetricsEl.innerHTML = "";
+			resumenChartsEl.innerHTML = "";
+			recentOrdersEl.innerHTML = "";
+			lowStockEl.innerHTML = "";
+			resumenErrorEl.hidden = true;
+			lastOrdersMetrics = null;
+			lastDashboardSummary = null;
+
+			viewLoadedAt.resumen = 0;
+			viewLoadedAt.pedidos = 0;
+			viewLoadedAt.inventario = 0;
+
+			closeLabelModal();
+			closeOverlay(DRAWER_OVERLAY_ID);
+			closeSidebarDrawer();
+			drawer.hidden = true;
+			drawerBackdrop.hidden = true;
+			currentOrderId = null;
+			currentOrderStatus = null;
+			currentOrderDetail = null;
+			pendingStatusConfirm = null;
+			drawerBody.innerHTML = "";
+			drawerSubtitle.textContent = "";
+			drawerChips.innerHTML = "";
+		}
+
+		// ---------- Nombre y avatar del usuario ----------
+
+		function displayNameFromEmail(email: string): string {
+			const local = email.split("@")[0] || "";
+			const cleaned = local.replace(/[._-]+/g, " ").trim();
+			if (!cleaned) return "Administrador";
+			return cleaned
+				.split(" ")
+				.filter(Boolean)
+				.map((part) => part[0]!.toUpperCase() + part.slice(1))
+				.join(" ");
+		}
+
+		function resolveDisplayName(session: Session): string {
+			const metadata = session.user.user_metadata ?? {};
+			const fullName = String(metadata.full_name ?? "").trim();
+			if (fullName) return fullName;
+
+			const name = String(metadata.name ?? "").trim();
+			if (name) return name;
+
+			const email = session.user.email;
+			if (email) return displayNameFromEmail(email);
+
+			return "Administrador";
+		}
+
+		function initialsFrom(name: string): string {
+			const parts = name.split(/\s+/).filter(Boolean);
+			if (parts.length === 0) return "A";
+			if (parts.length === 1) return parts[0]!.slice(0, 2).toUpperCase();
+			return (parts[0]![0]! + parts[1]![0]!).toUpperCase();
+		}
+
+		// Texto por vista de la cabecera: titulo corto + subtitulo. El
+		// subtitulo de "resumen" incluye el nombre del administrador
+		// (mismo saludo de siempre); el resto describe la vista activa en
+		// vez de repetir "resumen de TAQTO" en todas partes.
+		const VIEW_TOPBAR: Record<
+			ViewName,
+			{ title: string; subtitle: (name: string) => string }
+		> = {
+			resumen: {
+				title: "Resumen",
+				subtitle: (name) =>
+					`Bienvenido, <strong>${escapeHtml(name)}</strong>. Aquí tienes el resumen de TAQTO.`,
+			},
+			pedidos: {
+				title: "Pedidos",
+				subtitle: () => "Gestiona y revisa los pedidos de TAQTO.",
+			},
+			inventario: {
+				title: "Inventario",
+				subtitle: () =>
+					"Consulta el estado del inventario y el stock de TAQTO.",
+			},
+		};
+
+		let currentDisplayName = "Administrador";
+
+		function updateTopbarContext(view: ViewName) {
+			const cfg = VIEW_TOPBAR[view];
+			topbarTitleEl.textContent = cfg.title;
+			topbarSubtitleEl.innerHTML = cfg.subtitle(currentDisplayName);
+		}
+
+		function updateWelcome(session: Session) {
+			// El nombre se usa unicamente para presentacion (saludo y
+			// avatar): la autorizacion real siempre pasa por is_admin() en
+			// el servidor, nunca por este metadata del cliente.
+			const name = resolveDisplayName(session);
+			currentDisplayName = name;
+			const initials = initialsFrom(name);
+			avatarEl.textContent = initials;
+			avatarEl.title = session.user.email ?? "";
+			sidebarAvatarEl.textContent = initials;
+			sidebarNameEl.textContent = name;
+			sidebarNameEl.title = session.user.email ?? "";
+			updateTopbarContext(activeView);
+		}
+
+		function updateLastRefreshed() {
+			updatedEl.textContent = `Actualizado: ${updatedAtFormatter.format(new Date())}`;
+		}
+
+		async function forceSignOutForbidden() {
+			stopAutoRefresh();
+			await supabase!.auth.signOut();
+			showOnly(forbiddenView);
+		}
+
+		// ---------- Navegación entre vistas ----------
+
+		function setNavActive(name: ViewName) {
+			navLinks.forEach((link) => {
+				const match = link.dataset.adminNav === name;
+				link.classList.toggle("is-active", match);
+				if (match) {
+					link.setAttribute("aria-current", "page");
+				} else {
+					link.removeAttribute("aria-current");
+				}
+			});
+		}
+
+		function activateView(name: ViewName) {
+			activeView = name;
+			viewSections.forEach((el, key) => {
+				el.hidden = key !== name;
+			});
+			setNavActive(name);
+			updateTopbarContext(name);
+			closeSidebarDrawer();
+
+			const force = forceNextLoad;
+			forceNextLoad = false;
+			void ensureView(name, force);
+		}
+
+		function handleHashChange() {
+			const raw = location.hash.replace(/^#/, "");
+			const name: ViewName = VALID_VIEWS.has(raw)
+				? (raw as ViewName)
+				: "resumen";
+			if (name !== raw) {
+				history.replaceState(null, "", `#${name}`);
+			}
+			activateView(name);
+		}
+
+		/*
+		 * Actualiza el hash sin depender del evento nativo `hashchange`:
+		 * el <ClientRouter/> de Astro intercepta el click de los enlaces
+		 * internos del sidebar (aunque sean solo de hash) y navega via
+		 * History API, que NO dispara `hashchange`. `history.pushState`
+		 * deja la URL correcta (recargar conserva la vista) y esta misma
+		 * funcion invoca `activateView` directamente, sin esperar un
+		 * evento que en ese camino nunca llega. `hashchange` se sigue
+		 * escuchando aparte para atras/adelante del navegador y URLs
+		 * escritas a mano.
+		 */
+		function goToView(name: ViewName) {
+			const target = `#${name}`;
+			if (location.hash !== target) {
+				history.pushState(null, "", target);
+			}
+			activateView(name);
+		}
+
+		/**
+		 * Navega a una vista aplicando (opcionalmente) un ajuste de
+		 * filtros antes de cargarla, para las tarjetas de metricas que
+		 * "navegan de verdad" en vez de ser decorativas.
+		 */
+		function navigateTo(name: ViewName, setup?: () => void) {
+			if (setup) setup();
+			forceNextLoad = true;
+			goToView(name);
+		}
+
+		async function ensureView(name: ViewName, force: boolean) {
+			const fresh =
+				!force && Date.now() - viewLoadedAt[name] < VIEW_FRESH_MS;
+			if (fresh) return;
+
+			if (name === "resumen") await loadResumen();
+			else if (name === "pedidos") await loadPedidosView();
+			else await loadInventoryView();
+
+			updateLastRefreshed();
+		}
+
+		// ---------- Sidebar móvil ----------
+
+		function openSidebarDrawer() {
+			sidebar.classList.add("is-open");
+			sidebarBackdrop.hidden = false;
+			menuToggle.setAttribute("aria-expanded", "true");
+			openOverlay({
+				id: SIDEBAR_OVERLAY_ID,
+				container: sidebar,
+				trigger: menuToggle,
+				close: closeSidebarDrawer,
+			});
+		}
+
+		function closeSidebarDrawer() {
+			if (!sidebar.classList.contains("is-open")) return;
+			sidebar.classList.remove("is-open");
+			sidebarBackdrop.hidden = true;
+			menuToggle.setAttribute("aria-expanded", "false");
+			closeOverlay(SIDEBAR_OVERLAY_ID);
+		}
+
+		menuToggle.addEventListener("click", () => {
+			if (sidebar.classList.contains("is-open")) {
+				closeSidebarDrawer();
+			} else {
+				openSidebarDrawer();
+			}
+		});
+
+		sidebarBackdrop.addEventListener("click", closeSidebarDrawer);
+
+		/*
+		 * `href="#resumen"` etc. se conserva en el markup para que el
+		 * enlace siga siendo un enlace de verdad (clic central/nuevo
+		 * separador, sin JS). Pero un clic normal se resuelve aqui
+		 * mismo con `goToView` en vez de dejarlo en manos de la
+		 * navegacion nativa: el <ClientRouter/> de Astro intercepta el
+		 * click y navega via History API, que no dispara `hashchange`.
+		 */
+		navLinks.forEach((link) => {
+			link.addEventListener("click", (event) => {
+				if (
+					event.defaultPrevented ||
+					event.button !== 0 ||
+					event.metaKey ||
+					event.ctrlKey ||
+					event.shiftKey ||
+					event.altKey
+				) {
+					return;
+				}
+				event.preventDefault();
+				event.stopPropagation();
+				const name = link.dataset.adminNav as ViewName;
+				goToView(name);
+			});
+		});
+
+		gotoButtons.forEach((button) => {
+			button.addEventListener("click", () => {
+				const target = button.dataset.adminGoto as ViewName;
+				navigateTo(target);
+			});
+		});
+
+		// =====================================================
+		// ---------- Resumen ----------
+		// =====================================================
+
+		// numeric de Postgres puede llegar como string por el driver: se
+		// fuerza siempre a Number antes de formatear/mostrar. Un campo
+		// valido pero vacio (null/undefined/NaN) se muestra como 0, nunca
+		// como guion: el guion queda reservado para cuando el RPC completo
+		// fallo (summary === null).
+		function asNumber(value: unknown): number {
+			const num = Number(value);
+			return Number.isFinite(num) ? num : 0;
+		}
+
+		/*
+		 * Cuatro tarjetas fijas: valor de pedidos activos, ventas
+		 * confirmadas, total de pedidos y stock bajo. "Activos" y
+		 * "confirmadas" son cifras DISTINTAS a proposito (ver
+		 * admin_dashboard_summary_v4_production.sql): activos suma todo
+		 * pedido no cancelado (incluye "Recibido"), confirmadas solo
+		 * pagos ya verificados/entregados o con evidencia real en
+		 * order_payments. No se presenta un pedido apenas recibido como
+		 * dinero ya cobrado.
+		 */
+		function renderResumenMetrics(summary: DashboardSummaryV4 | null) {
+			const stockHint = !summary
+				? "—"
+				: summary.inventory_error
+					? "No se pudo consultar el inventario"
+					: `${asNumber(summary.inventory_out_of_stock)} sin stock`;
+
+			resumenMetricsEl.innerHTML = `
+				<div class="admin-metric-cards">
+					<button class="admin-metric-card admin-glass" type="button" data-admin-card="active-value">
+						<span class="admin-metric-card__icon" aria-hidden="true">${CLIPBOARD_ICON}</span>
+						<p class="admin-metric-card__label">Valor de pedidos activos</p>
+						<p class="admin-metric-card__value">${summary ? escapeHtml(formatMoney(asNumber(summary.active_orders_value))) : "—"}</p>
+						<p class="admin-metric-card__hint">Incluye todos los pedidos no cancelados</p>
+					</button>
+					<button class="admin-metric-card admin-glass" type="button" data-admin-card="sales-confirmed">
+						<span class="admin-metric-card__icon" aria-hidden="true">${WALLET_ICON}</span>
+						<p class="admin-metric-card__label">Ventas confirmadas</p>
+						<p class="admin-metric-card__value">${summary ? escapeHtml(formatMoney(asNumber(summary.confirmed_sales_value))) : "—"}</p>
+						<p class="admin-metric-card__hint">${summary ? escapeHtml(asNumber(summary.confirmed_sales_count)) : "—"} pedido(s) confirmado(s)</p>
+					</button>
+					<button class="admin-metric-card admin-glass" type="button" data-admin-card="orders-total">
+						<span class="admin-metric-card__icon" aria-hidden="true">${CALENDAR_ICON}</span>
+						<p class="admin-metric-card__label">Total de pedidos</p>
+						<p class="admin-metric-card__value">${summary ? escapeHtml(asNumber(summary.orders_total)) : "—"}</p>
+						<p class="admin-metric-card__hint">${summary ? escapeHtml(asNumber(summary.orders_today)) : "—"} hoy</p>
+					</button>
+					<button class="admin-metric-card admin-glass admin-metric-card--warn" type="button" data-admin-card="stock-low">
+						<span class="admin-metric-card__icon" aria-hidden="true">${PACKAGE_X_ICON}</span>
+						<p class="admin-metric-card__label">Stock bajo</p>
+						<p class="admin-metric-card__value">${summary ? escapeHtml(asNumber(summary.inventory_low_stock)) : "—"}</p>
+						<p class="admin-metric-card__hint">${escapeHtml(stockHint)}</p>
+					</button>
+				</div>
+			`;
+		}
+
+		resumenMetricsEl.addEventListener("click", (event) => {
+			const button = (event.target as HTMLElement | null)?.closest<HTMLButtonElement>(
+				"[data-admin-card]",
+			);
+			if (!button) return;
+
+			switch (button.dataset.adminCard) {
+				case "active-value":
+				case "orders-total":
+					navigateTo("pedidos", clearOrderFilters);
+					break;
+				case "sales-confirmed":
+					// El listado de pedidos (admin_list_orders / v2) no
+					// expone un filtro de "confirmado" (solo un
+					// order_status exacto a la vez), asi que no se puede
+					// filtrar a varios estados del flujo a la vez: se
+					// navega a Pedidos sin filtro exacto y se explica en
+					// el resumen (ver hint de la tarjeta).
+					navigateTo("pedidos", clearOrderFilters);
+					break;
+				case "stock-low":
+					navigateTo("inventario", () => {
+						clearInventoryFilters();
+						invFilters.stock = "low";
+						syncInventoryFilterInputs();
+					});
+					break;
+			}
+		});
+
+		function renderRecentOrders(rows: OrderRow[]) {
+			if (rows.length === 0) {
+				recentOrdersEl.innerHTML =
+					'<p class="admin-panel__empty">Todavía no hay pedidos.</p>';
+				return;
+			}
+
+			recentOrdersEl.innerHTML = `
+				<ul class="admin-mini-list">
+					${rows
+						.map((row) => {
+							const statusLabelText =
+								ORDER_STATUS_LABELS[row.order_status] ??
+								row.order_status;
+							return `
+								<li class="admin-mini-row">
+									<div class="admin-mini-row__main">
+										<p class="admin-mini-row__title">${escapeHtml(row.order_number)}</p>
+										<p class="admin-mini-row__meta">${escapeHtml(row.customer_full_name)} · ${escapeHtml(formatDate(row.created_at))}</p>
+									</div>
+									<div class="admin-mini-row__side">
+										<span class="admin-badge" data-status="${escapeHtml(row.order_status)}">${escapeHtml(statusLabelText)}</span>
+										<span class="admin-mini-row__total">${escapeHtml(formatMoney(row.total))}</span>
+										<button class="btn btn--secondary admin-view-button" type="button" data-admin-view data-order-id="${escapeHtml(row.id)}">Ver</button>
+									</div>
+								</li>
+							`;
+						})
+						.join("")}
+				</ul>
+			`;
+
+			recentOrdersEl
+				.querySelectorAll<HTMLButtonElement>("[data-admin-view]")
+				.forEach((button) => {
+					button.addEventListener("click", () => {
+						const orderId = button.dataset.orderId;
+						if (orderId) void openOrderDetail(orderId, button);
+					});
+				});
+		}
+
+		function renderLowStock(rows: InventoryRow[]) {
+			const attention = rows
+				.filter((row) => row.stock_status !== "available")
+				.slice(0, 5);
+
+			if (attention.length === 0) {
+				lowStockEl.innerHTML =
+					'<p class="admin-panel__empty">Todo el inventario tiene stock disponible</p>';
+				return;
+			}
+
+			lowStockEl.innerHTML = `
+				<ul class="admin-mini-list">
+					${attention
+						.map((row) => {
+							const variant = [row.wood_title, row.size_title]
+								.filter(Boolean)
+								.map(escapeHtml)
+								.join(" · ");
+							return `
+								<li class="admin-mini-row">
+									<div class="admin-mini-row__main">
+										<p class="admin-mini-row__title">${escapeHtml(row.product_title)}</p>
+										<p class="admin-mini-row__meta">${variant ? variant + " · " : ""}SKU ${escapeHtml(row.sku)}</p>
+									</div>
+									<div class="admin-mini-row__side">
+										<span class="admin-badge" data-stock-status="${escapeHtml(row.stock_status)}">${escapeHtml(STOCK_STATUS_LABELS[row.stock_status] ?? row.stock_status)}</span>
+										<span class="admin-mini-row__total">${escapeHtml(row.stock_quantity)} u.</span>
+									</div>
+								</li>
+							`;
+						})
+						.join("")}
+				</ul>
+			`;
+		}
+
+		/*
+		 * Grafico de barras (HTML/CSS puro, sin canvas ni libreria) del
+		 * valor de pedidos ACTIVOS (no cancelados, incluye "received") de
+		 * los ultimos 7 dias. `daily_active_orders` ya viene ordenado
+		 * ascendente y sin huecos (RPC admin_dashboard_summary_v4).
+		 * Cada barra se escala contra el maximo real de la serie; si todos
+		 * los dias estan en cero se muestra la barra "vacia" igual, con su
+		 * valor de S/ 0.00 como texto (nunca solo decorativo).
+		 */
+		function renderSalesChart(days: ActiveOrdersDayRow[]): string {
+			// Las 7 fechas siempre vienen del backend (generate_series sin
+			// huecos): un array vacio solo pasa si la llamada fallo, no si
+			// los 7 dias estan en cero. Aun con todo en cero se dibujan
+			// las 7 barras (altura minima) para no dejar un panel vacio.
+			if (!days.length) {
+				return '<p class="admin-panel__empty">Sin datos de los últimos 7 días.</p>';
+			}
+
+			const max = Math.max(1, ...days.map((d) => Number(d.amount) || 0));
+			const allZero = days.every((d) => (Number(d.amount) || 0) === 0);
+
+			const cols = days
+				.map((d) => {
+					const value = Number(d.amount) || 0;
+					const count = Number(d.orders_count) || 0;
+					const pct = Math.max(2, Math.round((value / max) * 100));
+					const title = `${formatMoney(value)} · ${count} pedido(s)`;
+					return `
+						<div class="admin-bar-chart__col" title="${escapeHtml(title)}">
+							<span class="admin-bar-chart__value">${escapeHtml(formatMoney(value))}</span>
+							<div class="admin-bar-chart__track">
+								<div class="admin-bar-chart__bar" style="height:${pct}%"></div>
+							</div>
+							<span class="admin-bar-chart__label">${escapeHtml(dayLabel(d.date))}</span>
+						</div>
+					`;
+				})
+				.join("");
+
+			return `
+				<div class="admin-bar-chart" role="img" aria-label="Valor de pedidos activos por día, últimos 7 días">
+					${cols}
+				</div>
+				${allZero ? '<p class="admin-panel__empty admin-panel__empty--compact">Sin pedidos en los últimos 7 días.</p>' : ""}
+			`;
+		}
+
+		/*
+		 * Barras horizontales (HTML/CSS) de pedidos por estado, en el
+		 * orden real del flujo (el mismo orden de declaracion de
+		 * ORDER_STATUS_LABELS), no alfabetico. `breakdown` viene completo
+		 * (11 claves, con 0 en las que no tienen pedidos) desde
+		 * admin_orders_metrics().
+		 */
+		function renderStatusHBars(breakdown: Record<string, number> | null): string {
+			if (!breakdown) {
+				return '<p class="admin-panel__empty">Sin datos de pedidos por estado.</p>';
+			}
+
+			const entries = Object.entries(ORDER_STATUS_LABELS).map(
+				([status, label]) => [status, label, breakdown[status] ?? 0] as const,
+			);
+			const max = Math.max(1, ...entries.map(([, , count]) => count));
+
+			const rows = entries
+				.map(([status, label, count]) => {
+					const pct = count > 0 ? Math.max(2, Math.round((count / max) * 100)) : 0;
+					return `
+						<li class="admin-hbar-row">
+							<span class="admin-hbar-row__label">${escapeHtml(label)}</span>
+							<div class="admin-hbar-row__track">
+								<div class="admin-hbar-row__fill" data-status="${escapeHtml(status)}" style="width:${pct}%"></div>
+							</div>
+							<strong class="admin-hbar-row__value">${escapeHtml(count)}</strong>
+						</li>
+					`;
+				})
+				.join("");
+
+			return `<ul class="admin-hbar-list">${rows}</ul>`;
+		}
+
+		// status_counts llega como arreglo [{status,count}] desde
+		// admin_dashboard_summary_v4(): renderStatusHBars sigue esperando
+		// un Record por estado (mas simple de indexar contra
+		// ORDER_STATUS_LABELS), asi que se convierte aqui una sola vez.
+		function statusCountsToRecord(
+			rows: StatusCountRow[] | null | undefined,
+		): Record<string, number> | null {
+			if (!rows) return null;
+			const record: Record<string, number> = {};
+			for (const row of rows) {
+				record[row.status] = asNumber(row.count);
+			}
+			return record;
+		}
+
+		function renderResumenCharts(summary: DashboardSummaryV4 | null) {
+			resumenChartsEl.innerHTML = `
+				<section class="admin-panel admin-glass admin-panel--chart-7d" aria-labelledby="admin-sales-chart-title">
+					<div class="admin-panel__head">
+						<h3 id="admin-sales-chart-title">Valor de pedidos activos — últimos 7 días</h3>
+					</div>
+					${renderSalesChart(summary?.daily_active_orders ?? [])}
+				</section>
+				<section class="admin-panel admin-glass admin-panel--chart-status" aria-labelledby="admin-status-chart-title">
+					<div class="admin-panel__head">
+						<h3 id="admin-status-chart-title">Pedidos por estado</h3>
+					</div>
+					${renderStatusHBars(statusCountsToRecord(summary?.status_counts))}
+				</section>
+			`;
+		}
+
+		/*
+		 * admin_dashboard_summary_v4 devuelve jsonb (no SETOF/TABLE), asi
+		 * que supabase-js normalmente ya entrega `data` como el objeto
+		 * directamente. Se normaliza igual por si el driver alguna vez lo
+		 * envuelve en un arreglo de una fila, y se valida que el contenido
+		 * tenga forma de resumen antes de darlo por bueno: un objeto vacio
+		 * o sin las claves esperadas se trata como fallo, no como "0 en
+		 * todo".
+		 */
+		function normalizeSummary(raw: unknown): DashboardSummaryV4 | null {
+			const candidate = Array.isArray(raw) ? raw[0] : raw;
+			if (!candidate || typeof candidate !== "object") return null;
+			if (!("active_orders_value" in candidate)) return null;
+			return candidate as DashboardSummaryV4;
+		}
+
+		/*
+		 * Una sola llamada (admin_dashboard_summary_v4) trae dinero,
+		 * pedidos, 7 dias e inventario juntos: si falla, es el unico
+		 * fallo "critico" que amerita el aviso general del Resumen. Los
+		 * otros dos RPC (recientes / stock critico) ya tienen su propio
+		 * mensaje de reemplazo en su propia tarjeta y no deben apagar
+		 * cifras que si cargaron.
+		 */
+		async function loadResumen() {
+			if (isLoadingResumen) return;
+			isLoadingResumen = true;
+			resumenErrorEl.hidden = true;
+
+			try {
+				const [summaryRes, recentRes, lowStockRes] =
+					await Promise.allSettled([
+						supabase!.rpc("admin_dashboard_summary_v4"),
+						supabase!.rpc("admin_list_orders", {
+							p_search: null,
+							p_status: null,
+							p_payment_method: null,
+							p_delivery_method: null,
+							p_date_from: null,
+							p_date_to: null,
+							p_limit: 5,
+							p_offset: 0,
+						}),
+						supabase!.rpc("admin_list_inventory", {
+							p_search: null,
+							p_stock_filter: null,
+							p_active_only: true,
+							p_low_stock_threshold: LOW_STOCK_THRESHOLD,
+							p_limit: 8,
+							p_offset: 0,
+						}),
+					]);
+
+				for (const result of [summaryRes, recentRes, lowStockRes]) {
+					if (
+						result.status === "fulfilled" &&
+						result.value.error &&
+						isForbiddenError(result.value.error)
+					) {
+						await forceSignOutForbidden();
+						return;
+					}
+				}
+
+				const normalizedSummary =
+					summaryRes.status === "fulfilled" && !summaryRes.value.error
+						? normalizeSummary(summaryRes.value.data)
+						: null;
+				const summaryFailed =
+					summaryRes.status === "rejected" ||
+					!!summaryRes.value.error ||
+					!normalizedSummary;
+
+				if (!summaryFailed) {
+					lastDashboardSummary = normalizedSummary;
+				}
+
+				renderResumenMetrics(lastDashboardSummary);
+				renderResumenCharts(lastDashboardSummary);
+
+				if (recentRes.status === "fulfilled" && !recentRes.value.error) {
+					renderRecentOrders((recentRes.value.data ?? []) as OrderRow[]);
+				} else {
+					recentOrdersEl.innerHTML =
+						'<p class="admin-panel__empty">No se pudieron cargar los pedidos recientes.</p>';
+				}
+
+				if (
+					lowStockRes.status === "fulfilled" &&
+					!lowStockRes.value.error
+				) {
+					renderLowStock(
+						(lowStockRes.value.data ?? []) as InventoryRow[],
+					);
+				} else {
+					lowStockEl.innerHTML =
+						'<p class="admin-panel__empty">No se pudo consultar el inventario.</p>';
+				}
+
+				// Solo el fallo del resumen principal (dinero/pedidos/7
+				// dias/inventario en una sola cifra) apaga las tarjetas a
+				// "—" y amerita el aviso general: los otros dos paneles ya
+				// muestran su propio mensaje sin tocar las tarjetas.
+				if (summaryFailed) {
+					resumenErrorEl.textContent =
+						"No se pudieron cargar las métricas del resumen. Intenta actualizar de nuevo.";
+					resumenErrorEl.hidden = false;
+				}
+
+				viewLoadedAt.resumen = Date.now();
+			} catch {
+				resumenErrorEl.textContent =
+					"No se pudo cargar el resumen. Intenta de nuevo.";
+				resumenErrorEl.hidden = false;
+			} finally {
+				isLoadingResumen = false;
+			}
+		}
+
+		// =====================================================
+		// ---------- Pedidos ----------
+		// =====================================================
+
+		function clearOrderFilters() {
+			filters.search = "";
+			filters.status = "";
+			filters.payment = "";
+			filters.delivery = "";
+			filters.from = "";
+			filters.to = "";
+			currentPage = 0;
+		}
+
+		function syncOrderFilterInputs() {
+			filterInputs.forEach((input) => {
+				const key = input.dataset.adminFilter as keyof OrderFilters;
+				input.value = filters[key] ?? "";
+			});
+		}
+
+		function renderStatusBreakdown(
+			breakdown: Record<string, number> | null,
+		): string {
+			if (!breakdown) return "";
+
+			const chips = Object.entries(ORDER_STATUS_LABELS)
+				.map(([status, label]) => {
+					const count = breakdown[status] ?? 0;
+					return `<li class="admin-status-chip" data-status="${escapeHtml(status)}"><span>${escapeHtml(label)}</span><strong>${escapeHtml(count)}</strong></li>`;
+				})
+				.join("");
+
+			return `<ul class="admin-status-grid">${chips}</ul>`;
+		}
+
+		function renderMetrics(row: MetricsRow | undefined) {
+			if (!row) {
+				metricsEl.innerHTML = "";
+				return;
+			}
+
+			metricsEl.innerHTML = `
+				<div class="admin-metric-cards">
+					<div class="admin-metric-card">
+						<p class="admin-metric-card__label">Total de pedidos</p>
+						<p class="admin-metric-card__value">${escapeHtml(row.total_orders)}</p>
+					</div>
+					<div class="admin-metric-card">
+						<p class="admin-metric-card__label">Pedidos de hoy</p>
+						<p class="admin-metric-card__value">${escapeHtml(row.orders_today)}</p>
+					</div>
+					<div class="admin-metric-card">
+						<p class="admin-metric-card__label">Ventas confirmadas</p>
+						<p class="admin-metric-card__value">${escapeHtml(formatMoney(row.confirmed_sales_total))}</p>
+						<p class="admin-metric-card__hint">${escapeHtml(row.confirmed_sales_count)} pedido(s) con pago confirmado</p>
+					</div>
+				</div>
+				${renderStatusBreakdown(row.orders_by_status)}
+			`;
+		}
+
+		// Fila expandida actualmente en la tabla de Pedidos (una sola a la
+		// vez). No dispara ninguna carga: el detalle expandido se arma con
+		// los datos que la propia fila ya trae de admin_list_orders_v2.
+		let expandedOrderRowId: string | null = null;
+
+		function productSummary(row: OrderRow): string {
+			const name = row.first_item_product_name;
+			if (!name) return "—";
+
+			const qty = row.first_item_quantity ?? 1;
+			const variant = row.first_item_variant_label;
+			const extra = row.items_extra_count ?? 0;
+
+			const main = `${escapeHtml(name)} ×${escapeHtml(qty)}`;
+			const variantHtml = variant
+				? `<span class="admin-product-summary__variant">${escapeHtml(variant)}</span>`
+				: "";
+			const extraHtml =
+				extra > 0
+					? `<span class="admin-product-summary__extra">+ ${escapeHtml(extra)} producto(s) más</span>`
+					: "";
+
+			return `
+				<span class="admin-product-summary__main">${main}</span>
+				${variantHtml}
+				${extraHtml}
+			`;
+		}
+
+		function renderExpandedRow(row: OrderRow): string {
+			const name = row.first_item_product_name;
+			const qty = row.first_item_quantity ?? 1;
+			const variant = row.first_item_variant_label;
+			const extra = row.items_extra_count ?? 0;
+
+			const itemLine = name
+				? `<li>${escapeHtml(qty)} × ${escapeHtml(name)}${variant ? " — " + escapeHtml(variant) : ""}</li>`
+				: '<li class="admin-expanded__empty">Sin artículos cargados.</li>';
+			const extraLine =
+				extra > 0
+					? `<li class="admin-expanded__extra">+ ${escapeHtml(extra)} producto(s) más — usa "Ver detalle" para verlos todos</li>`
+					: "";
+
+			return `
+				<div class="admin-expanded">
+					<div class="admin-expanded__col">
+						<p class="admin-expanded__title">Productos</p>
+						<ul class="admin-expanded__items">${itemLine}${extraLine}</ul>
+					</div>
+					<div class="admin-expanded__col">
+						<p class="admin-expanded__title">Contacto</p>
+						<p>${escapeHtml(row.customer_email || "—")}</p>
+						<p>${escapeHtml(row.customer_phone || "—")}</p>
+					</div>
+					<div class="admin-expanded__col">
+						<p class="admin-expanded__title">Entrega</p>
+						<p>${escapeHtml(DELIVERY_METHOD_LABELS[row.delivery_method] ?? row.delivery_method)}</p>
+						<p>${escapeHtml(row.delivery_district || "—")}</p>
+					</div>
+				</div>
+			`;
+		}
+
+		function renderOrderRows(rows: OrderRow[]) {
+			if (rows.length === 0) {
+				tableBody.innerHTML = "";
+				emptyEl.hidden = false;
+				return;
+			}
+
+			// La fila expandida solo se conserva si sigue presente en la
+			// pagina actual (cambiar de pagina o filtro la cierra sola).
+			if (!rows.some((row) => row.id === expandedOrderRowId)) {
+				expandedOrderRowId = null;
+			}
+
+			emptyEl.hidden = true;
+
+			tableBody.innerHTML = rows
+				.map((row) => {
+					const statusLabelText =
+						ORDER_STATUS_LABELS[row.order_status] ??
+						row.order_status;
+					const paymentLabel =
+						PAYMENT_METHOD_LABELS[row.payment_method] ??
+						row.payment_method;
+					const deliveryLabel =
+						DELIVERY_METHOD_LABELS[row.delivery_method] ??
+						row.delivery_method;
+					const stageLabel = paymentStageLabel(
+						row.payment_method,
+						row.order_status,
+					);
+					const isExpanded = row.id === expandedOrderRowId;
+
+					return `
+						<tr class="admin-table__row" data-order-row="${escapeHtml(row.id)}">
+							<td data-label="" class="admin-table__toggle-cell">
+								<button
+									class="admin-table__toggle"
+									type="button"
+									data-admin-row-toggle
+									data-order-id="${escapeHtml(row.id)}"
+									aria-expanded="${isExpanded ? "true" : "false"}"
+									aria-label="${isExpanded ? "Ocultar detalles" : "Ver más detalles"} del pedido ${escapeHtml(row.order_number)}"
+								>${CHEVRON_DOWN_ICON}</button>
+							</td>
+							<td data-label="Pedido">
+								<span class="admin-cell__main">${escapeHtml(row.order_number)}</span>
+								<span class="admin-cell__meta">${escapeHtml(formatDate(row.created_at))}</span>
+							</td>
+							<td data-label="Cliente">
+								<span class="admin-cell__main">${escapeHtml(row.customer_full_name)}</span>
+								<span class="admin-cell__meta">${escapeHtml(row.customer_phone || "—")}</span>
+							</td>
+							<td data-label="Producto" class="admin-product-summary">${productSummary(row)}</td>
+							<td data-label="Distrito / Entrega">
+								<span class="admin-cell__main">${escapeHtml(row.delivery_district || "—")}</span>
+								<span class="admin-cell__meta">${escapeHtml(deliveryLabel)}</span>
+							</td>
+							<td data-label="Pago">
+								<span class="admin-cell__main">${escapeHtml(paymentLabel)}</span>
+								<span class="admin-cell__meta">${escapeHtml(stageLabel)}</span>
+							</td>
+							<td data-label="Estado">
+								<span class="admin-badge" data-status="${escapeHtml(row.order_status)}">${escapeHtml(statusLabelText)}</span>
+							</td>
+							<td data-label="Unidades" class="admin-table__num">${escapeHtml(row.unit_count)}${row.has_engraving ? ' <span class="admin-engraving-flag" title="Incluye grabado o personalización">✎</span>' : ""}</td>
+							<td data-label="Total" class="admin-table__num admin-table__total">${escapeHtml(formatMoney(row.total))}</td>
+							<td data-label="Acción">
+								<button class="btn btn--secondary admin-view-button" type="button" data-admin-view data-order-id="${escapeHtml(row.id)}">Ver detalle</button>
+							</td>
+						</tr>
+						<tr class="admin-table__detail-row" data-order-detail-row="${escapeHtml(row.id)}"${isExpanded ? "" : " hidden"}>
+							<td colspan="10">${renderExpandedRow(row)}</td>
+						</tr>
+					`;
+				})
+				.join("");
+
+			tableBody
+				.querySelectorAll<HTMLButtonElement>("[data-admin-view]")
+				.forEach((button) => {
+					button.addEventListener("click", () => {
+						const orderId = button.dataset.orderId;
+						if (orderId) void openOrderDetail(orderId, button);
+					});
+				});
+
+			// Un solo toggle a la vez: expandir uno colapsa cualquier otro.
+			// Botones normales (Enter/Espacio funcionan de forma nativa),
+			// sin re-fetch: todo el marcado ya esta en el DOM.
+			tableBody
+				.querySelectorAll<HTMLButtonElement>("[data-admin-row-toggle]")
+				.forEach((button) => {
+					button.addEventListener("click", () => {
+						const orderId = button.dataset.orderId ?? null;
+						expandedOrderRowId =
+							expandedOrderRowId === orderId ? null : orderId;
+						renderOrderRows(rows);
+					});
+				});
+		}
+
+		function updatePagination() {
+			const totalPages = Math.max(
+				1,
+				Math.ceil(totalCount / PAGE_SIZE),
+			);
+			const page = currentPage + 1;
+
+			pageInfoEl.textContent =
+				totalCount === 0
+					? "Sin resultados"
+					: `Página ${page} de ${totalPages} · ${totalCount} pedido(s)`;
+
+			prevButton.disabled = currentPage === 0;
+			nextButton.disabled = (currentPage + 1) * PAGE_SIZE >= totalCount;
+		}
+
+		async function loadOrders() {
+			if (isLoadingList) return;
+			isLoadingList = true;
+			tableWrap.setAttribute("aria-busy", "true");
+			errorEl.hidden = true;
+
+			try {
+				// admin_list_orders_v2: mismos filtros/paginacion que v1
+				// (admin_list_orders), mas resumen del primer articulo y
+				// conteo de articulos adicionales para la columna
+				// "Producto" de la tabla, sin consultas por fila. v1 sigue
+				// intacta y en uso solo en el listado de "Pedidos
+				// recientes" del Resumen.
+				const { data, error } = await supabase!.rpc(
+					"admin_list_orders_v2",
+					{
+						p_search: filters.search || null,
+						p_status: filters.status || null,
+						p_payment_method: filters.payment || null,
+						p_delivery_method: filters.delivery || null,
+						p_date_from: filters.from || null,
+						p_date_to: filters.to || null,
+						p_limit: PAGE_SIZE,
+						p_offset: currentPage * PAGE_SIZE,
+					},
+				);
+
+				if (error) {
+					if (isForbiddenError(error)) {
+						await forceSignOutForbidden();
+						return;
+					}
+					throw error;
+				}
+
+				const rows = (data ?? []) as OrderRow[];
+				totalCount = rows[0]?.total_count ?? 0;
+				renderOrderRows(rows);
+				updatePagination();
+			} catch {
+				tableBody.innerHTML = "";
+				errorEl.textContent =
+					"No se pudieron cargar los pedidos. Intenta de nuevo.";
+				errorEl.hidden = false;
+			} finally {
+				isLoadingList = false;
+				tableWrap.removeAttribute("aria-busy");
+			}
+		}
+
+		async function loadMetrics(): Promise<boolean> {
+			if (isLoadingMetrics) return true;
+			isLoadingMetrics = true;
+
+			try {
+				const { data, error } = await supabase!.rpc(
+					"admin_orders_metrics",
+				);
+
+				if (error) {
+					if (isForbiddenError(error)) {
+						await forceSignOutForbidden();
+						return false;
+					}
+					throw error;
+				}
+
+				const rows = (data ?? []) as MetricsRow[];
+				lastOrdersMetrics = rows[0] ?? null;
+				renderMetrics(rows[0]);
+				return true;
+			} catch {
+				metricsEl.innerHTML =
+					'<p class="admin-metrics__error">No se pudieron cargar las métricas.</p>';
+				return true;
+			} finally {
+				isLoadingMetrics = false;
+			}
+		}
+
+		async function loadPedidosView() {
+			const authorized = await loadMetrics();
+			if (!authorized) return;
+			await loadOrders();
+			viewLoadedAt.pedidos = Date.now();
+		}
+
+		function statusLabel(value: unknown): string {
+			const key = String(value ?? "");
+			return ORDER_STATUS_LABELS[key] ?? key;
+		}
+
+		/*
+		 * Un unico origen para la lista de estados: ORDER_STATUS_LABELS,
+		 * el mismo mapa que usan metricas, tabla, detalle y etiqueta. El
+		 * orden de sus claves es el orden logico del flujo y se conserva
+		 * aqui tal cual.
+		 */
+		function renderStatusOptions(current: string): string {
+			return Object.entries(ORDER_STATUS_LABELS)
+				.map(
+					([value, label]) =>
+						`<option value="${escapeHtml(value)}"${value === current ? " selected" : ""}>${escapeHtml(label)}</option>`,
+				)
+				.join("");
+		}
+
+		function renderManageSection(o: Record<string, any>): string {
+			const current = String(o.order_status ?? "");
+
+			return `
+				<div class="admin-drawer__section admin-manage">
+					<h3>Gestión del pedido</h3>
+
+					<p class="admin-manage__current">
+						<span>Estado actual:</span>
+						<span class="admin-badge" data-status="${escapeHtml(current)}">${escapeHtml(statusLabel(current))}</span>
+					</p>
+
+					<div class="admin-manage__field">
+						<label for="admin-manage-status">Nuevo estado</label>
+						<select id="admin-manage-status" data-admin-status-select>
+							${renderStatusOptions(current)}
+						</select>
+					</div>
+
+					<div class="admin-manage__field">
+						<label for="admin-manage-note">Nota (opcional)</label>
+						<textarea
+							id="admin-manage-note"
+							data-admin-status-note
+							rows="2"
+							maxlength="400"
+							placeholder="Queda solo en el historial interno."
+						></textarea>
+					</div>
+
+					<div
+						class="admin-manage__confirm"
+						data-admin-status-confirm
+						role="group"
+						aria-label="Confirmar cambio de estado"
+						hidden
+					>
+						<p data-admin-status-confirm-text></p>
+						<div class="admin-manage__confirm-actions">
+							<button class="btn btn--primary" type="button" data-admin-status-confirm-yes>Sí, continuar</button>
+							<button class="btn btn--tertiary" type="button" data-admin-status-confirm-no>Cancelar</button>
+						</div>
+					</div>
+
+					<p class="admin-manage__feedback" data-admin-status-feedback role="status" hidden></p>
+
+					<div class="admin-manage__actions">
+						<button class="btn btn--primary" type="button" data-admin-status-submit disabled>Actualizar estado</button>
+						<button class="btn btn--secondary" type="button" data-admin-label-open>Generar etiqueta</button>
+					</div>
+				</div>
+			`;
+		}
+
+		function renderDrawerChips(o: Record<string, any>): string {
+			return `
+				<span class="admin-badge" data-status="${escapeHtml(o.order_status)}">${escapeHtml(ORDER_STATUS_LABELS[o.order_status] ?? o.order_status)}</span>
+				<span class="admin-badge admin-badge--outline" data-payment-status="${escapeHtml(o.payment_status)}">Pago: ${escapeHtml(PAYMENT_STATUS_LABELS[o.payment_status] ?? o.payment_status)}</span>
+			`;
+		}
+
+		function renderOrderDetail(payload: OrderDetail): string {
+			const o = payload.order;
+			const items = payload.items ?? [];
+			const unitCount = items.reduce(
+				(sum, item) => sum + Number(item.quantity ?? 0),
+				0,
+			);
+			// El RPC devuelve el historial cronologico ascendente; en
+			// pantalla interesa lo ultimo que paso primero.
+			const history = [...(payload.history ?? [])].reverse();
+
+			const itemsHtml = items.length
+				? items
+						.map((item) => {
+							const variant = [
+								item.wood_name,
+								item.size_name,
+								item.dimensions_label,
+							]
+								.filter(Boolean)
+								.map(escapeHtml)
+								.join(" · ");
+
+							const engraving = item.engraving_requested
+								? `<p class="admin-drawer__item-engraving">Grabado${item.engraving_type ? " (" + escapeHtml(item.engraving_type) + ")" : ""}${item.engraving_text ? `: "${escapeHtml(item.engraving_text)}"` : ""}</p>`
+								: "";
+
+							const notes = item.personalization_notes
+								? `<p class="admin-drawer__item-notes">Notas: ${escapeHtml(item.personalization_notes)}</p>`
+								: "";
+
+							return `
+								<li class="admin-drawer__item">
+									<div class="admin-drawer__item-main">
+										<p class="admin-drawer__item-name">${escapeHtml(item.product_name)}</p>
+										<p class="admin-drawer__item-meta">SKU ${escapeHtml(item.product_sku)}${variant ? " · " + variant : ""}</p>
+										${engraving}
+										${notes}
+									</div>
+									<div class="admin-drawer__item-nums">
+										<span>${escapeHtml(item.quantity)} × ${escapeHtml(formatMoney(item.unit_price))}</span>
+										<strong>${escapeHtml(formatMoney(item.line_total))}</strong>
+									</div>
+								</li>
+							`;
+						})
+						.join("")
+				: '<li class="admin-drawer__history-empty">Sin artículos.</li>';
+
+			const historyHtml = history.length
+				? history
+						.map((h) => {
+							const prev = h.previous_status
+								? `${escapeHtml(ORDER_STATUS_LABELS[h.previous_status] ?? h.previous_status)} → `
+								: "";
+							const note = h.note
+								? `<span class="admin-drawer__history-note">${escapeHtml(h.note)}</span>`
+								: "";
+
+							return `
+								<li class="admin-drawer__history-item">
+									<span class="admin-drawer__history-date">${escapeHtml(formatDate(h.created_at))}</span>
+									<span class="admin-drawer__history-change">${prev}${escapeHtml(ORDER_STATUS_LABELS[h.new_status] ?? h.new_status)}</span>
+									${note}
+								</li>
+							`;
+						})
+						.join("")
+				: '<li class="admin-drawer__history-empty">Sin historial de estados registrado.</li>';
+
+			const phoneDigits = String(o.customer_phone ?? "").replace(
+				/\D/g,
+				"",
+			);
+			const whatsappDigits = phoneDigits
+				? phoneDigits.startsWith("51")
+					? phoneDigits
+					: `51${phoneDigits}`
+				: "";
+
+			const location = [
+				o.delivery_district,
+				o.delivery_province,
+				o.delivery_department,
+			]
+				.filter(Boolean)
+				.map(escapeHtml)
+				.join(", ");
+
+			const discountRow =
+				Number(o.discount_total) > 0
+					? `<p><span>Descuento</span><span>-${escapeHtml(formatMoney(o.discount_total))}</span></p>`
+					: "";
+
+			return `
+				<div class="admin-drawer__summary">
+					<div class="admin-drawer__summary-item">
+						<span class="admin-drawer__summary-label">Total</span>
+						<span class="admin-drawer__summary-value">${escapeHtml(formatMoney(o.total))}</span>
+					</div>
+					<div class="admin-drawer__summary-item">
+						<span class="admin-drawer__summary-label">Unidades</span>
+						<span class="admin-drawer__summary-value">${escapeHtml(unitCount)}</span>
+					</div>
+					<div class="admin-drawer__summary-item">
+						<span class="admin-drawer__summary-label">Entrega</span>
+						<span class="admin-drawer__summary-value">${escapeHtml(DELIVERY_METHOD_LABELS[o.delivery_method] ?? o.delivery_method)}</span>
+					</div>
+					<div class="admin-drawer__summary-item">
+						<span class="admin-drawer__summary-label">Pago</span>
+						<span class="admin-drawer__summary-value">${escapeHtml(PAYMENT_METHOD_LABELS[o.payment_method] ?? o.payment_method)}</span>
+					</div>
+				</div>
+
+				<div class="admin-drawer__columns">
+					<div class="admin-drawer__col-main">
+						<div class="admin-drawer__section">
+							<h3>Cliente</h3>
+							<p>${escapeHtml(o.customer_first_name)} ${escapeHtml(o.customer_last_name)}</p>
+							<p><a href="mailto:${escapeHtml(o.customer_email)}">${escapeHtml(o.customer_email)}</a></p>
+							<p>
+								${phoneDigits ? `<a href="tel:+${escapeHtml(phoneDigits)}">${escapeHtml(o.customer_phone)}</a>` : escapeHtml(o.customer_phone)}
+								${whatsappDigits ? ` · <a href="https://wa.me/${escapeHtml(whatsappDigits)}" target="_blank" rel="noopener noreferrer">WhatsApp</a>` : ""}
+							</p>
+							${o.customer_document_number ? `<p>${escapeHtml(o.customer_document_type || "Doc.")}: ${escapeHtml(o.customer_document_number)}</p>` : ""}
+						</div>
+
+						<div class="admin-drawer__section">
+							<h3>Entrega</h3>
+							<p>${escapeHtml(DELIVERY_METHOD_LABELS[o.delivery_method] ?? o.delivery_method)}</p>
+							${o.delivery_address ? `<p>${escapeHtml(o.delivery_address)}</p>` : ""}
+							${location ? `<p>${location}</p>` : ""}
+							${o.delivery_reference ? `<p>Referencia: ${escapeHtml(o.delivery_reference)}</p>` : ""}
+							${o.agency_name ? `<p>Agencia: ${escapeHtml(o.agency_name)}</p>` : ""}
+						</div>
+
+						${o.customer_notes ? `<div class="admin-drawer__section"><h3>Notas del cliente</h3><p>${escapeHtml(o.customer_notes)}</p></div>` : ""}
+						${o.internal_notes ? `<div class="admin-drawer__section"><h3>Notas internas</h3><p>${escapeHtml(o.internal_notes)}</p></div>` : ""}
+
+						<div class="admin-drawer__section">
+							<h3>Productos</h3>
+							<ul class="admin-drawer__items">${itemsHtml}</ul>
+						</div>
+
+						<div class="admin-drawer__section admin-drawer__totals">
+							<p><span>Subtotal</span><span>${escapeHtml(formatMoney(o.subtotal))}</span></p>
+							<p><span>Envío</span><span>${escapeHtml(formatMoney(o.delivery_cost))}</span></p>
+							${discountRow}
+							<p class="admin-drawer__total-final"><span>Total</span><span>${escapeHtml(formatMoney(o.total))}</span></p>
+						</div>
+					</div>
+
+					<div class="admin-drawer__col-side">
+						${renderManageSection(o)}
+
+						<div class="admin-drawer__section">
+							<h3>Historial de estados</h3>
+							<ul class="admin-drawer__history">${historyHtml}</ul>
+						</div>
+					</div>
+				</div>
+			`;
+		}
+
+		function openDrawer(trigger: HTMLElement) {
+			drawer.hidden = false;
+			drawerBackdrop.hidden = false;
+
+			openOverlay({
+				id: DRAWER_OVERLAY_ID,
+				container: drawer,
+				trigger,
+				close: closeDrawer,
+			});
+		}
+
+		function closeDrawer() {
+			closeLabelModal();
+			drawer.hidden = true;
+			drawerBackdrop.hidden = true;
+			currentOrderId = null;
+			currentOrderStatus = null;
+			currentOrderDetail = null;
+			pendingStatusConfirm = null;
+			drawerBody.innerHTML = "";
+			drawerSubtitle.textContent = "";
+			drawerChips.innerHTML = "";
+			closeOverlay(DRAWER_OVERLAY_ID);
+		}
+
+		function setStatusFeedback(
+			message: string,
+			tone: "ok" | "error" | "warn",
+		) {
+			const el = drawerBody.querySelector<HTMLElement>(
+				"[data-admin-status-feedback]",
+			);
+			if (!el) return;
+			el.textContent = message;
+			el.dataset.tone = tone;
+			el.hidden = false;
+		}
+
+		function clearStatusFeedback() {
+			const el = drawerBody.querySelector<HTMLElement>(
+				"[data-admin-status-feedback]",
+			);
+			if (!el) return;
+			el.hidden = true;
+			el.textContent = "";
+		}
+
+		/*
+		 * Rellena el drawer con el detalle del pedido. `feedback` permite
+		 * conservar un mensaje (exito o conflicto) despues de repintar,
+		 * porque el repintado destruye el nodo anterior.
+		 */
+		async function loadOrderDetail(
+			orderId: string,
+			feedback?: { message: string; tone: "ok" | "error" | "warn" },
+		) {
+			try {
+				const { data, error } = await supabase!.rpc(
+					"admin_get_order_detail",
+					{ p_order_id: orderId },
+				);
+
+				if (error) {
+					if (isForbiddenError(error)) {
+						closeDrawer();
+						await forceSignOutForbidden();
+						return;
+					}
+					if (isNotFoundError(error)) {
+						currentOrderId = null;
+						currentOrderStatus = null;
+						currentOrderDetail = null;
+						drawerTitle.textContent = "Pedido no encontrado";
+						drawerSubtitle.textContent = "";
+						drawerChips.innerHTML = "";
+						drawerBody.innerHTML =
+							'<p class="admin-drawer__error">Este pedido ya no está disponible.</p>';
+						return;
+					}
+					throw error;
+				}
+
+				const detail = data as OrderDetail;
+				currentOrderId = orderId;
+				currentOrderDetail = detail;
+				currentOrderStatus = String(detail.order.order_status ?? "");
+				pendingStatusConfirm = null;
+
+				drawerTitle.textContent = detail.order.order_number;
+				drawerSubtitle.textContent = formatDate(
+					detail.order.created_at,
+				);
+				drawerChips.innerHTML = renderDrawerChips(detail.order);
+				drawerBody.innerHTML = renderOrderDetail(detail);
+
+				if (feedback) {
+					setStatusFeedback(feedback.message, feedback.tone);
+				}
+			} catch {
+				drawerTitle.textContent = "Error";
+				drawerSubtitle.textContent = "";
+				drawerChips.innerHTML = "";
+				drawerBody.innerHTML =
+					'<p class="admin-drawer__error">No se pudo cargar el detalle. Intenta de nuevo.</p>';
+			}
+		}
+
+		async function openOrderDetail(orderId: string, trigger: HTMLElement) {
+			drawerTitle.textContent = "Cargando pedido…";
+			drawerSubtitle.textContent = "";
+			drawerChips.innerHTML = "";
+			drawerBody.innerHTML =
+				'<p class="admin-drawer__loading">Cargando detalle…</p>';
+			openDrawer(trigger);
+			await loadOrderDetail(orderId);
+		}
+
+		// ---------- Cambio de estado ----------
+
+		function syncStatusSubmitState() {
+			const select = drawerBody.querySelector<HTMLSelectElement>(
+				"[data-admin-status-select]",
+			);
+			const submit = drawerBody.querySelector<HTMLButtonElement>(
+				"[data-admin-status-submit]",
+			);
+			if (!select || !submit) return;
+
+			submit.disabled =
+				isSavingStatus ||
+				!currentOrderStatus ||
+				select.value === currentOrderStatus;
+		}
+
+		function hideStatusConfirm() {
+			pendingStatusConfirm = null;
+			const box = drawerBody.querySelector<HTMLElement>(
+				"[data-admin-status-confirm]",
+			);
+			if (box) box.hidden = true;
+		}
+
+		function confirmMessageFor(target: string): string | null {
+			if (target === "cancelled") {
+				return "¿Confirmas que deseas cancelar este pedido?";
+			}
+			if (
+				currentOrderStatus === "delivered" ||
+				currentOrderStatus === "cancelled"
+			) {
+				return `Este pedido ya figura como ${statusLabel(currentOrderStatus)}. Cambiarlo de nuevo es una corrección administrativa y quedará registrada en el historial. ¿Deseas continuar?`;
+			}
+			return null;
+		}
+
+		function requestStatusChange() {
+			const select = drawerBody.querySelector<HTMLSelectElement>(
+				"[data-admin-status-select]",
+			);
+			if (!select || !currentOrderId || !currentOrderStatus) return;
+
+			const target = select.value;
+
+			// El selector solo contiene claves de ORDER_STATUS_LABELS, pero
+			// se revalida antes de mandar nada al servidor.
+			if (!target || !(target in ORDER_STATUS_LABELS)) {
+				setStatusFeedback("Selecciona un estado válido.", "error");
+				return;
+			}
+
+			if (target === currentOrderStatus) return;
+
+			const message = confirmMessageFor(target);
+
+			if (message && pendingStatusConfirm !== target) {
+				pendingStatusConfirm = target;
+				const box = drawerBody.querySelector<HTMLElement>(
+					"[data-admin-status-confirm]",
+				);
+				const text = drawerBody.querySelector<HTMLElement>(
+					"[data-admin-status-confirm-text]",
+				);
+				if (box && text) {
+					text.textContent = message;
+					box.hidden = false;
+					drawerBody
+						.querySelector<HTMLButtonElement>(
+							"[data-admin-status-confirm-yes]",
+						)
+						?.focus();
+				}
+				return;
+			}
+
+			hideStatusConfirm();
+			void performStatusUpdate(target);
+		}
+
+		async function performStatusUpdate(target: string) {
+			const orderId = currentOrderId;
+			const expected = currentOrderStatus;
+			if (!orderId || !expected) return;
+
+			const submit = drawerBody.querySelector<HTMLButtonElement>(
+				"[data-admin-status-submit]",
+			);
+			const noteEl = drawerBody.querySelector<HTMLTextAreaElement>(
+				"[data-admin-status-note]",
+			);
+			const note = noteEl?.value.trim() ?? "";
+
+			isSavingStatus = true;
+			clearStatusFeedback();
+			if (submit) {
+				submit.disabled = true;
+				submit.textContent = "Actualizando…";
+			}
+
+			try {
+				const { error } = await supabase!.rpc(
+					"admin_update_order_status",
+					{
+						p_order_id: orderId,
+						p_expected_status: expected,
+						p_new_status: target,
+						p_note: note || null,
+					},
+				);
+
+				if (error) {
+					if (isForbiddenError(error)) {
+						closeDrawer();
+						await forceSignOutForbidden();
+						return;
+					}
+
+					if (hasSignal(error, "ORDER_STATUS_CONFLICT")) {
+						await loadOrderDetail(orderId, {
+							message:
+								"El pedido fue actualizado en otra sesión. Recargamos su estado actual.",
+							tone: "warn",
+						});
+						return;
+					}
+
+					if (isNotFoundError(error)) {
+						setStatusFeedback(
+							"Este pedido ya no está disponible.",
+							"error",
+						);
+						return;
+					}
+
+					if (hasSignal(error, "ORDER_STATUS_UNCHANGED")) {
+						setStatusFeedback(
+							"El pedido ya tiene ese estado.",
+							"warn",
+						);
+						return;
+					}
+
+					if (hasSignal(error, "ORDER_STATUS_CANCELLED_FINAL")) {
+						await loadOrderDetail(orderId, {
+							message:
+								"Este pedido ya fue cancelado y no puede cambiar de estado.",
+							tone: "warn",
+						});
+						return;
+					}
+
+					// El segundo caso es el que devuelve Postgres si el valor
+					// no pertenece al enum: se traduce igual, sin mostrar el
+					// texto crudo del error.
+					if (
+						hasSignal(error, "INVALID_ORDER_STATUS") ||
+						hasSignal(error, "invalid input value for enum")
+					) {
+						setStatusFeedback("Estado no válido.", "error");
+						return;
+					}
+
+					// Sesion caducada: el listener de auth ya devuelve al
+					// login; aqui solo se evita un mensaje enganoso.
+					const { data: sessionData } =
+						await supabase!.auth.getSession();
+					if (!sessionData.session) {
+						setStatusFeedback(
+							"Tu sesión expiró. Vuelve a iniciar sesión.",
+							"error",
+						);
+						return;
+					}
+
+					throw error;
+				}
+
+				// Exito: se recarga el detalle (estado, insignia e
+				// historial salen del servidor, no de una suposicion
+				// local) y se refrescan metricas y listado.
+				await loadOrderDetail(orderId, {
+					message: "Estado actualizado correctamente",
+					tone: "ok",
+				});
+				viewLoadedAt.pedidos = 0;
+				viewLoadedAt.resumen = 0;
+				if (activeView === "pedidos") void loadPedidosView();
+				else if (activeView === "resumen") void loadResumen();
+			} catch {
+				setStatusFeedback(
+					"No se pudo actualizar el estado. Intenta de nuevo.",
+					"error",
+				);
+			} finally {
+				isSavingStatus = false;
+				const currentSubmit =
+					drawerBody.querySelector<HTMLButtonElement>(
+						"[data-admin-status-submit]",
+					);
+				if (currentSubmit) {
+					currentSubmit.textContent = "Actualizar estado";
+				}
+				syncStatusSubmitState();
+			}
+		}
+
+		// ---------- Etiqueta del paquete ----------
+
+		const LABEL_BODY_CLASS = "admin-label-open";
+
+		function labelLines(): string[] {
+			const detail = currentOrderDetail;
+			if (!detail) return [];
+
+			const o = detail.order;
+			const items = detail.items ?? [];
+			const lines: string[] = [];
+
+			const push = (label: string, value: unknown) => {
+				const text = String(value ?? "").trim();
+				if (!text) return;
+				lines.push(`${label}: ${text}`);
+			};
+
+			lines.push(`TAQTO — PEDIDO #${String(o.order_number ?? "").trim()}`);
+			lines.push("");
+
+			push("Fecha", formatDate(o.created_at));
+			push(
+				"Cliente",
+				`${o.customer_first_name ?? ""} ${o.customer_last_name ?? ""}`.trim(),
+			);
+			push("Teléfono", o.customer_phone);
+			push("Entrega", DELIVERY_METHOD_LABELS[o.delivery_method] ?? "");
+			push("Distrito", o.delivery_district);
+			push("Dirección", o.delivery_address);
+			push("Referencia", o.delivery_reference);
+			push("Agencia", o.agency_name);
+
+			if (items.length) {
+				lines.push("");
+				lines.push("PRODUCTOS");
+
+				items.forEach((item) => {
+					const variant = [
+						item.wood_name,
+						item.size_name,
+						item.dimensions_label,
+					]
+						.filter(Boolean)
+						.join(" · ");
+
+					lines.push(
+						`• ${item.quantity} × ${String(item.product_name ?? "").trim()}${variant ? ` — ${variant}` : ""}`,
+					);
+
+					if (item.engraving_requested && item.engraving_text) {
+						lines.push(`  Grabado: “${item.engraving_text}”`);
+					} else if (item.engraving_requested) {
+						lines.push("  Incluye grabado");
+					}
+
+					if (item.personalization_notes) {
+						lines.push(`  Nota: ${item.personalization_notes}`);
+					}
+				});
+			}
+
+			if (o.customer_notes || o.internal_notes) {
+				lines.push("");
+				push("Nota del cliente", o.customer_notes);
+				push("Nota interna", o.internal_notes);
+			}
+
+			lines.push("");
+			push("Estado", statusLabel(o.order_status));
+
+			return lines;
+		}
+
+		function renderLabelSheet(): string {
+			const detail = currentOrderDetail;
+			if (!detail) return "";
+
+			const o = detail.order;
+			const items = detail.items ?? [];
+
+			const row = (label: string, value: unknown) => {
+				const text = String(value ?? "").trim();
+				if (!text) return "";
+				return `<p class="admin-label__row"><span>${escapeHtml(label)}</span><strong>${escapeHtml(text)}</strong></p>`;
+			};
+
+			const itemsHtml = items
+				.map((item) => {
+					const variant = [
+						item.wood_name,
+						item.size_name,
+						item.dimensions_label,
+					]
+						.filter(Boolean)
+						.map(escapeHtml)
+						.join(" · ");
+
+					const engraving = item.engraving_requested
+						? `<p class="admin-label__item-extra">${
+								item.engraving_text
+									? `Grabado: “${escapeHtml(item.engraving_text)}”`
+									: "Incluye grabado"
+							}</p>`
+						: "";
+
+					const notes = item.personalization_notes
+						? `<p class="admin-label__item-extra">Nota: ${escapeHtml(item.personalization_notes)}</p>`
+						: "";
+
+					return `
+						<li class="admin-label__item">
+							<p class="admin-label__item-main">${escapeHtml(item.quantity)} × ${escapeHtml(item.product_name)}${variant ? ` — ${variant}` : ""}</p>
+							${engraving}
+							${notes}
+						</li>
+					`;
+				})
+				.join("");
+
+			const notesHtml = [
+				o.customer_notes
+					? `<p class="admin-label__note">Nota del cliente: ${escapeHtml(o.customer_notes)}</p>`
+					: "",
+				o.internal_notes
+					? `<p class="admin-label__note">Nota interna: ${escapeHtml(o.internal_notes)}</p>`
+					: "",
+			].join("");
+
+			return `
+				<div class="admin-label__head">
+					<p class="admin-label__brand">TAQTO</p>
+					<p class="admin-label__number">#${escapeHtml(o.order_number)}</p>
+					<p class="admin-label__date">${escapeHtml(formatDate(o.created_at))}</p>
+				</div>
+
+				<p class="admin-label__status">
+					<span class="admin-badge" data-status="${escapeHtml(o.order_status)}">${escapeHtml(statusLabel(o.order_status))}</span>
+				</p>
+
+				<div class="admin-label__block">
+					${row("Cliente", `${o.customer_first_name ?? ""} ${o.customer_last_name ?? ""}`.trim())}
+					${row("Teléfono", o.customer_phone)}
+					${row("Entrega", DELIVERY_METHOD_LABELS[o.delivery_method] ?? "")}
+					${row("Distrito", o.delivery_district)}
+					${row("Dirección", o.delivery_address)}
+					${row("Referencia", o.delivery_reference)}
+					${row("Agencia", o.agency_name)}
+				</div>
+
+				<div class="admin-label__block">
+					<p class="admin-label__block-title">Productos</p>
+					<ul class="admin-label__items">${itemsHtml}</ul>
+					${notesHtml}
+				</div>
+			`;
+		}
+
+		function setLabelFeedback(message: string) {
+			window.clearTimeout(labelFeedbackTimer);
+			labelFeedbackEl.textContent = message;
+			labelFeedbackEl.hidden = false;
+			labelFeedbackTimer = window.setTimeout(() => {
+				labelFeedbackEl.hidden = true;
+				labelFeedbackEl.textContent = "";
+			}, 4000);
+		}
+
+		function labelFocusables(): HTMLElement[] {
+			return Array.from(
+				labelModal.querySelectorAll<HTMLElement>(
+					'button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+				),
+			).filter(
+				(el) => el.offsetWidth + el.offsetHeight > 0,
+			);
+		}
+
+		function openLabelModal(trigger: HTMLElement) {
+			if (!currentOrderDetail) return;
+
+			labelTrigger = trigger;
+			labelSheet.innerHTML = renderLabelSheet();
+			labelBackdrop.hidden = false;
+			labelModal.hidden = false;
+			document.body.classList.add(LABEL_BODY_CLASS);
+
+			/*
+			 * El drawer ya bloqueo el scroll y registro su propio manejador
+			 * de teclado en `document` (capture). Este se registra en
+			 * `window`, que en fase de captura corre ANTES, y detiene la
+			 * propagacion de Escape/Tab: asi la etiqueta se cierra sola sin
+			 * cerrar tambien el drawer que hay debajo.
+			 */
+			labelKeydownHandler = (event: KeyboardEvent) => {
+				if (event.key === "Escape") {
+					event.preventDefault();
+					event.stopPropagation();
+					closeLabelModal();
+					return;
+				}
+
+				if (event.key !== "Tab") return;
+
+				const focusables = labelFocusables();
+				if (focusables.length === 0) return;
+
+				const first = focusables[0];
+				const last = focusables[focusables.length - 1];
+				const current = document.activeElement;
+
+				event.stopPropagation();
+
+				if (
+					event.shiftKey &&
+					(current === first || !labelModal.contains(current))
+				) {
+					event.preventDefault();
+					last.focus();
+				} else if (!event.shiftKey && current === last) {
+					event.preventDefault();
+					first.focus();
+				}
+			};
+
+			window.addEventListener("keydown", labelKeydownHandler, true);
+
+			window.requestAnimationFrame(() => {
+				labelFocusables()[0]?.focus();
+			});
+		}
+
+		function closeLabelModal() {
+			if (labelModal.hidden) return;
+
+			if (labelKeydownHandler) {
+				window.removeEventListener(
+					"keydown",
+					labelKeydownHandler,
+					true,
+				);
+				labelKeydownHandler = null;
+			}
+
+			window.clearTimeout(labelFeedbackTimer);
+			labelFeedbackEl.hidden = true;
+			labelFeedbackEl.textContent = "";
+
+			labelModal.hidden = true;
+			labelBackdrop.hidden = true;
+			document.body.classList.remove(LABEL_BODY_CLASS);
+			// Se vacia siempre: ninguna etiqueta debe conservar datos del
+			// pedido anterior.
+			labelSheet.innerHTML = "";
+
+			const trigger = labelTrigger;
+			labelTrigger = null;
+			trigger?.focus();
+		}
+
+		async function copyLabelText() {
+			const text = labelLines().join("\n");
+			if (!text) return;
+
+			try {
+				if (navigator.clipboard?.writeText) {
+					await navigator.clipboard.writeText(text);
+				} else {
+					// Fallback ligero para navegadores sin Clipboard API o
+					// sin contexto seguro.
+					const area = document.createElement("textarea");
+					area.value = text;
+					area.setAttribute("readonly", "");
+					area.style.position = "fixed";
+					area.style.opacity = "0";
+					document.body.appendChild(area);
+					area.select();
+					document.execCommand("copy");
+					area.remove();
+				}
+				setLabelFeedback("Texto de la etiqueta copiado");
+			} catch {
+				setLabelFeedback(
+					"No se pudo copiar. Selecciona el texto manualmente.",
+				);
+			}
+		}
+
+		// Delegacion: el cuerpo del drawer se repinta entero en cada carga,
+		// asi que los controles no pueden tener listeners propios (se
+		// acumularian). Estos tres se registran una sola vez.
+		drawerBody.addEventListener("click", (event) => {
+			const target = event.target as HTMLElement | null;
+			if (!target) return;
+
+			if (target.closest("[data-admin-status-submit]")) {
+				requestStatusChange();
+				return;
+			}
+
+			if (target.closest("[data-admin-status-confirm-yes]")) {
+				const pending = pendingStatusConfirm;
+				hideStatusConfirm();
+				if (pending) void performStatusUpdate(pending);
+				return;
+			}
+
+			if (target.closest("[data-admin-status-confirm-no]")) {
+				hideStatusConfirm();
+				drawerBody
+					.querySelector<HTMLButtonElement>(
+						"[data-admin-status-submit]",
+					)
+					?.focus();
+				return;
+			}
+
+			const labelButton = target.closest<HTMLElement>(
+				"[data-admin-label-open]",
+			);
+			if (labelButton) {
+				openLabelModal(labelButton);
+			}
+		});
+
+		drawerBody.addEventListener("change", (event) => {
+			const target = event.target as HTMLElement | null;
+			if (target?.matches("[data-admin-status-select]")) {
+				hideStatusConfirm();
+				clearStatusFeedback();
+				syncStatusSubmitState();
+			}
+		});
+
+		labelCopyButton.addEventListener("click", () => {
+			void copyLabelText();
+		});
+
+		labelPrintButton.addEventListener("click", () => {
+			window.print();
+		});
+
+		labelCloseButtons.forEach((button) => {
+			button.addEventListener("click", closeLabelModal);
+		});
+
+		labelBackdrop.addEventListener("click", closeLabelModal);
+
+		drawerCloseButton.addEventListener("click", closeDrawer);
+		drawerBackdrop.addEventListener("click", closeDrawer);
+
+		filtersToggle.addEventListener("click", () => {
+			const isOpen = filtersPanel.classList.toggle("is-open");
+			filtersToggle.setAttribute(
+				"aria-expanded",
+				isOpen ? "true" : "false",
+			);
+		});
+
+		function applyFiltersFromInputs() {
+			filterInputs.forEach((input) => {
+				const key = input.dataset.adminFilter as keyof OrderFilters;
+				filters[key] = input.value.trim();
+			});
+			currentPage = 0;
+			void loadOrders();
+		}
+
+		filterInputs.forEach((input) => {
+			const key = input.dataset.adminFilter;
+
+			if (key === "search") {
+				input.addEventListener("input", () => {
+					window.clearTimeout(searchDebounceTimer);
+					searchDebounceTimer = window.setTimeout(() => {
+						applyFiltersFromInputs();
+					}, 300);
+				});
+			} else {
+				input.addEventListener("change", applyFiltersFromInputs);
+			}
+		});
+
+		filtersClearButton.addEventListener("click", () => {
+			clearOrderFilters();
+			syncOrderFilterInputs();
+			void loadOrders();
+		});
+
+		prevButton.addEventListener("click", () => {
+			if (currentPage === 0) return;
+			currentPage -= 1;
+			void loadOrders();
+		});
+
+		nextButton.addEventListener("click", () => {
+			if ((currentPage + 1) * PAGE_SIZE >= totalCount) return;
+			currentPage += 1;
+			void loadOrders();
+		});
+
+		// =====================================================
+		// ---------- Inventario ----------
+		// =====================================================
+
+		function clearInventoryFilters() {
+			invFilters.search = "";
+			invFilters.stock = "";
+			invFilters.active = "";
+			invCurrentPage = 0;
+		}
+
+		function syncInventoryFilterInputs() {
+			invFilterInputs.forEach((input) => {
+				const key = input.dataset.adminInvFilter as keyof InventoryFilters;
+				input.value = invFilters[key] ?? "";
+			});
+		}
+
+		function variantLabel(row: InventoryRow): string {
+			return (
+				[row.wood_title, row.size_title, row.dimensions_label]
+					.filter(Boolean)
+					.join(" · ") || "—"
+			);
+		}
+
+		function renderInventoryRows(rows: InventoryRow[]) {
+			if (rows.length === 0) {
+				invTableBody.innerHTML = "";
+				invEmptyEl.hidden = false;
+				return;
+			}
+
+			invEmptyEl.hidden = true;
+
+			invTableBody.innerHTML = rows
+				.map((row) => {
+					const stockStatusLabel =
+						STOCK_STATUS_LABELS[row.stock_status] ?? row.stock_status;
+					const priceHtml =
+						row.sale_price !== null &&
+						row.effective_price === row.sale_price
+							? `<span class="admin-price-strike">${escapeHtml(formatMoney(row.price))}</span> ${escapeHtml(formatMoney(row.effective_price))}`
+							: escapeHtml(formatMoney(row.effective_price));
+
+					return `
+						<tr>
+							<td data-label="Producto">${escapeHtml(row.product_title)}</td>
+							<td data-label="Variante">${escapeHtml(variantLabel(row))}</td>
+							<td data-label="SKU">${escapeHtml(row.sku)}</td>
+							<td data-label="Estado">
+								<span class="admin-badge admin-badge--outline">${row.product_active ? "Activo" : "Inactivo"}</span>
+							</td>
+							<td data-label="Stock">${escapeHtml(row.stock_quantity)}</td>
+							<td data-label="Precio">${priceHtml}</td>
+							<td data-label="Estado de stock">
+								<span class="admin-badge" data-stock-status="${escapeHtml(row.stock_status)}">${escapeHtml(stockStatusLabel)}</span>
+							</td>
+						</tr>
+					`;
+				})
+				.join("");
+		}
+
+		function updateInventoryPagination() {
+			const totalPages = Math.max(
+				1,
+				Math.ceil(invTotalCount / INVENTORY_PAGE_SIZE),
+			);
+			const page = invCurrentPage + 1;
+
+			invPageInfoEl.textContent =
+				invTotalCount === 0
+					? "Sin resultados"
+					: `Página ${page} de ${totalPages} · ${invTotalCount} variante(s)`;
+
+			invPrevButton.disabled = invCurrentPage === 0;
+			invNextButton.disabled =
+				(invCurrentPage + 1) * INVENTORY_PAGE_SIZE >= invTotalCount;
+		}
+
+		async function loadInventory() {
+			if (isLoadingInventory) return;
+			isLoadingInventory = true;
+			invTableWrap.setAttribute("aria-busy", "true");
+			invErrorEl.hidden = true;
+
+			try {
+				const { data, error } = await supabase!.rpc(
+					"admin_list_inventory",
+					{
+						p_search: invFilters.search || null,
+						p_stock_filter: invFilters.stock || null,
+						p_active_only:
+							invFilters.active === ""
+								? null
+								: invFilters.active === "true",
+						p_low_stock_threshold: LOW_STOCK_THRESHOLD,
+						p_limit: INVENTORY_PAGE_SIZE,
+						p_offset: invCurrentPage * INVENTORY_PAGE_SIZE,
+					},
+				);
+
+				if (error) {
+					if (isForbiddenError(error)) {
+						await forceSignOutForbidden();
+						return;
+					}
+					throw error;
+				}
+
+				const rows = (data ?? []) as InventoryRow[];
+				invTotalCount = rows[0]?.total_count ?? 0;
+				renderInventoryRows(rows);
+				updateInventoryPagination();
+			} catch {
+				invTableBody.innerHTML = "";
+				invErrorEl.textContent =
+					"No se pudo cargar el inventario. Intenta de nuevo.";
+				invErrorEl.hidden = false;
+			} finally {
+				isLoadingInventory = false;
+				invTableWrap.removeAttribute("aria-busy");
+			}
+		}
+
+		async function loadInventoryView() {
+			await loadInventory();
+			viewLoadedAt.inventario = Date.now();
+		}
+
+		function applyInventoryFiltersFromInputs() {
+			invFilterInputs.forEach((input) => {
+				const key = input.dataset.adminInvFilter as keyof InventoryFilters;
+				invFilters[key] = input.value.trim();
+			});
+			invCurrentPage = 0;
+			void loadInventory();
+		}
+
+		invFilterInputs.forEach((input) => {
+			const key = input.dataset.adminInvFilter;
+
+			if (key === "search") {
+				input.addEventListener("input", () => {
+					window.clearTimeout(invSearchDebounceTimer);
+					invSearchDebounceTimer = window.setTimeout(() => {
+						applyInventoryFiltersFromInputs();
+					}, 300);
+				});
+			} else {
+				input.addEventListener(
+					"change",
+					applyInventoryFiltersFromInputs,
+				);
+			}
+		});
+
+		invClearButton.addEventListener("click", () => {
+			clearInventoryFilters();
+			syncInventoryFilterInputs();
+			void loadInventory();
+		});
+
+		invPrevButton.addEventListener("click", () => {
+			if (invCurrentPage === 0) return;
+			invCurrentPage -= 1;
+			void loadInventory();
+		});
+
+		invNextButton.addEventListener("click", () => {
+			if ((invCurrentPage + 1) * INVENTORY_PAGE_SIZE >= invTotalCount)
+				return;
+			invCurrentPage += 1;
+			void loadInventory();
+		});
+
+		// =====================================================
+		// ---------- Auth / ciclo de vida ----------
+		// =====================================================
+
+		refreshButton.addEventListener("click", () => {
+			refreshIcon.classList.add("is-spinning");
+			void ensureView(activeView, true).finally(() => {
+				refreshIcon.classList.remove("is-spinning");
+			});
+		});
+
+		logoutButton.addEventListener("click", async () => {
+			stopAutoRefresh();
+			await supabase!.auth.signOut();
+		});
+
+		forbiddenBackButton.addEventListener("click", () => {
+			showOnly(loginView);
+		});
+
+		loginForm.addEventListener("submit", async (event) => {
+			event.preventDefault();
+			clearLoginError();
+			setLoginLoading(true);
+
+			const { error } = await supabase!.auth.signInWithPassword({
+				email: loginEmailInput.value.trim(),
+				password: loginPasswordInput.value,
+			});
+
+			if (error) {
+				showLoginError(
+					"Credenciales inválidas o error al iniciar sesión.",
+				);
+				setLoginLoading(false);
+				return;
+			}
+
+			// onAuthStateChange se encarga del resto (verificar
+			// is_admin() y mostrar el panel o el aviso de "no
+			// autorizado"). No se limpia setLoginLoading aqui a
+			// proposito: handleAuthenticated lo hace al terminar, para
+			// que el boton siga bloqueado mientras se verifica.
+			loginPasswordInput.value = "";
+		});
+
+		async function handleAuthenticated(session: Session) {
+			setLoginLoading(true);
+
+			try {
+				const authorized = await loadMetrics();
+				if (!authorized) return;
+
+				updateWelcome(session);
+				showOnly(shellView);
+				resetFiltersKeepingSession();
+				handleHashChange();
+				startAutoRefresh();
+			} finally {
+				setLoginLoading(false);
+			}
+		}
+
+		function resetFiltersKeepingSession() {
+			currentPage = 0;
+			clearOrderFilters();
+			syncOrderFilterInputs();
+			invCurrentPage = 0;
+			clearInventoryFilters();
+			syncInventoryFilterInputs();
+		}
+
+		window.addEventListener("hashchange", handleHashChange);
+
+		const { data: authListener } = supabase.auth.onAuthStateChange(
+			(event: AuthChangeEvent, session: Session | null) => {
+				if (event === "SIGNED_OUT" || !session) {
+					stopAutoRefresh();
+					resetDashboardState();
+					clearLoginError();
+					setLoginLoading(false);
+					showOnly(loginView);
+					return;
+				}
+
+				if (event === "SIGNED_IN") {
+					void handleAuthenticated(session);
+				}
+
+				// TOKEN_REFRESHED / USER_UPDATED / INITIAL_SESSION con
+				// sesion ya vigente: no hay que re-disparar el flujo
+				// completo (perderia pagina/filtros actuales).
+			},
+		);
+
+		authSubscription = authListener.subscription;
+
+		void supabase.auth.getSession().then(({ data }) => {
+			if (data.session) {
+				void handleAuthenticated(data.session);
+			} else {
+				showOnly(loginView);
+			}
+		});
+
+		(root as any)._adminDispose = () => {
+			stopAutoRefresh();
+			authSubscription?.unsubscribe();
+			authSubscription = null;
+			window.removeEventListener("hashchange", handleHashChange);
+			// Cierra la etiqueta si quedo abierta: quita su listener de
+			// teclado en window, la clase de impresion del body y el
+			// temporizador del aviso de copiado.
+			closeLabelModal();
+			window.clearTimeout(labelFeedbackTimer);
+			document.body.classList.remove(LABEL_BODY_CLASS);
+			closeOverlay(DRAWER_OVERLAY_ID);
+			closeOverlay(SIDEBAR_OVERLAY_ID);
+			root.dataset.adminReady = "false";
+		};
+	};
+
+	initAdminDashboard();
+	document.addEventListener("astro:page-load", initAdminDashboard);
+
+	document.addEventListener("astro:before-swap", () => {
+		const root = document.querySelector<HTMLElement>(
+			"[data-admin-orders]",
+		);
+		(root as any)?._adminDispose?.();
+	});
+</script>
+
+<style is:global>
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border: 0;
+	}
+
+	.admin-orders {
+		min-height: 60vh;
+		background: var(--color-white);
+		/*
+		 * Lenguaje visual de referencia (Stitch "TAQTO - Minimalist Organic
+		 * Admin Panel"): geometria mas tecnica y sobria que el resto del
+		 * sitio -- radios casi rectos, sombras casi planas, bordes
+		 * hairline. Se redefinen aqui, dentro del scope de esta pagina, en
+		 * vez de tocar los tokens globales de BaseLayout (que otras
+		 * paginas siguen usando redondeados). Toda regla de este archivo
+		 * que ya usa var(--radius-*) / var(--shadow-*) hereda estos
+		 * valores automaticamente.
+		 */
+		--radius-sm: 4px;
+		--radius-md: 6px;
+		--radius-lg: 10px;
+		--shadow-sm: 0 1px 2px rgba(20, 20, 20, 0.04);
+		--shadow-md: 0 4px 16px rgba(20, 20, 20, 0.06);
+		--admin-label-tracking: 0.08em;
+	}
+
+	/*
+	 * El reset global (BaseLayout) fuerza `display: block` en todo
+	 * svg/img/video, y varias reglas de aqui abajo fuerzan su propio
+	 * `display` en las vistas (login/forbidden/dashboard/drawer). Una
+	 * regla de autor con `display` explicito le gana SIEMPRE a la regla
+	 * `[hidden]{display:none}` del user-agent, sin importar
+	 * especificidad: sin este override, el atributo `hidden` que
+	 * Astro/JS activan para alternar vistas no ocultaba nada.
+	 */
+	.admin-orders [hidden] {
+		display: none !important;
+	}
+
+	.admin-config-error {
+		max-width: 560px;
+		margin-inline: auto;
+		margin-top: clamp(20px, 4vw, 48px);
+		padding: var(--space-lg);
+		border-radius: var(--radius-md);
+		background: var(--color-white);
+		text-align: center;
+	}
+
+	/* ---------- Superficie admin ----------
+	 * Antes "Liquid Glass" (fondo translucido + backdrop-filter). Se
+	 * reemplaza por una superficie opaca con borde hairline, siguiendo el
+	 * lenguaje sobrio y sin transparencias de la referencia Stitch. El
+	 * nombre de la clase se conserva (se usa en decenas de elementos del
+	 * marcado) para no tocar el HTML/JS de este archivo.
+	 */
+
+	.admin-glass {
+		background: var(--color-white);
+		border: 1px solid var(--ink-08);
+		box-shadow: var(--shadow-sm);
+	}
+
+	/* ---------- Login ---------- */
+
+	.admin-login {
+		display: grid;
+		place-items: center;
+		min-height: 100vh;
+		padding: 16px;
+		background: var(--color-white);
+	}
+
+	.admin-login__card {
+		width: min(100%, 400px);
+		padding: clamp(24px, 5vw, 28px);
+		border-radius: 20px;
+	}
+
+	.admin-login__eyebrow {
+		margin: 0 0 4px;
+		font-size: 12px;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--color-orange);
+	}
+
+	.admin-login__title {
+		margin: 0 0 6px;
+		font-size: clamp(1.375rem, 4vw, 1.5rem);
+		font-weight: 700;
+	}
+
+	.admin-login__subtitle {
+		margin: 0 0 22px;
+		color: var(--ink-70);
+		font-size: 13px;
+	}
+
+	.admin-login__form {
+		display: grid;
+		gap: 6px;
+	}
+
+	.admin-login__label {
+		font-size: 12px;
+		font-weight: 600;
+		color: var(--ink-70);
+	}
+
+	.admin-login__input {
+		min-height: 42px;
+		margin-bottom: 14px;
+		padding: 10px 14px;
+		border: 1px solid var(--ink-15);
+		border-radius: var(--radius-sm);
+		background: var(--color-white);
+		font-size: 14px;
+	}
+
+	.admin-login__input:focus-visible {
+		outline: none;
+		border-color: var(--color-orange);
+		box-shadow: var(--focus-ring);
+	}
+
+	.admin-login__error {
+		margin: -4px 0 14px;
+		padding: 10px 12px;
+		border-radius: var(--radius-sm);
+		background: rgba(168, 51, 26, 0.08);
+		color: #a8331a;
+		font-size: 13px;
+	}
+
+	.admin-login__submit {
+		margin-top: 4px;
+		min-height: 42px;
+	}
+
+	.admin-login__spinner {
+		width: 18px;
+		height: 18px;
+		animation: admin-spin 900ms linear infinite;
+	}
+
+	@media (max-width: 360px) {
+		.admin-login__card {
+			padding: 20px;
+		}
+	}
+
+	/* ---------- Forbidden ---------- */
+
+	.admin-forbidden {
+		display: grid;
+		place-items: center;
+		min-height: 100vh;
+		background: var(--color-white);
+	}
+
+	.admin-forbidden__card {
+		display: grid;
+		gap: 14px;
+		justify-items: center;
+		width: min(100%, 380px);
+		padding: clamp(24px, 4vw, 36px);
+		border-radius: var(--radius-lg);
+		text-align: center;
+	}
+
+	.admin-forbidden__card svg {
+		width: 36px;
+		height: 36px;
+		color: #a8331a;
+	}
+
+	/* ---------- Shell: sidebar + topbar ---------- */
+
+	.admin-shell {
+		--admin-sidebar-width: 216px;
+		--admin-gap-sm: 8px;
+		--admin-gap-md: 12px;
+		--admin-gap-lg: 16px;
+		display: grid;
+		grid-template-columns: var(--admin-sidebar-width) minmax(0, 1fr);
+		align-items: start;
+		min-height: 100vh;
+		background: var(--surface-app, #f7f7f6);
+	}
+
+	.admin-sidebar-backdrop {
+		position: fixed;
+		inset: 0;
+		z-index: 500;
+		background: rgba(20, 16, 14, 0.45);
+	}
+
+	.admin-sidebar {
+		position: sticky;
+		top: 0;
+		height: 100vh;
+		display: flex;
+		flex-direction: column;
+		gap: var(--admin-gap-sm, 8px);
+		padding: 16px 12px;
+		border-radius: 0;
+		border-width: 0 1px 0 0;
+		background: var(--color-white);
+	}
+
+	.admin-sidebar__brand {
+		padding: 2px 8px 14px;
+		margin-bottom: 4px;
+		border-bottom: 1px solid var(--ink-08);
+	}
+
+	.admin-sidebar__brand-mark {
+		margin: 0;
+		font-size: var(--text-md);
+		font-weight: 800;
+		letter-spacing: 0.02em;
+		color: var(--color-black);
+	}
+
+	.admin-sidebar__brand-sub {
+		margin: 2px 0 0;
+		font-size: var(--text-xs);
+		color: var(--ink-55);
+	}
+
+	.admin-sidebar__nav {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: grid;
+		align-content: start;
+		gap: 4px;
+		/* No flex:1 aqui: eso estiraba las filas del grid y separaba
+			Resumen/Pedidos/Inventario entre si. El espacio libre debe
+			quedar solo antes de la cuenta (ver .admin-sidebar__footer). */
+		flex: 0 0 auto;
+	}
+
+	.admin-sidebar__link {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		min-height: 42px;
+		padding: 9px 12px;
+		border-radius: 9px;
+		border-left: 3px solid transparent;
+		color: var(--ink-70);
+		font-weight: 600;
+		font-size: 13.5px;
+		text-decoration: none;
+		transition:
+			background 160ms var(--ease-out, ease),
+			color 160ms var(--ease-out, ease),
+			border-color 160ms var(--ease-out, ease);
+	}
+
+	.admin-sidebar__link svg {
+		width: 17px;
+		height: 17px;
+		flex: 0 0 auto;
+		color: var(--ink-55);
+		transition: color 160ms ease;
+	}
+
+	.admin-sidebar__link:hover {
+		background: var(--ink-08);
+	}
+
+	.admin-sidebar__link:focus-visible {
+		outline: none;
+		box-shadow: var(--focus-ring);
+	}
+
+	.admin-sidebar__link.is-active {
+		background: rgba(255, 122, 26, 0.1);
+		color: var(--color-black);
+		border-left-color: var(--color-orange);
+	}
+
+	.admin-sidebar__link.is-active svg {
+		color: var(--color-orange);
+	}
+
+	.admin-sidebar__footer {
+		display: grid;
+		gap: 10px;
+		padding-top: 12px;
+		/* auto empuja la cuenta/logout al fondo del panel flex-column,
+			sin repartir espacio entre las opciones de navegacion. */
+		margin-top: auto;
+		border-top: 1px solid var(--ink-08);
+	}
+
+	.admin-sidebar__profile {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		padding: 4px 8px;
+		min-width: 0;
+	}
+
+	.admin-sidebar__profile-avatar {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 32px;
+		height: 32px;
+		flex: 0 0 auto;
+		border-radius: var(--radius-full);
+		background: var(--color-black);
+		color: var(--color-white);
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 0.02em;
+	}
+
+	.admin-sidebar__profile-name {
+		margin: 0;
+		font-size: 13px;
+		font-weight: 600;
+		color: var(--color-black);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.admin-sidebar__logout {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		min-height: 40px;
+		padding: 9px 12px;
+		border: 1px solid var(--ink-15);
+		border-radius: 9px;
+		background: transparent;
+		color: var(--ink-70);
+		font-weight: 600;
+		font-size: 13px;
+		cursor: pointer;
+		transition: background 160ms ease;
+	}
+
+	.admin-sidebar__logout svg {
+		width: 16px;
+		height: 16px;
+	}
+
+	.admin-sidebar__logout:hover {
+		background: var(--ink-08);
+	}
+
+	.admin-sidebar__logout:focus-visible {
+		outline: none;
+		box-shadow: var(--focus-ring);
+	}
+
+	.admin-main {
+		display: grid;
+		gap: clamp(16px, 2vw, 24px);
+		padding: clamp(16px, 2.4vw, 28px) clamp(16px, 3vw, 32px)
+			clamp(48px, 6vw, 72px);
+		min-width: 0;
+	}
+
+	.admin-menu-toggle {
+		display: none;
+		align-items: center;
+		justify-content: center;
+		width: 40px;
+		height: 40px;
+		border: 1px solid var(--ink-15);
+		border-radius: var(--radius-sm);
+		background: var(--color-white);
+		cursor: pointer;
+	}
+
+	.admin-menu-toggle svg {
+		width: 20px;
+		height: 20px;
+	}
+
+	.admin-menu-toggle:focus-visible {
+		outline: none;
+		box-shadow: var(--focus-ring);
+	}
+
+	.admin-topbar {
+		position: sticky;
+		top: clamp(8px, 1.4vw, 14px);
+		z-index: 20;
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: var(--admin-gap-md, 12px);
+		padding: 13px clamp(14px, 2.2vw, 22px);
+		border-radius: var(--radius-md);
+	}
+
+	.admin-topbar__refresh {
+		min-height: 37px;
+	}
+
+	.admin-topbar__welcome {
+		flex: 1 1 220px;
+		min-width: 0;
+	}
+
+	.admin-topbar__title {
+		margin: 0;
+		font-size: 17px;
+		font-weight: 700;
+		color: var(--color-black);
+	}
+
+	.admin-topbar__subtitle {
+		margin: 2px 0 0;
+		font-size: var(--text-xs);
+		color: var(--ink-55);
+	}
+
+	.admin-topbar__subtitle strong {
+		font-weight: 700;
+		color: var(--ink-70);
+	}
+
+	.admin-topbar__meta {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+	}
+
+	.admin-topbar__updated {
+		margin: 0;
+		font-size: var(--text-xs);
+		color: var(--ink-55);
+		white-space: nowrap;
+	}
+
+	.admin-topbar__refresh svg {
+		transition: transform 400ms ease;
+	}
+
+	.admin-topbar__refresh svg.is-spinning {
+		animation: admin-spin 900ms linear infinite;
+	}
+
+	@keyframes admin-spin {
+		to {
+			transform: rotate(360deg);
+		}
+	}
+
+	.admin-avatar {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 36px;
+		height: 36px;
+		border-radius: var(--radius-full);
+		background: var(--color-black);
+		color: var(--color-white);
+		font-size: var(--text-xs);
+		font-weight: 700;
+		letter-spacing: 0.02em;
+		flex: 0 0 auto;
+	}
+
+	/* ---------- Vistas ---------- */
+
+	.admin-view {
+		display: grid;
+		gap: clamp(16px, 2vw, 22px);
+	}
+
+	.admin-panel__error {
+		margin: 0;
+		padding: 10px 14px;
+		border-radius: var(--radius-sm);
+		background: rgba(168, 51, 26, 0.08);
+		color: #a8331a;
+		font-size: var(--text-sm);
+	}
+
+	/* ---------- Resumen ---------- */
+
+	.admin-resumen-grid {
+		display: grid;
+		grid-template-columns: repeat(12, minmax(0, 1fr));
+		gap: var(--admin-gap-lg, 16px);
+	}
+
+	.admin-resumen-grid > section {
+		grid-column: span 6;
+	}
+
+	/* ---------- Charts (Resumen) ---------- */
+	/* 12 columnas: grafico de 7 dias ocupa 7, pedidos por estado 5. */
+
+	.admin-charts-grid {
+		display: grid;
+		grid-template-columns: repeat(12, minmax(0, 1fr));
+		gap: var(--admin-gap-lg, 16px);
+	}
+
+	.admin-panel--chart-7d {
+		grid-column: span 7;
+	}
+
+	.admin-panel--chart-status {
+		grid-column: span 5;
+	}
+
+	.admin-panel--chart-7d,
+	.admin-panel--chart-status {
+		max-height: 300px;
+		overflow-y: auto;
+	}
+
+	/* Grafico de barras verticales: HTML/CSS puro, sin canvas ni SVG. */
+	.admin-bar-chart {
+		display: flex;
+		align-items: flex-end;
+		gap: clamp(6px, 1.6vw, 14px);
+		height: 160px;
+		padding-top: 20px;
+	}
+
+	.admin-bar-chart__col {
+		display: flex;
+		flex: 1 1 0;
+		flex-direction: column;
+		align-items: center;
+		justify-content: flex-end;
+		height: 100%;
+		min-width: 0;
+	}
+
+	.admin-bar-chart__value {
+		margin-bottom: 6px;
+		font-size: 10.5px;
+		font-weight: 600;
+		color: var(--ink-70);
+		white-space: nowrap;
+	}
+
+	.admin-bar-chart__track {
+		display: flex;
+		align-items: flex-end;
+		width: 100%;
+		max-width: 34px;
+		height: 100%;
+		border-radius: 6px 6px 0 0;
+		background: var(--ink-08);
+		overflow: hidden;
+	}
+
+	.admin-bar-chart__bar {
+		width: 100%;
+		min-height: 2px;
+		border-radius: 6px 6px 0 0;
+		background: var(--color-orange);
+		transition: height 300ms ease;
+	}
+
+	.admin-bar-chart__label {
+		margin-top: 6px;
+		font-size: 10.5px;
+		color: var(--ink-55);
+		white-space: nowrap;
+	}
+
+	/* Barras horizontales de "Pedidos por estado", en el orden real del
+		flujo (no alfabetico): el color es solo un refuerzo, la etiqueta y
+		el numero siempre estan como texto. */
+	.admin-hbar-list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: grid;
+		gap: 6px;
+	}
+
+	.admin-hbar-row {
+		display: grid;
+		grid-template-columns: minmax(88px, 124px) 1fr auto;
+		align-items: center;
+		gap: 8px;
+		min-height: 24px;
+	}
+
+	.admin-hbar-row__label {
+		font-size: 11.5px;
+		color: var(--ink-70);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.admin-hbar-row__track {
+		height: 6px;
+		border-radius: var(--radius-full);
+		background: var(--ink-08);
+		overflow: hidden;
+	}
+
+	.admin-hbar-row__fill {
+		height: 100%;
+		border-radius: var(--radius-full);
+		background: var(--ink-35, #9c9c9c);
+		transition: width 300ms ease;
+	}
+
+	.admin-hbar-row__fill[data-status="delivered"],
+	.admin-hbar-row__fill[data-status="shipped"],
+	.admin-hbar-row__fill[data-status="ready_to_ship"],
+	.admin-hbar-row__fill[data-status="mockup_approved"] {
+		background: #23b33a;
+	}
+
+	.admin-hbar-row__fill[data-status="cancelled"] {
+		background: #a8331a;
+	}
+
+	.admin-hbar-row__fill[data-status="payment_pending"],
+	.admin-hbar-row__fill[data-status="mockup_pending"] {
+		background: #ffb300;
+	}
+
+	.admin-hbar-row__fill[data-status="payment_verified"],
+	.admin-hbar-row__fill[data-status="mockup_sent"],
+	.admin-hbar-row__fill[data-status="in_production"] {
+		background: #2f7de1;
+	}
+
+	.admin-hbar-row__value {
+		min-width: 22px;
+		text-align: right;
+		font-size: 12.5px;
+		font-variant-numeric: tabular-nums;
+		color: var(--color-black);
+	}
+
+	.admin-panel {
+		padding: clamp(16px, 2vw, 20px);
+		border-radius: var(--radius-md);
+	}
+
+	.admin-panel__head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 10px;
+		margin-bottom: 12px;
+	}
+
+	.admin-panel__head h3 {
+		margin: 0;
+		font-size: 11px;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: var(--admin-label-tracking);
+		color: var(--ink-55);
+	}
+
+	.admin-panel__loading,
+	.admin-panel__empty {
+		margin: 0;
+		padding: 8px 0;
+		color: var(--ink-55);
+		font-size: var(--text-sm);
+	}
+
+	.admin-panel__empty--compact {
+		padding-top: 4px;
+		font-size: 11.5px;
+	}
+
+	.admin-mini-list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: grid;
+		gap: 10px;
+	}
+
+	.admin-mini-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+		padding: 10px 0;
+		border-bottom: 1px solid var(--ink-08);
+	}
+
+	.admin-mini-row:last-child {
+		border-bottom: 0;
+		padding-bottom: 0;
+	}
+
+	.admin-mini-row__main {
+		min-width: 0;
+	}
+
+	.admin-mini-row__title {
+		margin: 0;
+		font-weight: 600;
+		font-size: var(--text-sm);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.admin-mini-row__meta {
+		margin: 2px 0 0;
+		font-size: var(--text-xs);
+		color: var(--ink-55);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.admin-mini-row__side {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		flex: 0 0 auto;
+	}
+
+	.admin-mini-row__total {
+		font-size: var(--text-sm);
+		font-weight: 600;
+		white-space: nowrap;
+	}
+
+	/* ---------- Metrics ---------- */
+
+	.admin-metrics-row {
+		display: grid;
+		gap: var(--admin-gap-md, 12px);
+	}
+
+	.admin-metric-cards {
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: var(--admin-gap-md, 12px);
+	}
+
+	.admin-metric-card {
+		display: block;
+		width: 100%;
+		min-height: 120px;
+		padding: 16px;
+		border: 1px solid var(--ink-08);
+		border-radius: var(--radius-md);
+		background: var(--color-white);
+		box-shadow: var(--shadow-sm);
+		text-align: left;
+		font: inherit;
+		color: inherit;
+		cursor: default;
+		transition:
+			transform 160ms var(--ease-out, ease),
+			box-shadow 160ms var(--ease-out, ease),
+			border-color 160ms var(--ease-out, ease);
+	}
+
+	button.admin-metric-card {
+		cursor: pointer;
+		border: 1px solid var(--ink-08);
+	}
+
+	button.admin-metric-card:hover,
+	button.admin-metric-card:focus-visible {
+		transform: translateY(-2px);
+		box-shadow: var(--shadow-md);
+		border-color: var(--ink-15);
+	}
+
+	button.admin-metric-card:focus-visible {
+		outline: none;
+		box-shadow: var(--focus-ring), var(--shadow-md);
+	}
+
+	button.admin-metric-card:active {
+		transform: translateY(-1px);
+	}
+
+	.admin-metric-card--warn .admin-metric-card__value {
+		color: #8a5a00;
+	}
+
+	.admin-metric-card--danger .admin-metric-card__value {
+		color: #a8331a;
+	}
+
+	.admin-metric-card__icon {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 28px;
+		height: 28px;
+		margin-bottom: 8px;
+		border-radius: 8px;
+		background: var(--ink-08);
+		color: var(--ink-70);
+	}
+
+	.admin-metric-card__icon svg {
+		width: 15px;
+		height: 15px;
+	}
+
+	.admin-metric-card--warn .admin-metric-card__icon {
+		background: rgba(255, 179, 0, 0.16);
+		color: #8a5a00;
+	}
+
+	.admin-metric-card__label {
+		margin: 0 0 4px;
+		font-size: 10.5px;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: var(--admin-label-tracking);
+		color: var(--ink-55);
+	}
+
+	.admin-metric-card__value {
+		margin: 0;
+		font-size: clamp(26px, 2.4vw, 30px);
+		font-weight: 600;
+		line-height: 1.15;
+	}
+
+	.admin-metric-card__hint {
+		margin: 4px 0 0;
+		font-size: 11.5px;
+		color: var(--ink-55);
+	}
+
+	.admin-stat-strip {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 10px;
+	}
+
+	.admin-stat-chip {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 8px 14px;
+		border-radius: var(--radius-full);
+		background: var(--surface-warm);
+		font-size: var(--text-xs);
+		color: var(--ink-70);
+	}
+
+	.admin-stat-chip strong {
+		font-size: var(--text-sm);
+		color: var(--color-black);
+	}
+
+	.admin-status-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+		gap: 8px;
+		margin: 14px 0 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.admin-status-chip {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 8px;
+		padding: 8px 12px;
+		border-radius: var(--radius-sm);
+		background: var(--color-white);
+		font-size: var(--text-xs);
+		color: var(--ink-70);
+	}
+
+	.admin-status-chip strong {
+		font-size: var(--text-sm);
+		color: var(--color-black);
+	}
+
+	.admin-metrics__error {
+		margin: 0;
+		color: #a8331a;
+		font-size: var(--text-sm);
+	}
+
+	/* ---------- Filters ---------- */
+
+	.admin-filters {
+		padding: 14px clamp(14px, 2.4vw, 22px);
+		border-radius: var(--radius-md);
+	}
+
+	.admin-filters__toggle {
+		display: none;
+		width: 100%;
+		min-height: 42px;
+		border: 1px solid var(--ink-15);
+		border-radius: var(--radius-sm);
+		background: var(--surface);
+		font-weight: 600;
+	}
+
+	.admin-filters__panel {
+		display: grid;
+		gap: 12px;
+	}
+
+	.admin-filters__row--search {
+		display: grid;
+	}
+
+	/*
+	 * Segunda fila: Estado | Pago | Entrega | Desde | Hasta | Limpiar.
+	 * Las columnas de fecha llevan mas ancho minimo (165px) para que el
+	 * icono nativo del <input type="date"> nunca quede recortado ni
+	 * superpuesto con el valor.
+	 */
+	.admin-filters__row--grid {
+		display: grid;
+		grid-template-columns:
+			minmax(140px, 0.8fr) minmax(140px, 0.8fr) minmax(150px, 1fr)
+			minmax(165px, 0.9fr) minmax(165px, 0.9fr) auto;
+		gap: 12px;
+		align-items: end;
+	}
+
+	/* Panel de filtros del inventario: no tiene filas separadas
+		(busqueda + 2 selects + limpiar caben juntos), asi que conserva un
+		grid auto-fit propio en vez del de dos filas de Pedidos. */
+	.admin-filters__panel--static {
+		grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+		align-items: end;
+	}
+
+	.admin-filters__field {
+		display: grid;
+		gap: 4px;
+		min-width: 0;
+	}
+
+	.admin-filters__field--search {
+		grid-column: 1 / -1;
+	}
+
+	.admin-filters__field label {
+		font-size: 11.5px;
+		font-weight: 600;
+		color: var(--ink-55);
+	}
+
+	.admin-filters__field input,
+	.admin-filters__field select {
+		min-height: 41px;
+		padding: 8px 12px;
+		border: 1px solid var(--ink-15);
+		border-radius: var(--radius-sm);
+		font-size: 13px;
+		background: var(--surface);
+	}
+
+	.admin-filters__field input[type="date"] {
+		padding-right: 8px;
+	}
+
+	.admin-filters__field input:focus-visible,
+	.admin-filters__field select:focus-visible {
+		outline: none;
+		border-color: var(--color-orange);
+		box-shadow: var(--focus-ring);
+	}
+
+	.admin-filters__clear {
+		align-self: end;
+		min-height: 41px;
+		white-space: nowrap;
+	}
+
+	/* ---------- Table ---------- */
+
+	.admin-table-wrap {
+		max-height: 72vh;
+		overflow-x: auto;
+		overflow-y: auto;
+		border-radius: var(--radius-md);
+	}
+
+	.admin-table {
+		width: 100%;
+		min-width: 920px;
+		border-collapse: collapse;
+		font-size: 12.5px;
+		font-variant-numeric: tabular-nums;
+	}
+
+	.admin-table thead th {
+		position: sticky;
+		top: 0;
+		z-index: 2;
+		padding: 10px 12px;
+		border-bottom: 1px solid var(--ink-15);
+		background: var(--color-white);
+		text-align: left;
+		font-size: 11px;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--ink-55);
+		white-space: nowrap;
+	}
+
+	.admin-table td {
+		padding: 10px 12px;
+		border-bottom: 1px solid var(--ink-08);
+		white-space: nowrap;
+		vertical-align: middle;
+	}
+
+	.admin-table tbody tr.admin-table__row:hover {
+		background: var(--ink-04, rgba(20, 20, 20, 0.025));
+	}
+
+	.admin-table__num,
+	th.admin-table__num {
+		text-align: right;
+	}
+
+	.admin-table__total {
+		font-weight: 600;
+	}
+
+	.admin-cell__main {
+		display: block;
+		font-weight: 600;
+		color: var(--color-black);
+	}
+
+	.admin-cell__meta {
+		display: block;
+		margin-top: 2px;
+		font-size: 11px;
+		color: var(--ink-55);
+	}
+
+	.admin-product-summary {
+		white-space: normal;
+		max-width: 220px;
+	}
+
+	.admin-product-summary__main {
+		display: block;
+		font-weight: 600;
+		color: var(--color-black);
+	}
+
+	.admin-product-summary__variant,
+	.admin-product-summary__extra {
+		display: block;
+		margin-top: 2px;
+		font-size: 11px;
+		color: var(--ink-55);
+	}
+
+	.admin-product-summary__extra {
+		color: var(--color-orange);
+		font-weight: 600;
+	}
+
+	.admin-table__toggle-cell {
+		width: 32px;
+		padding-inline: 6px;
+	}
+
+	.admin-table__toggle {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 28px;
+		height: 28px;
+		border: 1px solid transparent;
+		border-radius: 8px;
+		background: transparent;
+		color: var(--ink-55);
+		cursor: pointer;
+		transition:
+			background 140ms ease,
+			transform 200ms ease;
+	}
+
+	.admin-table__toggle:hover {
+		background: var(--ink-08);
+		color: var(--ink-70);
+	}
+
+	.admin-table__toggle:focus-visible {
+		outline: none;
+		box-shadow: var(--focus-ring);
+	}
+
+	.admin-table__toggle[aria-expanded="true"] .admin-table__toggle-icon {
+		transform: rotate(180deg);
+	}
+
+	.admin-table__toggle-icon {
+		transition: transform 200ms ease;
+	}
+
+	.admin-table__detail-row td {
+		padding: 0;
+		background: var(--surface-warm);
+	}
+
+	.admin-expanded {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+		gap: 14px;
+		padding: 12px 16px;
+		white-space: normal;
+	}
+
+	.admin-expanded__title {
+		margin: 0 0 4px;
+		font-size: 10.5px;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--ink-55);
+	}
+
+	.admin-expanded__col p {
+		margin: 0 0 2px;
+		font-size: 12px;
+		color: var(--ink-70);
+	}
+
+	.admin-expanded__items {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		font-size: 12px;
+		color: var(--ink-70);
+	}
+
+	.admin-expanded__extra,
+	.admin-expanded__empty {
+		color: var(--ink-55);
+	}
+
+	.admin-view-button {
+		min-height: 34px;
+		padding-inline: 12px;
+		font-size: 12px;
+	}
+
+	.admin-price-strike {
+		color: var(--ink-35);
+		text-decoration: line-through;
+		margin-right: 4px;
+	}
+
+	/*
+	 * Antes chips con fondo de color solido. La referencia Stitch marca el
+	 * estado con un punto de color + texto en mayusculas espaciadas, sin
+	 * pildora de fondo: se conserva el color por estado (redundante con el
+	 * punto, no es el unico portador de significado) pero la superficie
+	 * vuelve a ser plana.
+	 */
+	.admin-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		padding: 2px 0;
+		border-radius: 0;
+		background: transparent;
+		color: var(--ink-70);
+		font-size: 10.5px;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: var(--admin-label-tracking);
+		white-space: nowrap;
+	}
+
+	.admin-badge::before {
+		content: "";
+		flex: 0 0 auto;
+		width: 6px;
+		height: 6px;
+		border-radius: var(--radius-full);
+		background: var(--ink-35);
+	}
+
+	.admin-badge--outline {
+		padding: 3px 10px;
+		border: 1px solid var(--ink-15);
+		border-radius: var(--radius-full);
+	}
+
+	.admin-badge[data-status="delivered"],
+	.admin-badge[data-status="shipped"],
+	.admin-badge[data-status="ready_to_ship"],
+	.admin-badge[data-status="mockup_approved"],
+	.admin-badge[data-payment-status="verified"],
+	.admin-badge[data-stock-status="available"] {
+		color: #1c7a2f;
+	}
+
+	.admin-badge[data-status="delivered"]::before,
+	.admin-badge[data-status="shipped"]::before,
+	.admin-badge[data-status="ready_to_ship"]::before,
+	.admin-badge[data-status="mockup_approved"]::before,
+	.admin-badge[data-payment-status="verified"]::before,
+	.admin-badge[data-stock-status="available"]::before {
+		background: #1c7a2f;
+	}
+
+	.admin-badge[data-status="cancelled"],
+	.admin-badge[data-payment-status="rejected"],
+	.admin-badge[data-stock-status="out"] {
+		color: #a8331a;
+	}
+
+	.admin-badge[data-status="cancelled"]::before,
+	.admin-badge[data-payment-status="rejected"]::before,
+	.admin-badge[data-stock-status="out"]::before {
+		background: #a8331a;
+	}
+
+	.admin-badge[data-status="payment_pending"],
+	.admin-badge[data-status="mockup_pending"],
+	.admin-badge[data-payment-status="pending"],
+	.admin-badge[data-payment-status="reported"],
+	.admin-badge[data-stock-status="low"] {
+		color: #8a5a00;
+	}
+
+	.admin-badge[data-status="payment_pending"]::before,
+	.admin-badge[data-status="mockup_pending"]::before,
+	.admin-badge[data-payment-status="pending"]::before,
+	.admin-badge[data-payment-status="reported"]::before,
+	.admin-badge[data-stock-status="low"]::before {
+		background: #8a5a00;
+	}
+
+	.admin-engraving-flag {
+		color: var(--color-orange);
+	}
+
+	.admin-table__empty,
+	.admin-table__error {
+		margin: 0;
+		padding: 28px 16px;
+		text-align: center;
+		color: var(--ink-55);
+	}
+
+	.admin-table__error {
+		color: #a8331a;
+	}
+
+	/* ---------- Pagination ---------- */
+
+	.admin-pagination {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 16px;
+		font-size: var(--text-sm);
+		color: var(--ink-70);
+	}
+
+	/* ---------- Drawer ---------- */
+
+	/*
+	 * Detalle del pedido: modal centrado y opaco (no drawer lateral).
+	 * Sin blur ni backdrop-filter: la superficie es 100% solida.
+	 */
+
+	.admin-drawer-backdrop {
+		position: fixed;
+		inset: 0;
+		z-index: 500;
+		background: rgba(20, 20, 20, 0.55);
+	}
+
+	.admin-drawer {
+		position: fixed;
+		inset: 0;
+		margin: auto;
+		z-index: 501;
+		width: min(92vw, 1000px);
+		height: fit-content;
+		max-height: 88vh;
+		display: flex;
+		flex-direction: column;
+		border-radius: var(--radius-md);
+		border: 1px solid var(--ink-15);
+		background: var(--color-white);
+		box-shadow: var(--shadow-dark-lg);
+		transform: scale(0.98);
+		opacity: 0;
+		animation: admin-drawer-in var(--dur-panel, 220ms)
+			var(--ease-panel, ease) forwards;
+	}
+
+	@keyframes admin-drawer-in {
+		from {
+			opacity: 0;
+			transform: scale(0.98);
+		}
+		to {
+			opacity: 1;
+			transform: scale(1);
+		}
+	}
+
+	.admin-drawer__head {
+		display: flex;
+		align-items: flex-start;
+		gap: 14px;
+		padding: 18px 20px;
+		border-bottom: 1px solid var(--ink-15);
+		flex-wrap: wrap;
+	}
+
+	.admin-drawer__head-main {
+		flex: 1 1 220px;
+		min-width: 0;
+		display: grid;
+		gap: 4px;
+	}
+
+	.admin-drawer__head h2 {
+		margin: 0;
+		font-size: var(--text-lg);
+		overflow-wrap: anywhere;
+	}
+
+	.admin-drawer__subtitle {
+		margin: 0;
+		font-size: var(--text-sm);
+		color: var(--ink-55);
+	}
+
+	.admin-drawer__chips {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 8px;
+		padding-top: 2px;
+	}
+
+	.admin-drawer__close {
+		flex: 0 0 auto;
+		margin-left: auto;
+	}
+
+	.admin-drawer__body {
+		flex: 1;
+		overflow-y: auto;
+		padding: 20px;
+		display: grid;
+		gap: 20px;
+	}
+
+	.admin-drawer__summary {
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: 1px;
+		background: var(--ink-15);
+		border: 1px solid var(--ink-15);
+		border-radius: var(--radius-sm);
+		overflow: hidden;
+	}
+
+	.admin-drawer__summary-item {
+		display: grid;
+		gap: 4px;
+		padding: 12px 14px;
+		background: var(--surface-warm);
+	}
+
+	.admin-drawer__summary-label {
+		font-size: var(--text-xs);
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--ink-55);
+	}
+
+	.admin-drawer__summary-value {
+		font-size: var(--text-md);
+		font-weight: 700;
+		overflow-wrap: anywhere;
+	}
+
+	.admin-drawer__columns {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 300px);
+		gap: 24px;
+		align-items: start;
+	}
+
+	.admin-drawer__col-main,
+	.admin-drawer__col-side {
+		display: grid;
+		gap: 20px;
+		min-width: 0;
+	}
+
+	.admin-drawer__section h3 {
+		margin: 0 0 8px;
+		font-size: var(--text-sm);
+		color: var(--ink-55);
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+	}
+
+	.admin-drawer__section p {
+		margin: 0 0 4px;
+	}
+
+	.admin-drawer__items {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: grid;
+		gap: 12px;
+	}
+
+	.admin-drawer__item {
+		display: flex;
+		justify-content: space-between;
+		gap: 12px;
+		padding: 10px 0;
+		border-bottom: 1px solid var(--ink-08);
+	}
+
+	.admin-drawer__item-name {
+		margin: 0;
+		font-weight: 600;
+	}
+
+	.admin-drawer__item-meta,
+	.admin-drawer__item-engraving,
+	.admin-drawer__item-notes {
+		margin: 2px 0 0;
+		font-size: var(--text-xs);
+		color: var(--ink-55);
+	}
+
+	.admin-drawer__item-nums {
+		display: grid;
+		text-align: right;
+		gap: 4px;
+		flex: 0 0 auto;
+		font-size: var(--text-sm);
+	}
+
+	.admin-drawer__totals p {
+		display: flex;
+		justify-content: space-between;
+		font-size: var(--text-sm);
+	}
+
+	.admin-drawer__total-final {
+		margin-top: 6px;
+		padding-top: 6px;
+		border-top: 1px solid var(--ink-15);
+		font-weight: 700;
+		font-size: var(--text-base);
+	}
+
+	.admin-drawer__history {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: grid;
+		gap: 10px;
+	}
+
+	.admin-drawer__history-item {
+		display: grid;
+		gap: 2px;
+		font-size: var(--text-sm);
+	}
+
+	.admin-drawer__history-date {
+		font-size: var(--text-xs);
+		color: var(--ink-55);
+	}
+
+	.admin-drawer__history-note {
+		font-size: var(--text-xs);
+		color: var(--ink-55);
+	}
+
+	.admin-drawer__history-empty,
+	.admin-drawer__loading,
+	.admin-drawer__error {
+		color: var(--ink-55);
+		font-size: var(--text-sm);
+	}
+
+	/* ---------- Gestión del pedido ---------- */
+
+	.admin-manage {
+		display: grid;
+		gap: 12px;
+		padding: 14px;
+		border: 1px solid var(--ink-15);
+		border-radius: var(--radius-md);
+		background: var(--surface-warm);
+	}
+
+	.admin-manage h3 {
+		margin: 0;
+	}
+
+	.admin-manage__current {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 8px;
+		margin: 0;
+		font-size: var(--text-sm);
+		color: var(--ink-70);
+	}
+
+	.admin-manage__field {
+		display: grid;
+		gap: 4px;
+	}
+
+	.admin-manage__field label {
+		font-size: var(--text-xs);
+		color: var(--ink-55);
+	}
+
+	.admin-manage__field select,
+	.admin-manage__field textarea {
+		width: 100%;
+		min-height: 44px;
+		padding: 10px 12px;
+		border: 1px solid var(--ink-15);
+		border-radius: var(--radius-sm);
+		background: var(--color-white);
+		font: inherit;
+		font-size: var(--text-sm);
+	}
+
+	.admin-manage__field textarea {
+		resize: vertical;
+	}
+
+	.admin-manage__field select:focus-visible,
+	.admin-manage__field textarea:focus-visible {
+		outline: none;
+		border-color: var(--color-orange);
+		box-shadow: var(--focus-ring);
+	}
+
+	.admin-manage__actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 10px;
+	}
+
+	.admin-manage__actions .btn {
+		flex: 1 1 160px;
+		min-height: 44px;
+	}
+
+	.admin-manage__confirm {
+		display: grid;
+		gap: 10px;
+		padding: 12px;
+		border: 1px solid rgba(168, 51, 26, 0.35);
+		border-radius: var(--radius-sm);
+		background: rgba(168, 51, 26, 0.06);
+	}
+
+	.admin-manage__confirm p {
+		margin: 0;
+		font-size: var(--text-sm);
+	}
+
+	.admin-manage__confirm-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+	}
+
+	.admin-manage__confirm-actions .btn {
+		flex: 1 1 140px;
+		min-height: 44px;
+	}
+
+	.admin-manage__feedback {
+		margin: 0;
+		padding: 10px 12px;
+		border-radius: var(--radius-sm);
+		font-size: var(--text-sm);
+		background: var(--ink-08);
+		color: var(--ink-70);
+	}
+
+	.admin-manage__feedback[data-tone="ok"] {
+		background: rgba(35, 179, 58, 0.12);
+		color: #1c7a2f;
+	}
+
+	.admin-manage__feedback[data-tone="warn"] {
+		background: rgba(255, 179, 0, 0.16);
+		color: #8a5a00;
+	}
+
+	.admin-manage__feedback[data-tone="error"] {
+		background: rgba(168, 51, 26, 0.08);
+		color: #a8331a;
+	}
+
+	/* ---------- Etiqueta ---------- */
+
+	.admin-label-backdrop {
+		position: fixed;
+		inset: 0;
+		z-index: 600;
+		background: rgba(20, 16, 14, 0.55);
+	}
+
+	.admin-label-modal {
+		position: fixed;
+		z-index: 601;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		width: min(100% - 24px, 460px);
+		max-height: min(92vh, 900px);
+		display: flex;
+		flex-direction: column;
+		border-radius: var(--radius-md);
+		background: var(--color-white);
+		box-shadow: var(--shadow-dark-lg);
+	}
+
+	.admin-label-modal__head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+		padding: 14px 16px;
+		border-bottom: 1px solid var(--ink-15);
+	}
+
+	.admin-label-modal__head h2 {
+		margin: 0;
+		font-size: var(--text-base);
+	}
+
+	.admin-label-modal__scroll {
+		flex: 1;
+		overflow-y: auto;
+		padding: 16px;
+		background: var(--surface-warm);
+		display: grid;
+		justify-items: center;
+	}
+
+	.admin-label-modal__feedback {
+		margin: 0;
+		padding: 8px 16px;
+		font-size: var(--text-xs);
+		color: #1c7a2f;
+		background: rgba(35, 179, 58, 0.1);
+	}
+
+	.admin-label-modal__actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+		padding: 12px 16px;
+		border-top: 1px solid var(--ink-15);
+	}
+
+	.admin-label-modal__actions .btn {
+		flex: 1 1 130px;
+		min-height: 44px;
+	}
+
+	/*
+	 * Dimensiones de la etiqueta centralizadas en estas dos variables:
+	 * cambiarlas aqui cambia vista previa e impresion a la vez.
+	 */
+	.admin-label {
+		--label-width: 100mm;
+		--label-height: 150mm;
+		--label-padding: 6mm;
+
+		box-sizing: border-box;
+		width: var(--label-width);
+		max-width: 100%;
+		min-height: var(--label-height);
+		padding: var(--label-padding);
+		border: 1px solid #111;
+		background: #fff;
+		color: #000;
+		font-size: 11px;
+		line-height: 1.35;
+	}
+
+	.admin-label__head {
+		padding-bottom: 6px;
+		border-bottom: 2px solid var(--color-orange);
+	}
+
+	.admin-label__brand {
+		margin: 0;
+		font-size: 13px;
+		font-weight: 700;
+		letter-spacing: 0.14em;
+		color: var(--color-orange);
+	}
+
+	.admin-label__number {
+		margin: 2px 0 0;
+		font-size: 20px;
+		font-weight: 700;
+		color: #000;
+	}
+
+	.admin-label__date {
+		margin: 2px 0 0;
+		font-size: 10px;
+		color: #333;
+	}
+
+	.admin-label__status {
+		margin: 8px 0 0;
+	}
+
+	.admin-label__status .admin-badge {
+		border: 1px solid #111;
+		background: transparent;
+		color: #000;
+		font-size: 10px;
+	}
+
+	.admin-label__block {
+		margin-top: 10px;
+		padding-top: 8px;
+		border-top: 1px solid #ccc;
+	}
+
+	.admin-label__block-title {
+		margin: 0 0 4px;
+		font-size: 10px;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: #333;
+	}
+
+	.admin-label__row {
+		display: flex;
+		gap: 8px;
+		margin: 0 0 3px;
+	}
+
+	.admin-label__row span {
+		flex: 0 0 26mm;
+		color: #333;
+	}
+
+	.admin-label__row strong {
+		font-weight: 600;
+		overflow-wrap: anywhere;
+	}
+
+	.admin-label__items {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.admin-label__item {
+		margin-bottom: 5px;
+		/* Un producto nunca se parte entre dos hojas. */
+		break-inside: avoid;
+		page-break-inside: avoid;
+	}
+
+	.admin-label__item-main {
+		margin: 0;
+		font-weight: 600;
+		overflow-wrap: anywhere;
+	}
+
+	.admin-label__item-extra,
+	.admin-label__note {
+		margin: 1px 0 0;
+		font-size: 10px;
+		color: #333;
+		overflow-wrap: anywhere;
+	}
+
+	.admin-label__note {
+		margin-top: 6px;
+	}
+
+	/* ---------- Responsive ---------- */
+
+	@media (max-width: 980px) {
+		.admin-shell {
+			grid-template-columns: 1fr;
+		}
+
+		.admin-menu-toggle {
+			display: inline-flex;
+		}
+
+		.admin-sidebar {
+			position: fixed;
+			inset: 0 auto 0 0;
+			z-index: 501;
+			width: min(84%, 300px);
+			height: 100vh;
+			border-radius: 0;
+			transform: translateX(-100%);
+			transition: transform var(--dur-panel, 220ms) var(--ease-panel, ease);
+		}
+
+		.admin-sidebar.is-open {
+			transform: translateX(0);
+		}
+	}
+
+	@media (max-width: 860px) {
+		.admin-topbar {
+			align-items: flex-start;
+		}
+
+		.admin-topbar__meta {
+			width: 100%;
+			justify-content: space-between;
+		}
+
+		.admin-metric-cards {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+
+		.admin-drawer {
+			width: min(94vw, 720px);
+		}
+
+		.admin-drawer__columns {
+			grid-template-columns: 1fr;
+		}
+
+		.admin-drawer__col-side {
+			gap: 20px;
+		}
+	}
+
+	@media (max-width: 720px) {
+		/* Los paneles de 7/5 columnas y las dos columnas de pedidos
+			recientes / stock critico pasan a apilarse en una sola
+			columna cuando ya no entran comodos uno al lado del otro. */
+		.admin-panel--chart-7d,
+		.admin-panel--chart-status,
+		.admin-resumen-grid > section {
+			grid-column: 1 / -1;
+		}
+
+		.admin-filters__toggle {
+			display: block;
+		}
+
+		.admin-filters__panel {
+			display: none;
+			padding-top: 14px;
+			grid-template-columns: 1fr;
+		}
+
+		.admin-filters__panel.is-open {
+			display: grid;
+		}
+
+		.admin-filters__panel--static {
+			display: grid;
+			grid-template-columns: 1fr;
+			padding-top: 0;
+		}
+
+		/* Tablet: 2 columnas donde entren, fechas ocupan su propia
+			celda pero siguen en la rejilla; Limpiar pasa a fila propia
+			para no quedar apretado. */
+		.admin-filters__row--grid {
+			grid-template-columns: repeat(2, minmax(140px, 1fr));
+		}
+
+		.admin-filters__clear {
+			grid-column: 1 / -1;
+		}
+
+		.admin-drawer__summary {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+
+	@media (max-width: 320px) {
+		.admin-filters__row--grid {
+			grid-template-columns: 1fr;
+		}
+
+		.admin-filters__field input[type="date"] {
+			width: 100%;
+		}
+	}
+
+	@media (max-width: 640px) {
+		.admin-table thead {
+			display: none;
+		}
+
+		.admin-table,
+		.admin-table tbody,
+		.admin-table tr,
+		.admin-table td {
+			display: block;
+			width: 100%;
+		}
+
+		.admin-table tr {
+			margin: 12px;
+			border: 1px solid var(--ink-15);
+			border-radius: var(--radius-md);
+			padding: 4px 12px;
+		}
+
+		.admin-table td {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			gap: 12px;
+			padding: 8px 0;
+			border-bottom: 1px solid var(--ink-08);
+			white-space: normal;
+			text-align: right;
+		}
+
+		.admin-table td:last-child {
+			border-bottom: 0;
+		}
+
+		.admin-table td::before {
+			content: attr(data-label);
+			font-weight: 600;
+			color: var(--ink-70);
+			text-align: left;
+		}
+
+		.admin-mini-row {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 6px;
+		}
+
+		.admin-mini-row__side {
+			width: 100%;
+			justify-content: space-between;
+		}
+
+		/* La tarjeta apilada ya muestra el resumen de producto entero: el
+			chevron de expandir y la fila de detalle (pensados para la
+			tabla de escritorio) se ocultan para no duplicar informacion. */
+		.admin-table__toggle-cell,
+		.admin-table__detail-row {
+			display: none;
+		}
+
+		.admin-cell__main,
+		.admin-cell__meta,
+		.admin-product-summary__main,
+		.admin-product-summary__variant,
+		.admin-product-summary__extra {
+			display: inline;
+			margin: 0;
+		}
+
+		.admin-product-summary {
+			max-width: none;
+		}
+
+		/*
+		 * Movil / tablet estrecha: dialogo casi a pantalla completa (no
+		 * drawer lateral), con margenes exteriores pequenos y altura
+		 * compatible con el viewport dinamico (barras de navegador).
+		 */
+		.admin-drawer {
+			inset: 10px;
+			width: auto;
+			height: auto;
+			max-height: none;
+			max-height: calc(100dvh - 20px);
+			border-radius: var(--radius-sm);
+		}
+
+		.admin-drawer__head {
+			padding: 14px 16px;
+		}
+
+		.admin-drawer__body {
+			padding: 16px;
+			gap: 16px;
+		}
+
+		.admin-drawer__summary {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+
+	@media (max-width: 400px) {
+		/* Por debajo de 400px, dos columnas de tarjeta dejan cada valor
+			(hasta S/ 9,999.99) demasiado apretado: una sola columna. */
+		.admin-metric-cards {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	@media (max-width: 480px) {
+		/* A partir de aqui los botones se apilan: a 320px dos botones en
+			fila dejarian areas tactiles demasiado estrechas. */
+		.admin-manage__actions .btn,
+		.admin-manage__confirm-actions .btn,
+		.admin-label-modal__actions .btn {
+			flex: 1 1 100%;
+		}
+
+		.admin-drawer__summary {
+			grid-template-columns: 1fr;
+		}
+
+		.admin-label-modal {
+			width: calc(100% - 16px);
+			max-height: 94vh;
+		}
+
+		.admin-label-modal__scroll {
+			padding: 10px;
+		}
+
+		/* La hoja de 100mm no cabe a 320px: se deja fluida en pantalla.
+			La impresion vuelve a las medidas reales mas abajo. */
+		.admin-label {
+			width: 100%;
+			min-height: 0;
+			padding: 14px;
+		}
+
+		.admin-label__row span {
+			flex: 0 0 76px;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.admin-login__spinner,
+		.admin-topbar__refresh svg.is-spinning {
+			animation: none;
+		}
+
+		.admin-drawer {
+			animation: none;
+			transform: none;
+			opacity: 1;
+		}
+
+		.admin-sidebar {
+			transition: none;
+		}
+
+		button.admin-metric-card,
+		.admin-sidebar__link,
+		.admin-sidebar__logout {
+			transition:
+				background 1ms linear,
+				border-color 1ms linear,
+				color 1ms linear,
+				box-shadow 1ms linear;
+		}
+
+		button.admin-metric-card:hover,
+		button.admin-metric-card:focus-visible,
+		button.admin-metric-card:active {
+			transform: none;
+		}
+	}
+
+	/* ---------- Impresión ---------- */
+
+	/*
+	 * Solo se aplica cuando la etiqueta esta abierta (body.admin-label-open),
+	 * para que un Ctrl+P con el panel normal no imprima una pagina en
+	 * blanco. Se oculta TODO por visibilidad y se vuelve visible solo la
+	 * hoja de etiqueta: eso cubre Header, Footer, boton flotante de
+	 * WhatsApp, dashboard, drawer, overlay y los propios botones del
+	 * modal sin tener que enumerarlos uno por uno.
+	 */
+	@media print {
+		body.admin-label-open,
+		body.admin-label-open * {
+			visibility: hidden !important;
+			box-shadow: none !important;
+		}
+
+		body.admin-label-open [data-admin-label-sheet],
+		body.admin-label-open [data-admin-label-sheet] * {
+			visibility: visible !important;
+			color: #000 !important;
+			background: transparent !important;
+		}
+
+		body.admin-label-open {
+			background: #fff !important;
+		}
+
+		body.admin-label-open [data-admin-label-sheet] {
+			position: fixed;
+			inset: 0 auto auto 0;
+			width: var(--label-width);
+			min-height: var(--label-height);
+			margin: 0;
+			padding: var(--label-padding);
+			border: 0;
+			background: #fff !important;
+			/* Si el contenido no cabe, se ajusta el espaciado y la
+				tipografia; nunca se recorta ni se omite un producto. */
+			font-size: 10.5px;
+		}
+
+		body.admin-label-open .admin-label__brand,
+		body.admin-label-open .admin-label__head {
+			color: #000 !important;
+		}
+
+		body.admin-label-open .admin-label__head {
+			border-bottom-color: #000 !important;
+		}
+
+		@page {
+			size: 100mm 150mm;
+			margin: 0;
+		}
+	}
+</style>

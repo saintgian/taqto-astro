@@ -5,6 +5,7 @@ import {
 	WHATSAPP_NUMBER,
 	EMPRESAS_CATEGORY_SLUG,
 } from "../lib/constants";
+import WhatsAppIcon from "./icons/WhatsAppIcon.astro";
 import {
 	ChevronDown,
 	ArrowUp,
@@ -329,14 +330,7 @@ const currentYear = new Date().getFullYear();
 							class="footer-whatsapp-cta__icon"
 							aria-hidden="true"
 						>
-							<img
-								src={getUrl("/icons/icon-whastapp.svg")}
-								alt=""
-								width="20"
-								height="20"
-								loading="lazy"
-								decoding="async"
-							/>
+							<WhatsAppIcon width={20} height={20} />
 						</span>
 
 						<span class="footer-whatsapp-cta__copy">
@@ -921,7 +915,8 @@ const currentYear = new Date().getFullYear();
 		place-items: center;
 	}
 
-	.footer-whatsapp-cta__icon img {
+	.footer-whatsapp-cta__icon img,
+	.footer-whatsapp-cta__icon svg {
 		display: block;
 		width: 20px;
 		height: 20px;

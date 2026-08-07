@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Header from "../components/Header.astro";
+import WhatsAppIcon from "../components/icons/WhatsAppIcon.astro";
 import { YAPE_NAME, YAPE_NUMBER_DISPLAY } from "../lib/constants";
 import {
 	ShoppingBag,
@@ -23,7 +24,6 @@ const base = import.meta.env.BASE_URL;
 const catalogHref = `${base}categorias/`;
 const yapeQr = `${base}pagos/qr-yape_1.webp`;
 const yapeLogo = `${base}icons/Yape_peru_logotype.svg`;
-const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 ---
 
 <BaseLayout
@@ -513,12 +513,7 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 									/>
 
 									<span class="payment-option__logo">
-										<img
-											src={whatsappIcon}
-											alt=""
-											width="34"
-											height="34"
-										/>
+										<WhatsAppIcon width={34} height={34} />
 									</span>
 
 									<span class="payment-option__body">
@@ -552,7 +547,7 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 										<img
 											class="payment-option__yape-logo"
 											src={yapeLogo}
-											alt="Yape"
+											alt=""
 											width="62"
 											height="34"
 										/>
@@ -685,6 +680,13 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 				<p class="cart-item__title" data-role="title"></p>
 				<p class="cart-item__variant" data-role="variant"></p>
 				<p class="cart-item__engraving" data-role="engraving"></p>
+				<p
+					class="cart-item__availability"
+					data-role="availability"
+					hidden
+				>
+					Temporalmente agotado
+				</p>
 				<p class="cart-item__price" data-role="unit-price"></p>
 			</div>
 
@@ -717,6 +719,8 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 		removeItem,
 		clearCart,
 		onCartUpdated,
+		getDistinctProductIds,
+		applyAvailability,
 		type CartItem,
 	} from "../lib/cart";
 
@@ -738,7 +742,11 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 		SHIPPING_COST,
 	} from "../lib/constants";
 
-	import { supabase } from "../lib/supabase";
+	// Cliente sin sesion a proposito: si el checkout usara el cliente
+	// persistente compartido con /admin/, en el navegador del administrador
+	// logueado las llamadas irian como `authenticated` y create_order_v2
+	// (concedido solo a `anon`) fallaria.
+	import { supabasePublic as supabase } from "../lib/supabase";
 
 	let disposeCheckout: (() => void) | null = null;
 
@@ -1086,6 +1094,23 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 			}, 3000);
 		};
 
+		// ---------- Disponibilidad real (public_variant_availability) ----------
+
+		// Se consulta una sola vez por carga de /carrito/ (ver
+		// refreshCartAvailability mas abajo); estos estados solo gatean el
+		// CTA "Continuar" mientras esa unica consulta esta en vuelo o si deja
+		// algun item en 0.
+		let isCheckingAvailability = false;
+
+		const setPersistentStockNote = (text: string) => {
+			if (cartStockNoteTimer !== undefined) {
+				window.clearTimeout(cartStockNoteTimer);
+				cartStockNoteTimer = undefined;
+			}
+
+			cartStockNote.textContent = text;
+		};
+
 		const goToStep2Button =
 			document.querySelector<HTMLButtonElement>(
 				"#go-to-step-2",
@@ -1149,6 +1174,21 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 					engraving.textContent = `Grabado: “${item.engravingText}”`;
 				} else {
 					engraving.remove();
+				}
+			}
+
+			const isOutOfStock =
+				typeof item.stock === "number" && item.stock <= 0;
+
+			row.classList.toggle("is-out-of-stock", isOutOfStock);
+
+			const availability = pick("availability");
+
+			if (availability) {
+				if (isOutOfStock) {
+					availability.hidden = false;
+				} else {
+					availability.remove();
 				}
 			}
 
@@ -1244,9 +1284,15 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 			const items = getCart();
 			const isEmpty = items.length === 0;
 
+			const hasOutOfStockItem = items.some(
+				(item) =>
+					typeof item.stock === "number" && item.stock <= 0,
+			);
+
 			cartItemsContainer.replaceChildren();
 			cartEmptyState.hidden = !isEmpty;
-			goToStep2Button.disabled = isEmpty;
+			goToStep2Button.disabled =
+				isEmpty || isCheckingAvailability || hasOutOfStockItem;
 
 			if (!isEmpty) {
 				const list = document.createElement("ul");
@@ -1267,8 +1313,114 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 		renderCartItems();
 		unsubscribeFromCart.push(onCartUpdated(renderCartItems));
 
+		/*
+		 * Una sola pasada por carga de /carrito/: como mucho una llamada a
+		 * public_variant_availability por producto distinto (nunca por
+		 * item/variante). `applyAvailability` escribe en localStorage y
+		 * dispara `cart:updated`, asi que `renderCartItems` ya se vuelve a
+		 * ejecutar sola con los stocks nuevos; aqui solo se anuncia el
+		 * resultado.
+		 */
+		const refreshCartAvailability = async () => {
+			const items = getCart();
+			if (items.length === 0) return;
+
+			if (!supabase) {
+				// Sin cliente publico no hay como consultar: se deja el
+				// carrito tal cual, create_order_v2 sigue siendo la
+				// autoridad final al confirmar.
+				return;
+			}
+
+			const productIds = getDistinctProductIds();
+
+			isCheckingAvailability = true;
+			setPersistentStockNote("Comprobando disponibilidad…");
+			renderCartItems();
+
+			const settled = await Promise.allSettled(
+				productIds.map(async (productId) => {
+					const { data, error } = await supabase!.rpc(
+						"public_variant_availability",
+						{ p_sanity_product_id: productId },
+					);
+
+					if (error) throw error;
+
+					return {
+						productId,
+						rows:
+							(data as Array<{
+								sku: string;
+								stock_quantity: number;
+							}>) ?? [],
+					};
+				}),
+			);
+
+			isCheckingAvailability = false;
+
+			const bySku = new Map<string, number>();
+			const queriedProductIds = new Set<string>();
+
+			settled.forEach((result) => {
+				if (result.status !== "fulfilled") return;
+
+				queriedProductIds.add(result.value.productId);
+				result.value.rows.forEach((row) => {
+					bySku.set(row.sku, row.stock_quantity);
+				});
+			});
+
+			const someFailed = queriedProductIds.size < productIds.length;
+
+			if (queriedProductIds.size === 0) {
+				// Ninguna consulta se pudo completar: no se toca ninguna
+				// cantidad, se muestra el respaldo y se deja avanzar.
+				setPersistentStockNote(
+					"Disponibilidad se confirmará al finalizar tu compra.",
+				);
+				renderCartItems();
+				return;
+			}
+
+			const { adjusted } = applyAvailability(
+				bySku,
+				queriedProductIds,
+			);
+
+			if (adjusted.length > 0) {
+				const [first] = adjusted;
+
+				const message =
+					adjusted.length === 1
+						? `${first.title}: la cantidad se ajustó a ${first.to} por disponibilidad.`
+						: `Ajustamos ${adjusted.length} productos de tu carrito por disponibilidad.`;
+
+				setPersistentStockNote(message);
+
+				cartStockNoteTimer = window.setTimeout(() => {
+					cartStockNote.textContent = "";
+					cartStockNoteTimer = undefined;
+				}, 4000);
+			} else if (someFailed) {
+				setPersistentStockNote(
+					"Disponibilidad se confirmará al finalizar tu compra.",
+				);
+			} else {
+				setPersistentStockNote("");
+			}
+
+			// `applyAvailability` ya disparo `cart:updated` si cambio algo;
+			// esto solo cubre el caso sin cambios, donde nadie mas vuelve a
+			// pintar el boton "Continuar" tras salir de isCheckingAvailability.
+			renderCartItems();
+		};
+
+		void refreshCartAvailability();
+
 		goToStep2Button.addEventListener("click", () => {
-			if (getCart().length === 0) return;
+			if (goToStep2Button.disabled) return;
 			goToStep(2);
 		});
 
@@ -2413,6 +2565,21 @@ const whatsappIcon = `${base}icons/icon-whastapp.svg`;
 
 	.cart-item__engraving {
 		font-style: italic;
+	}
+
+	.cart-item__availability {
+		margin: 4px 0 0;
+		color: #c2410c;
+		font-size: 12.5px;
+		font-weight: 600;
+	}
+
+	.cart-item.is-out-of-stock {
+		opacity: 0.7;
+	}
+
+	.cart-item.is-out-of-stock .cart-item__media {
+		filter: grayscale(0.4);
 	}
 
 	.cart-item__qty {

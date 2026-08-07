@@ -7,6 +7,7 @@ import {
 	EMPRESAS_SUBCATEGORIES,
 } from "../lib/constants";
 import ProductSearch from "./ProductSearch.astro";
+import WhatsAppIcon from "./icons/WhatsAppIcon.astro";
 import {
 	Search,
 	ChevronDown,
@@ -312,12 +313,7 @@ const getCategoryIcon = (slug: string) =>
 					rel="noopener noreferrer"
 					aria-label="Contactar a TAQTO por WhatsApp"
 				>
-					<img
-						src={`${base}icons/icon-whastapp.svg`}
-						alt=""
-						width="22"
-						height="22"
-					/>
+					<WhatsAppIcon width={22} height={22} />
 				</a>
 
 				<button

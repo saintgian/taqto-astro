@@ -681,7 +681,7 @@ const safeVariantJson = JSON.stringify({
 					<span id="product-stock-label">
 						{
 							initialStock > 0
-								? `${initialStock} unidades disponibles`
+								? `${initialStock} ${initialStock === 1 ? "unidad disponible" : "unidades disponibles"}`
 								: "Temporalmente agotado"
 						}
 					</span>
@@ -1121,6 +1121,7 @@ const safeVariantJson = JSON.stringify({
 
 <script>
 	import { addItem } from "../../lib/cart";
+	import { supabasePublic } from "../../lib/supabase";
 
 	const initializeProductPage = () => {
 		const dataElement =
@@ -1154,6 +1155,34 @@ const safeVariantJson = JSON.stringify({
 		const uniqueProductInfo =
 			parsedData.uniqueProduct || null;
 		const productInfo = parsedData.product || {};
+
+		/*
+		 * Disponibilidad en vivo.
+		 *
+		 * El stock que trae este JSON es el que tenia Sanity en el momento
+		 * del build; Supabase lo descuenta en el mismo instante de cada
+		 * compra (create_order_v2). Los dos numeros se separan apenas
+		 * ocurre la primera venta. Se consulta el stock operativo real una
+		 * sola vez por carga de ficha -- todas las variantes del producto
+		 * en una sola llamada, sin polling -- y se sustituye el valor del
+		 * build antes de dejar comprar.
+		 *
+		 *   "pending"     -> todavia no se sabe: no se afirma disponibilidad
+		 *                    y el CTA queda inhabilitado el tiempo que dure
+		 *                    la consulta.
+		 *   "live"        -> el numero mostrado viene de Supabase.
+		 *   "unavailable" -> la consulta fallo o no devolvio nada. Se cae al
+		 *                    valor del build (el comportamiento que la ficha
+		 *                    tenia antes de esto) pero SIN afirmar un numero
+		 *                    al cliente, y create_order_v2 sigue siendo la
+		 *                    autoridad final al confirmar el pedido.
+		 */
+		type AvailabilityState =
+			| "pending"
+			| "live"
+			| "unavailable";
+
+		let availabilityState: AvailabilityState = "pending";
 
 		const woodButtons = Array.from(
 			document.querySelectorAll<HTMLButtonElement>(
@@ -1359,8 +1388,72 @@ const safeVariantJson = JSON.stringify({
 			};
 		};
 
+		/*
+		 * Unico lugar que escribe la linea de disponibilidad y el estado
+		 * del CTA. Sirve a los dos modos de producto (con variantes y
+		 * unico), porque lee de `getCurrentSelection()`.
+		 */
+		const renderAvailability = () => {
+			const selection = getCurrentSelection();
+
+			const stock = selection
+				? Math.max(0, Number(selection.stock) || 0)
+				: 0;
+
+			const checking = availabilityState === "pending";
+
+			// Con el dato en vivo (o sin dato pero con el build ya en 0)
+			// se puede afirmar que no hay unidades. Mientras se comprueba,
+			// no se afirma nada.
+			const soldOut = !checking && stock <= 0;
+
+			// Solo se bloquea la compra por agotado o mientras se
+			// comprueba. En "unavailable" con stock de build > 0 se deja
+			// comprar: el pedido se valida igual contra el stock real en
+			// create_order_v2, que puede rechazarlo con su propio mensaje.
+			const blocked = checking || soldOut;
+
+			if (stockLabel) {
+				stockLabel.textContent = checking
+					? "Comprobando disponibilidad…"
+					: soldOut
+						? "Temporalmente agotado"
+						: availabilityState === "live"
+							? `${stock} ${stock === 1 ? "unidad disponible" : "unidades disponibles"}`
+							: "Disponibilidad se confirma al finalizar tu compra";
+			}
+
+			stockDot?.classList.toggle("is-out", soldOut);
+
+			stockDot?.classList.toggle(
+				"is-unconfirmed",
+				availabilityState !== "live" && !soldOut,
+			);
+
+			addToCartButton?.classList.toggle(
+				"is-disabled",
+				blocked,
+			);
+
+			if (addToCartButton) {
+				addToCartButton.disabled = blocked;
+
+				addToCartButton.setAttribute(
+					"aria-disabled",
+					blocked ? "true" : "false",
+				);
+			}
+		};
+
 		const updateInterface = () => {
-			if (!variants.length) return;
+			if (!variants.length) {
+				// Producto unico: no hay selector de variante que
+				// actualizar, pero la disponibilidad en vivo igual tiene
+				// que reemplazar al valor del build.
+				renderAvailability();
+				setQuantity(getQuantity());
+				return;
+			}
 
 			const variant = findVariant();
 
@@ -1426,32 +1519,7 @@ const safeVariantJson = JSON.stringify({
 					variant.woodTitle;
 			}
 
-			const stock = Number(variant.stock || 0);
-
-			if (stockLabel) {
-				stockLabel.textContent =
-					stock > 0
-						? `${stock} unidades disponibles`
-						: "Temporalmente agotado";
-			}
-
-			stockDot?.classList.toggle(
-				"is-out",
-				stock <= 0,
-			);
-
-			addToCartButton?.classList.toggle(
-				"is-disabled",
-				stock <= 0,
-			);
-
-			if (addToCartButton) {
-				addToCartButton.disabled = stock <= 0;
-				addToCartButton.setAttribute(
-					"aria-disabled",
-					stock <= 0 ? "true" : "false",
-				);
-			}
+			renderAvailability();
 
 			// La variante pudo cambiar a una con menos stock: se
 			// re-acota la cantidad elegida y el boton "+" al nuevo limite.
@@ -1746,7 +1814,108 @@ const safeVariantJson = JSON.stringify({
 			});
 		});
 
+		/*
+		 * Reemplaza el stock del build por el de Supabase. Un SKU que no
+		 * viene en la respuesta es una variante inactiva o inexistente en
+		 * el catalogo autoritativo: create_order_v2 la rechazaria, asi que
+		 * se muestra agotada en vez de disponible.
+		 */
+		const applyLiveAvailability = (rows: any[]) => {
+			const stockBySku = new Map<string, number>();
+
+			for (const row of rows) {
+				const sku =
+					typeof row?.sku === "string" ? row.sku : "";
+
+				if (!sku) continue;
+
+				const value = Number(row?.stock_quantity);
+
+				stockBySku.set(
+					sku,
+					Number.isFinite(value)
+						? Math.max(0, Math.floor(value))
+						: 0,
+				);
+			}
+
+			// Cero filas significa que el producto entero no esta en el
+			// espejo de catalogo (sincronizacion nunca corrida, producto
+			// despublicado ahi). Marcar todas las variantes como agotadas
+			// por eso seria tan inventado como dejar el numero viejo: se
+			// cae al estado prudente.
+			if (stockBySku.size === 0) {
+				availabilityState = "unavailable";
+				updateInterface();
+				return;
+			}
+
+			variants.forEach((variant: any) => {
+				variant.stock =
+					stockBySku.get(variant.sku) ?? 0;
+			});
+
+			if (uniqueProductInfo) {
+				uniqueProductInfo.stock =
+					stockBySku.get(uniqueProductInfo.sku) ?? 0;
+			}
+
+			availabilityState = "live";
+			updateInterface();
+		};
+
+		const loadLiveAvailability = async () => {
+			const sanityProductId = productInfo.id || "";
+
+			if (!supabasePublic || !sanityProductId) {
+				availabilityState = "unavailable";
+				updateInterface();
+				return;
+			}
+
+			try {
+				let request = supabasePublic.rpc(
+					"public_variant_availability",
+					{ p_sanity_product_id: sanityProductId },
+				);
+
+				// Sin tope, una consulta colgada dejaria el CTA
+				// inhabilitado para siempre. AbortSignal.timeout no existe
+				// en navegadores antiguos: ahi simplemente no hay tope, que
+				// es el comportamiento que la ficha ya tenia.
+				if (
+					typeof AbortSignal !== "undefined" &&
+					typeof AbortSignal.timeout === "function"
+				) {
+					request = request.abortSignal(
+						AbortSignal.timeout(6000),
+					);
+				}
+
+				const { data, error } = await request;
+
+				// El ClientRouter reemplaza el documento en cada
+				// navegacion: si el usuario ya se fue de esta ficha, la
+				// respuesta llega para un DOM que ya no esta en pagina.
+				if (!dataElement.isConnected) return;
+
+				if (error || !Array.isArray(data)) {
+					availabilityState = "unavailable";
+					updateInterface();
+					return;
+				}
+
+				applyLiveAvailability(data);
+			} catch {
+				if (!dataElement.isConnected) return;
+
+				availabilityState = "unavailable";
+				updateInterface();
+			}
+		};
+
 		updateInterface();
+		loadLiveAvailability();
 	};
 
 	initializeProductPage();
@@ -1989,6 +2158,16 @@ const safeVariantJson = JSON.stringify({
 
 	.product-status__dot.is-out {
 		background: #a94737;
+	}
+
+	/*
+	 * Disponibilidad todavia no confirmada contra Supabase (consultando, o
+	 * consulta fallida). Gris neutro a proposito: ni verde, que afirmaria
+	 * unidades que no se comprobaron, ni rojo, que afirmaria un agotado
+	 * que tampoco se comprobo.
+	 */
+	.product-status__dot.is-unconfirmed {
+		background: rgba(20, 20, 20, 0.28);
 	}
 
 	.product-meta {
