@@ -197,6 +197,12 @@ const slides = [
 	const sliders = document.querySelectorAll<HTMLElement>("[data-hero-slider]");
 
 	sliders.forEach((slider) => {
+		requestAnimationFrame(() => {
+			requestAnimationFrame(() => {
+				slider.setAttribute("data-ready", "true");
+			});
+		});
+
 		const slides = Array.from(
 			slider.querySelectorAll<HTMLElement>("[data-slide]"),
 		);
@@ -922,6 +928,32 @@ const slides = [
 				opacity: 0.85;
 				transform: scale(1.02);
 			}
+		}
+
+		/*
+		 * Primer render mobile (antes de que el script marque `data-ready`):
+		 * el slide 0 llega directo a su estado visual final, sin el fundido
+		 * de entrada (contenedor, foto y texto). Al fijar `data-ready` el
+		 * script no cambia ninguna propiedad de este slide, asi que no hay
+		 * transicion que disparar retroactivamente; las entradas/salidas
+		 * posteriores usan las reglas normales de arriba (o `[data-interacted]`
+		 * tras la primera interaccion/autoplay).
+		 */
+		.hero-slider:not([data-ready]) .hero-slide.is-active {
+			transition: none;
+		}
+
+		.hero-slider:not([data-ready]) .hero-slide.is-active .hero-slide__image {
+			transition: none;
+		}
+
+		.hero-slider:not([data-ready]) .hero-slide.is-active .hero-slide__eyebrow,
+		.hero-slider:not([data-ready]) .hero-slide.is-active h1,
+		.hero-slider:not([data-ready]) .hero-slide.is-active h2,
+		.hero-slider:not([data-ready]) .hero-slide.is-active .hero-slide__description,
+		.hero-slider:not([data-ready]) .hero-slide.is-active .hero-slide__button,
+		.hero-slider:not([data-ready]) .hero-slide.is-active .hero-slide__trust {
+			transition: none;
 		}
 	}
 
