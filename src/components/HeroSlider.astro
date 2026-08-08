@@ -80,6 +80,7 @@ const slides = [
 					]}
 					data-slide
 					aria-hidden={index === 0 ? "false" : "true"}
+					inert={index === 0 ? undefined : true}
 					style={`--slide-image: url('${slide.image}'); --slide-position: ${slide.position}; --slide-position-mobile: ${slide.mobilePosition || slide.position};${slide.overlayDesktop !== undefined ? ` --overlay-desktop-peak: ${slide.overlayDesktop};` : ""}${slide.overlayMobile !== undefined ? ` --overlay-mobile-peak: ${slide.overlayMobile};` : ""}`}
 				>
 					<picture>
@@ -240,6 +241,7 @@ const slides = [
 
 				slide.classList.toggle("is-active", isActive);
 				slide.setAttribute("aria-hidden", String(!isActive));
+				slide.inert = !isActive;
 			});
 
 			dots.forEach((dot, index) => {
@@ -660,6 +662,10 @@ const slides = [
 		display: flex;
 		align-items: center;
 		gap: 10px;
+		padding: 6px 12px;
+		border-radius: 999px;
+		background: rgba(20, 20, 20, 0.65);
+		backdrop-filter: blur(10px);
 		color: #fff;
 		font-size: 10px;
 		font-weight: 700;
